@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('fees') }}">Fee Management</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+        
+        <h1 class="h3 mb-4">
+            <i class="fas fa-credit-card"></i> {{ title }}
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Payment Information</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="paymentForm">
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Student Selection -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3">Student Details</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.student_id.label(class="form-label") }}
+                                {{ form.student_id(class="form-select", onchange="loadStudentDetails()") }}
+                                {% if form.student_id.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.student_id.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Student Details Display -->
+                        <div id="studentDetails" class="card bg-light" style="display: none;">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Student ID:</strong> <span id="studentId">-</span></p>
+                                        <p><strong>Name:</strong> <span id="studentName">-</span></p>
+                                        <p><strong>Course:</strong> <span id="studentCourse">-</span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Total Fees:</strong> ₹<span id="totalFees">0.00</span></p>
+                                        <p><strong>Paid Amount:</strong> ₹<span id="paidAmount">0.00</span></p>
+                                        <p><strong>Due Amount:</strong> ₹<span id="dueAmount">0.00</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Details -->
+                    <h6 class="text-primary mb-3">Payment Details</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.amount.label(class="form-label") }}
+                            {{ form.amount(class="form-control", placeholder="0.00", oninput="validateAmount()") }}
+                            {% if form.amount.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.amount.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">Enter the amount to be paid</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.payment_mode.label(class="form-label") }}
+                            {{ form.payment_mode(class="form-select") }}
+                            {% if form.payment_mode.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.payment_mode.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Additional Payment Details -->
+                    <div id="additionalDetails" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="transactionRef" class="form-label">Transaction Reference</label>
+                                <input type="text" class="form-control" id="transactionRef" placeholder="Transaction ID / Cheque Number">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="paymentDate" class="form-label">Payment Date</label>
+                                <input type="date" class="form-control" id="paymentDate" value="{{ moment().format('YYYY-MM-DD') }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="paymentRemarks" class="form-label">Remarks</label>
+                            <textarea class="form-control" id="paymentRemarks" rows="2" placeholder="Additional remarks (optional)"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Summary -->
+                    <div id="paymentSummary" class="card bg-light" style="display: none;">
+                        <div class="card-body">
+                            <h6 class="card-title">Payment Summary</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Payment Amount:</strong> ₹<span id="summaryAmount">0.00</span></p>
+                                    <p><strong>Payment Mode:</strong> <span id="summaryMode">-</span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Remaining Due:</strong> ₹<span id="remainingDue">0.00</span></p>
+                                    <p><strong>Installment Number:</strong> <span id="installmentNumber">-</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('fees') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Fee Management
+                        </a>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary me-2" onclick="previewPayment()">
+                                <i class="fas fa-eye"></i> Preview
+                            </button>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Payment Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <h6>Payment Modes:</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-money-bill-wave text-success"></i> <strong>Cash:</strong> Immediate payment</li>
+                    <li><i class="fas fa-credit-card text-primary"></i> <strong>Online:</strong> UPI/Net Banking</li>
+                    <li><i class="fas fa-check text-info"></i> <strong>Cheque:</strong> Bank cheque</li>
+                    <li><i class="fas fa-file-invoice text-warning"></i> <strong>DD:</strong> Demand Draft</li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Important Notes:</h6>
+                <div class="alert alert-info">
+                    <small>
+                        <ul class="mb-0">
+                            <li>Payment receipt will be generated automatically</li>
+                            <li>Student can pay in multiple installments</li>
+                            <li>Maximum 6 installments allowed per student</li>
+                            <li>Payment amount cannot exceed due amount</li>
+                        </ul>
+                    </small>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <small>
+                        <strong>Scholarship Note:</strong> Government scholarship amounts do not reduce the total payment but are tracked separately.
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Payments -->
+        <div class="card shadow mt-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Recent Payments</h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">BA-25-001</h6>
+                            <small>2 hours ago</small>
+                        </div>
+                        <p class="mb-1">₹15,000 - Cash</p>
+                        <small>Raj Kumar</small>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">BSC-25-003</h6>
+                            <small>1 day ago</small>
+                        </div>
+                        <p class="mb-1">₹12,500 - Online</p>
+                        <small>Priya Sharma</small>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">BA-25-005</h6>
+                            <small>2 days ago</small>
+                        </div>
+                        <p class="mb-1">₹8,000 - Cheque</p>
+                        <small>Amit Singh</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function loadStudentDetails() {
+    const studentSelect = document.getElementById('{{ form.student_id.id }}');
+    const studentId = studentSelect.value;
+    
+    if (studentId) {
+        // In a real implementation, fetch student details from API
+        // For now, show mock data
+        document.getElementById('studentDetails').style.display = 'block';
+        document.getElementById('studentId').textContent = 'BA-25-001';
+        document.getElementById('studentName').textContent = 'John Doe';
+        document.getElementById('studentCourse').textContent = 'Bachelor of Arts';
+        document.getElementById('totalFees').textContent = '25,000.00';
+        document.getElementById('paidAmount').textContent = '10,000.00';
+        document.getElementById('dueAmount').textContent = '15,000.00';
+        
+        // Show additional details and payment summary
+        document.getElementById('additionalDetails').style.display = 'block';
+        updatePaymentSummary();
+    } else {
+        document.getElementById('studentDetails').style.display = 'none';
+        document.getElementById('additionalDetails').style.display = 'none';
+        document.getElementById('paymentSummary').style.display = 'none';
+    }
+}
+
+function validateAmount() {
+    const amountInput = document.getElementById('{{ form.amount.id }}');
+    const dueAmount = parseFloat(document.getElementById('dueAmount').textContent.replace(',', ''));
+    const enteredAmount = parseFloat(amountInput.value);
+    
+    if (enteredAmount > dueAmount) {
+        amountInput.setCustomValidity('Payment amount cannot exceed due amount');
+    } else {
+        amountInput.setCustomValidity('');
+    }
+    
+    updatePaymentSummary();
+}
+
+function updatePaymentSummary() {
+    const amount = document.getElementById('{{ form.amount.id }}').value;
+    const mode = document.getElementById('{{ form.payment_mode.id }}').value;
+    const dueAmount = parseFloat(document.getElementById('dueAmount').textContent.replace(',', ''));
+    const paymentAmount = parseFloat(amount) || 0;
+    
+    if (amount && mode) {
+        document.getElementById('paymentSummary').style.display = 'block';
+        document.getElementById('summaryAmount').textContent = paymentAmount.toLocaleString();
+        document.getElementById('summaryMode').textContent = mode;
+        document.getElementById('remainingDue').textContent = (dueAmount - paymentAmount).toLocaleString();
+        document.getElementById('installmentNumber').textContent = getNextInstallmentNumber();
+    } else {
+        document.getElementById('paymentSummary').style.display = 'none';
+    }
+}
+
+function getNextInstallmentNumber() {
+    // In a real implementation, this would come from the server
+    return '3'; // Mock installment number
+}
+
+function previewPayment() {
+    const studentId = document.getElementById('{{ form.student_id.id }}').value;
+    const amount = document.getElementById('{{ form.amount.id }}').value;
+    const mode = document.getElementById('{{ form.payment_mode.id }}').value;
+    
+    if (!studentId || !amount || !mode) {
+        alert('Please fill all required fields');
+        return;
+    }
+    
+    // Show preview modal or generate preview
+    alert('Payment Preview:\nStudent: ' + document.getElementById('studentName').textContent + 
+          '\nAmount: ₹' + amount + '\nMode: ' + mode);
+}
+
+// Event listeners
+document.getElementById('{{ form.payment_mode.id }}').addEventListener('change', updatePaymentSummary);
+document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}

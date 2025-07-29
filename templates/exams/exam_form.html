@@ -1,0 +1,479 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('exams') }}">Examinations</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+        
+        <h1 class="h3 mb-4">
+            <i class="fas fa-edit"></i> {{ title }}
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-10">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Examination Details</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="examForm">
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Basic Information -->
+                    <h6 class="text-primary mb-3">Basic Information</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.student_id.label(class="form-label") }}
+                            {{ form.student_id(class="form-select", onchange="loadStudentInfo()") }}
+                            {% if form.student_id.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.student_id.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.course_id.label(class="form-label") }}
+                            {{ form.course_id(class="form-select") }}
+                            {% if form.course_id.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.course_id.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            {{ form.semester.label(class="form-label") }}
+                            {{ form.semester(class="form-control") }}
+                            {% if form.semester.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.semester.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            {{ form.exam_name.label(class="form-label") }}
+                            {{ form.exam_name(class="form-control") }}
+                            {% if form.exam_name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.exam_name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            {{ form.exam_date.label(class="form-label") }}
+                            {{ form.exam_date(class="form-control") }}
+                            {% if form.exam_date.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.exam_date.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Student Info Display -->
+                    <div id="studentInfo" class="card bg-light mb-4" style="display: none;">
+                        <div class="card-body">
+                            <h6>Selected Student Information</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Student ID:</strong> <span id="displayStudentId">-</span></p>
+                                    <p><strong>Name:</strong> <span id="displayStudentName">-</span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Course:</strong> <span id="displayStudentCourse">-</span></p>
+                                    <p><strong>Current Subjects:</strong> <span id="displayStudentSubjects">-</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Subject Marks -->
+                    <h6 class="text-primary mb-3">Subject-wise Marks</h6>
+                    
+                    <!-- Subject 1 -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Subject 1</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    {{ form.subject1_name.label(class="form-label") }}
+                                    {{ form.subject1_name(class="form-control") }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {{ form.subject1_max_marks.label(class="form-label") }}
+                                    {{ form.subject1_max_marks(class="form-control", onchange="calculateTotals()") }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {{ form.subject1_obtained_marks.label(class="form-label") }}
+                                    {{ form.subject1_obtained_marks(class="form-control", onchange="calculateTotals()") }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Subject 2 -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Subject 2</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    {{ form.subject2_name.label(class="form-label") }}
+                                    {{ form.subject2_name(class="form-control") }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {{ form.subject2_max_marks.label(class="form-label") }}
+                                    {{ form.subject2_max_marks(class="form-control", onchange="calculateTotals()") }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {{ form.subject2_obtained_marks.label(class="form-label") }}
+                                    {{ form.subject2_obtained_marks(class="form-control", onchange="calculateTotals()") }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Subject 3 -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Subject 3</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    {{ form.subject3_name.label(class="form-label") }}
+                                    {{ form.subject3_name(class="form-control") }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {{ form.subject3_max_marks.label(class="form-label") }}
+                                    {{ form.subject3_max_marks(class="form-control", onchange="calculateTotals()") }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {{ form.subject3_obtained_marks.label(class="form-label") }}
+                                    {{ form.subject3_obtained_marks(class="form-control", onchange="calculateTotals()") }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Additional Subjects Button -->
+                    <div class="text-center mb-4">
+                        <button type="button" class="btn btn-outline-primary" onclick="showAdditionalSubjects()">
+                            <i class="fas fa-plus"></i> Add More Subjects (Optional)
+                        </button>
+                    </div>
+                    
+                    <!-- Additional Subjects (Hidden by default) -->
+                    <div id="additionalSubjects" style="display: none;">
+                        <!-- Subject 4 -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Subject 4 (Optional)</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Subject Name</label>
+                                        <input type="text" class="form-control" name="subject4_name">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Max Marks</label>
+                                        <input type="number" class="form-control" name="subject4_max_marks" value="100" onchange="calculateTotals()">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Obtained Marks</label>
+                                        <input type="number" class="form-control" name="subject4_obtained_marks" value="0" onchange="calculateTotals()">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Subject 5 -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Subject 5 (Optional)</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Subject Name</label>
+                                        <input type="text" class="form-control" name="subject5_name">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Max Marks</label>
+                                        <input type="number" class="form-control" name="subject5_max_marks" value="100" onchange="calculateTotals()">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Obtained Marks</label>
+                                        <input type="number" class="form-control" name="subject5_obtained_marks" value="0" onchange="calculateTotals()">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Subject 6 -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Subject 6 (Optional)</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Subject Name</label>
+                                        <input type="text" class="form-control" name="subject6_name">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Max Marks</label>
+                                        <input type="number" class="form-control" name="subject6_max_marks" value="100" onchange="calculateTotals()">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Obtained Marks</label>
+                                        <input type="number" class="form-control" name="subject6_obtained_marks" value="0" onchange="calculateTotals()">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Result Summary -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">Calculated Results</h6>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <p><strong>Total Max Marks:</strong> <span id="totalMaxMarks">0</span></p>
+                                </div>
+                                <div class="col-md-3">
+                                    <p><strong>Total Obtained:</strong> <span id="totalObtainedMarks">0</span></p>
+                                </div>
+                                <div class="col-md-3">
+                                    <p><strong>Percentage:</strong> <span id="calculatedPercentage">0.00%</span></p>
+                                </div>
+                                <div class="col-md-3">
+                                    <p><strong>Grade:</strong> <span id="calculatedGrade" class="badge bg-secondary">-</span></p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Overall Status:</strong> <span id="overallStatus" class="badge bg-secondary">-</span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Pass/Fail Criteria:</strong> <span class="text-muted">40% minimum required</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('exams') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Examinations
+                        </a>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary me-2" onclick="previewResults()">
+                                <i class="fas fa-eye"></i> Preview
+                            </button>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Grading Scale</h6>
+            </div>
+            <div class="card-body">
+                <div class="grading-scale">
+                    <div class="grade-item">
+                        <span class="badge bg-success">A+</span> 90-100%
+                    </div>
+                    <div class="grade-item">
+                        <span class="badge bg-success">A</span> 80-89%
+                    </div>
+                    <div class="grade-item">
+                        <span class="badge bg-info">B+</span> 70-79%
+                    </div>
+                    <div class="grade-item">
+                        <span class="badge bg-info">B</span> 60-69%
+                    </div>
+                    <div class="grade-item">
+                        <span class="badge bg-warning">C+</span> 50-59%
+                    </div>
+                    <div class="grade-item">
+                        <span class="badge bg-warning">C</span> 40-49%
+                    </div>
+                    <div class="grade-item">
+                        <span class="badge bg-danger">F</span> Below 40%
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow mt-3">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success"></i> Enter marks accurately</li>
+                    <li><i class="fas fa-check text-success"></i> Verify student information</li>
+                    <li><i class="fas fa-check text-success"></i> Double-check calculations</li>
+                    <li><i class="fas fa-check text-success"></i> Generate report card after saving</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function loadStudentInfo() {
+    const studentSelect = document.getElementById('{{ form.student_id.id }}');
+    const studentId = studentSelect.value;
+    
+    if (studentId) {
+        // In a real implementation, fetch student details from API
+        const selectedOption = studentSelect.options[studentSelect.selectedIndex];
+        const studentText = selectedOption.text;
+        
+        document.getElementById('studentInfo').style.display = 'block';
+        document.getElementById('displayStudentId').textContent = studentText.split(' - ')[0];
+        document.getElementById('displayStudentName').textContent = studentText.split(' - ')[1];
+        document.getElementById('displayStudentCourse').textContent = 'Bachelor of Arts'; // Mock data
+        document.getElementById('displayStudentSubjects').textContent = 'English, Hindi, Political Science'; // Mock data
+    } else {
+        document.getElementById('studentInfo').style.display = 'none';
+    }
+}
+
+function showAdditionalSubjects() {
+    document.getElementById('additionalSubjects').style.display = 'block';
+    event.target.style.display = 'none';
+}
+
+function calculateTotals() {
+    let totalMax = 0;
+    let totalObtained = 0;
+    
+    // Get values from all subject fields
+    const subjects = [
+        { max: '{{ form.subject1_max_marks.id }}', obtained: '{{ form.subject1_obtained_marks.id }}' },
+        { max: '{{ form.subject2_max_marks.id }}', obtained: '{{ form.subject2_obtained_marks.id }}' },
+        { max: '{{ form.subject3_max_marks.id }}', obtained: '{{ form.subject3_obtained_marks.id }}' }
+    ];
+    
+    // Add additional subjects if visible
+    if (document.getElementById('additionalSubjects').style.display !== 'none') {
+        subjects.push(
+            { max: 'subject4_max_marks', obtained: 'subject4_obtained_marks' },
+            { max: 'subject5_max_marks', obtained: 'subject5_obtained_marks' },
+            { max: 'subject6_max_marks', obtained: 'subject6_obtained_marks' }
+        );
+    }
+    
+    subjects.forEach(subject => {
+        const maxField = document.getElementsByName(subject.max)[0] || document.getElementById(subject.max);
+        const obtainedField = document.getElementsByName(subject.obtained)[0] || document.getElementById(subject.obtained);
+        
+        if (maxField && obtainedField) {
+            const maxValue = parseInt(maxField.value) || 0;
+            const obtainedValue = parseInt(obtainedField.value) || 0;
+            
+            if (maxValue > 0) {
+                totalMax += maxValue;
+                totalObtained += obtainedValue;
+            }
+        }
+    });
+    
+    // Calculate percentage and grade
+    const percentage = totalMax > 0 ? (totalObtained / totalMax * 100) : 0;
+    const grade = calculateGrade(percentage);
+    const status = percentage >= 40 ? 'Pass' : 'Fail';
+    
+    // Update display
+    document.getElementById('totalMaxMarks').textContent = totalMax;
+    document.getElementById('totalObtainedMarks').textContent = totalObtained;
+    document.getElementById('calculatedPercentage').textContent = percentage.toFixed(2) + '%';
+    
+    const gradeElement = document.getElementById('calculatedGrade');
+    gradeElement.textContent = grade;
+    gradeElement.className = 'badge ' + getGradeBadgeClass(grade);
+    
+    const statusElement = document.getElementById('overallStatus');
+    statusElement.textContent = status;
+    statusElement.className = 'badge ' + (status === 'Pass' ? 'bg-success' : 'bg-danger');
+}
+
+function calculateGrade(percentage) {
+    if (percentage >= 90) return 'A+';
+    if (percentage >= 80) return 'A';
+    if (percentage >= 70) return 'B+';
+    if (percentage >= 60) return 'B';
+    if (percentage >= 50) return 'C+';
+    if (percentage >= 40) return 'C';
+    return 'F';
+}
+
+function getGradeBadgeClass(grade) {
+    switch(grade) {
+        case 'A+':
+        case 'A':
+            return 'bg-success';
+        case 'B+':
+        case 'B':
+            return 'bg-info';
+        case 'C+':
+        case 'C':
+            return 'bg-warning';
+        default:
+            return 'bg-danger';
+    }
+}
+
+function previewResults() {
+    const percentage = document.getElementById('calculatedPercentage').textContent;
+    const grade = document.getElementById('calculatedGrade').textContent;
+    const status = document.getElementById('overallStatus').textContent;
+    
+    alert(`Exam Results Preview:\nPercentage: ${percentage}\nGrade: ${grade}\nStatus: ${status}`);
+}
+
+// Initialize calculations on page load
+document.addEventListener('DOMContentLoaded', function() {
+    calculateTotals();
+});
+</script>
+{% endblock %}

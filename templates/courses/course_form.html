@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('courses') }}">Courses</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+        
+        <h1 class="h3 mb-4">
+            <i class="fas fa-book-open"></i> {{ title }}
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Course Information</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.course_short_name.label(class="form-label") }}
+                            {{ form.course_short_name(class="form-control") }}
+                            <small class="text-muted">e.g., BA, BSC, MA, MSC</small>
+                            {% if form.course_short_name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.course_short_name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.duration.label(class="form-label") }}
+                            {{ form.duration(class="form-control") }}
+                            {% if form.duration.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.duration.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.course_full_name.label(class="form-label") }}
+                        {{ form.course_full_name(class="form-control") }}
+                        <small class="text-muted">e.g., Bachelor of Arts, Bachelor of Science</small>
+                        {% if form.course_full_name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.course_full_name.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.course_category.label(class="form-label") }}
+                        {{ form.course_category(class="form-control") }}
+                        <small class="text-muted">e.g., Undergraduate, Postgraduate, Diploma</small>
+                        {% if form.course_category.errors %}
+                            <div class="text-danger">
+                                {% for error in form.course_category.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('courses') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Courses
+                        </a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Course Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <h6>Naming Conventions:</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Short Name:</strong> Use standard abbreviations (BA, BSC, MA, etc.)</li>
+                    <li><strong>Full Name:</strong> Complete course title</li>
+                    <li><strong>Category:</strong> Academic level classification</li>
+                    <li><strong>Duration:</strong> Number of years to complete</li>
+                </ul>
+                
+                <hr>
+                
+                <h6>After Creating Course:</h6>
+                <p class="text-muted">You'll be able to add subjects and define fee structure for this course.</p>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Note:</strong> Course short name will be used to generate student IDs automatically.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Student Summary - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="h3 mb-4">
+            <i class="fas fa-chart-pie"></i> Student Summary Dashboard
+        </h1>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Admissions</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ course_counts|sum(attribute=1) }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-plus fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Male Students</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {% for gender, count in gender_counts %}
+                                {% if gender == 'Male' %}{{ count }}{% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-male fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Female Students</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {% for gender, count in gender_counts %}
+                                {% if gender == 'Female' %}{{ count }}{% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-female fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Courses Available</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ course_counts|length }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-book-open fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Course-wise Distribution</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="courseDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Gender Distribution</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="genderDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Category Distribution</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Monthly Admissions</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyAdmissionsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Tables -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Course-wise Breakdown</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Course</th>
+                                <th class="text-end">Students</th>
+                                <th class="text-end">Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set total_students = course_counts|sum(attribute=1) %}
+                            {% for course, count in course_counts %}
+                            <tr>
+                                <td>{{ course }}</td>
+                                <td class="text-end">{{ count }}</td>
+                                <td class="text-end">{{ "%.1f"|format((count / total_students * 100) if total_students > 0 else 0) }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Category-wise Breakdown</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th class="text-end">Students</th>
+                                <th class="text-end">Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set total_students = category_counts|sum(attribute=1) %}
+                            {% for category, count in category_counts %}
+                            <tr>
+                                <td>{{ category or 'Not Specified' }}</td>
+                                <td class="text-end">{{ count }}</td>
+                                <td class="text-end">{{ "%.1f"|format((count / total_students * 100) if total_students > 0 else 0) }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Course Distribution Chart
+const courseCtx = document.getElementById('courseDistributionChart').getContext('2d');
+new Chart(courseCtx, {
+    type: 'doughnut',
+    data: {
+        labels: [{% for course, count in course_counts %}'{{ course }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for course, count in course_counts %}{{ count }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: [
+                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796',
+                '#5a5c69', '#f8f9fc', '#5777ba', '#1f9e6b'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Gender Distribution Chart
+const genderCtx = document.getElementById('genderDistributionChart').getContext('2d');
+new Chart(genderCtx, {
+    type: 'pie',
+    data: {
+        labels: [{% for gender, count in gender_counts %}'{{ gender }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for gender, count in gender_counts %}{{ count }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: ['#4e73df', '#e74a3b', '#36b9cc']
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Category Distribution Chart
+const categoryCtx = document.getElementById('categoryDistributionChart').getContext('2d');
+new Chart(categoryCtx, {
+    type: 'bar',
+    data: {
+        labels: [{% for category, count in category_counts %}'{{ category or "Not Specified" }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Students',
+            data: [{% for category, count in category_counts %}{{ count }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: '#4e73df'
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Monthly Admissions Chart
+const monthlyCtx = document.getElementById('monthlyAdmissionsChart').getContext('2d');
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+new Chart(monthlyCtx, {
+    type: 'line',
+    data: {
+        labels: [{% for month, year, count in monthly_admissions %}'{{ monthNames[month-1] }} {{ year }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Admissions',
+            data: [{% for month, year, count in monthly_admissions %}{{ count }}{% if not loop.last %},{% endif %}{% endfor %}],
+            borderColor: '#1cc88a',
+            backgroundColor: 'rgba(28, 200, 138, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

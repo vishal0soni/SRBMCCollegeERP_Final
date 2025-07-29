@@ -1,0 +1,92 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2c5282;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3182ce;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="secondaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a365d;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2c5282;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f6c23e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e74a3b;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Outer Circle Background -->
+  <circle cx="60" cy="60" r="58" fill="url(#primaryGradient)" stroke="#1a365d" stroke-width="2"/>
+  
+  <!-- Inner decorative circle -->
+  <circle cx="60" cy="60" r="52" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.3"/>
+  
+  <!-- College Building/Temple Structure -->
+  <g transform="translate(60, 60)">
+    <!-- Main building base -->
+    <rect x="-35" y="10" width="70" height="30" fill="url(#secondaryGradient)" rx="2"/>
+    
+    <!-- Building pillars -->
+    <rect x="-30" y="10" width="4" height="30" fill="#ffffff" opacity="0.9"/>
+    <rect x="-15" y="10" width="4" height="30" fill="#ffffff" opacity="0.9"/>
+    <rect x="0" y="10" width="4" height="30" fill="#ffffff" opacity="0.9"/>
+    <rect x="15" y="10" width="4" height="30" fill="#ffffff" opacity="0.9"/>
+    <rect x="30" y="10" width="4" height="30" fill="#ffffff" opacity="0.9"/>
+    
+    <!-- Dome/Roof -->
+    <path d="M -40 10 Q 0 -15 40 10 Z" fill="url(#accentGradient)"/>
+    <path d="M -35 10 Q 0 -10 35 10 Z" fill="#ffffff" opacity="0.2"/>
+    
+    <!-- Central spire -->
+    <rect x="-2" y="-15" width="4" height="15" fill="url(#accentGradient)"/>
+    <circle cx="0" cy="-15" r="3" fill="#f6c23e"/>
+    
+    <!-- Educational symbols -->
+    <!-- Open book -->
+    <g transform="translate(0, 25)">
+      <path d="M -8 0 L -2 -3 L 2 -3 L 8 0 L 8 8 L 2 5 L -2 5 L -8 8 Z" fill="#ffffff" opacity="0.9"/>
+      <line x1="-8" y1="2" x2="-2" y2="-1" stroke="#2c5282" stroke-width="0.5"/>
+      <line x1="-8" y1="4" x2="-2" y2="1" stroke="#2c5282" stroke-width="0.5"/>
+      <line x1="2" y1="-1" x2="8" y2="2" stroke="#2c5282" stroke-width="0.5"/>
+      <line x1="2" y1="1" x2="8" y2="4" stroke="#2c5282" stroke-width="0.5"/>
+    </g>
+    
+    <!-- Knowledge lamp/flame -->
+    <g transform="translate(0, -25)">
+      <ellipse cx="0" cy="2" rx="3" ry="1.5" fill="#f6c23e"/>
+      <path d="M -1.5 2 Q 0 -2 1.5 2" fill="url(#accentGradient)"/>
+      <circle cx="0" cy="-1" r="1" fill="#ffffff" opacity="0.8"/>
+    </g>
+    
+    <!-- Decorative elements around the logo -->
+    <g opacity="0.6">
+      <!-- Left laurel -->
+      <path d="M -45 -5 Q -40 -10 -35 -5 Q -40 0 -45 -5" fill="#1cc88a"/>
+      <path d="M -45 5 Q -40 0 -35 5 Q -40 10 -45 5" fill="#1cc88a"/>
+      
+      <!-- Right laurel -->
+      <path d="M 45 -5 Q 40 -10 35 -5 Q 40 0 45 -5" fill="#1cc88a"/>
+      <path d="M 45 5 Q 40 0 35 5 Q 40 10 45 5" fill="#1cc88a"/>
+    </g>
+    
+    <!-- College initials -->
+    <g transform="translate(0, -35)" fill="#ffffff" font-family="serif" font-size="8" font-weight="bold" text-anchor="middle">
+      <text x="0" y="0">SRBMC</text>
+    </g>
+    
+    <!-- Establishment year or motto -->
+    <g transform="translate(0, 45)" fill="#ffffff" font-family="serif" font-size="4" text-anchor="middle" opacity="0.8">
+      <text x="0" y="0">EXCELLENCE IN EDUCATION</text>
+    </g>
+  </g>
+  
+  <!-- Outer decorative border -->
+  <circle cx="60" cy="60" r="55" fill="none" stroke="url(#accentGradient)" stroke-width="1" opacity="0.5" stroke-dasharray="2,2"/>
+  
+  <!-- Corner decorative elements -->
+  <g opacity="0.3">
+    <circle cx="15" cy="15" r="2" fill="#f6c23e"/>
+    <circle cx="105" cy="15" r="2" fill="#f6c23e"/>
+    <circle cx="15" cy="105" r="2" fill="#f6c23e"/>
+    <circle cx="105" cy="105" r="2" fill="#f6c23e"/>
+  </g>
+</svg>

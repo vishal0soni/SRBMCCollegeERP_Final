@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="fas fa-file-invoice"></i> Invoice Management
+            </h1>
+            <div>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print Invoice
+                </button>
+                <a href="#" class="btn btn-success">
+                    <i class="fas fa-download"></i> Download PDF
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Invoice Display -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow" id="invoice-content">
+            <div class="card-body">
+                <!-- College Header -->
+                <div class="row mb-4">
+                    <div class="col-12 text-center">
+                        <img src="{{ url_for('static', filename='images/college_logo.svg') }}" alt="SRBMC Logo" width="80" height="80">
+                        <h3 class="mt-2">Shri Raghunath Bishnoi Memorial College (SRBMC)</h3>
+                        <h5 class="text-muted">Raniwara, Rajasthan</h5>
+                        <h4 class="text-primary mt-3">FEE RECEIPT</h4>
+                    </div>
+                </div>
+                
+                <!-- Invoice Details -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Receipt No:</strong></td>
+                                <td>INV202501290001</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Date:</strong></td>
+                                <td>29/01/2025</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Payment Mode:</strong></td>
+                                <td>Cash</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Student ID:</strong></td>
+                                <td>BA-25-001</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Academic Year:</strong></td>
+                                <td>2024-25</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Installment:</strong></td>
+                                <td>3rd Installment</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Student Details -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="text-primary mb-3">Student Details</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Name:</strong></td>
+                                        <td>Raj Kumar</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Father's Name:</strong></td>
+                                        <td>Suresh Kumar</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Course:</strong></td>
+                                        <td>Bachelor of Arts (BA)</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Phone:</strong></td>
+                                        <td>+91 9876543210</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Address:</strong></td>
+                                        <td>Village Raniwara, Jalore, Rajasthan</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Fee Breakdown -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="text-primary mb-3">Fee Breakdown</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fee Type</th>
+                                        <th class="text-end">Amount (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Tuition Fee</td>
+                                        <td class="text-end">12,000.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Enrollment Fee</td>
+                                        <td class="text-end">1,500.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>University Affiliation Fee</td>
+                                        <td class="text-end">800.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Sports Fee</td>
+                                        <td class="text-end">500.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Development Fee</td>
+                                        <td class="text-end">200.00</td>
+                                    </tr>
+                                    <tr class="table-secondary">
+                                        <td><strong>Total Amount</strong></td>
+                                        <td class="text-end"><strong>15,000.00</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Summary -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="text-primary mb-3">Payment Summary</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <table class="table table-borderless mb-0">
+                                            <tr>
+                                                <td><strong>Amount Paid Today:</strong></td>
+                                                <td class="text-end"><strong>₹15,000.00</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Total Fees:</td>
+                                                <td class="text-end">₹25,000.00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Previous Payments:</td>
+                                                <td class="text-end">₹10,000.00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Total Paid:</td>
+                                                <td class="text-end">₹25,000.00</td>
+                                            </tr>
+                                            <tr class="table-success">
+                                                <td><strong>Balance Due:</strong></td>
+                                                <td class="text-end"><strong>₹0.00</strong></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6>Previous Installments:</h6>
+                                        <ul class="list-unstyled">
+                                            <li>1st Installment: ₹5,000 (15/08/2024)</li>
+                                            <li>2nd Installment: ₹5,000 (15/11/2024)</li>
+                                            <li>3rd Installment: ₹15,000 (29/01/2025)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Amount in Words -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <strong>Amount in Words:</strong> Fifteen Thousand Rupees Only
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Received By:</strong> <br><br>
+                        _________________________<br>
+                        Accountant<br>
+                        SRBMC, Raniwara</p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <p><strong>Authorized Signature:</strong> <br><br>
+                        _________________________<br>
+                        Principal<br>
+                        SRBMC, Raniwara</p>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-12 text-center">
+                        <small class="text-muted">
+                            This is a computer-generated receipt. No signature required.<br>
+                            For any queries, contact: admin@srbmc.edu.in | +91-2973-XXXXXX
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Invoice Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Invoice Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Invoice Status:</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="originalPrinted" checked>
+                            <label class="form-check-label" for="originalPrinted">
+                                Original Invoice Printed
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="duplicatePrinted">
+                            <label class="form-check-label" for="duplicatePrinted">
+                                Duplicate Copy Printed
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Actions:</h6>
+                        <div class="btn-group-vertical d-grid gap-2">
+                            <button class="btn btn-outline-primary" onclick="printDuplicate()">
+                                <i class="fas fa-copy"></i> Print Duplicate
+                            </button>
+                            <button class="btn btn-outline-success" onclick="emailInvoice()">
+                                <i class="fas fa-envelope"></i> Email to Student
+                            </button>
+                            <button class="btn btn-outline-info" onclick="downloadPDF()">
+                                <i class="fas fa-file-pdf"></i> Download PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function printDuplicate() {
+    const originalPrinted = document.getElementById('originalPrinted').checked;
+    if (!originalPrinted) {
+        alert('Please print the original invoice first.');
+        return;
+    }
+    
+    // Mark as duplicate on print
+    const invoiceContent = document.getElementById('invoice-content');
+    const header = invoiceContent.querySelector('h4');
+    header.innerHTML = 'FEE RECEIPT <span class="text-danger">(DUPLICATE COPY)</span>';
+    
+    window.print();
+    
+    // Revert after print
+    setTimeout(() => {
+        header.innerHTML = 'FEE RECEIPT';
+    }, 1000);
+    
+    document.getElementById('duplicatePrinted').checked = true;
+}
+
+function emailInvoice() {
+    const email = prompt('Enter student email address:');
+    if (email) {
+        // In a real implementation, send email
+        alert('Invoice sent to: ' + email);
+    }
+}
+
+function downloadPDF() {
+    // In a real implementation, generate and download PDF
+    alert('PDF download will start shortly...');
+}
+
+// Print styles
+const style = document.createElement('style');
+style.textContent = `
+    @media print {
+        .btn, .card-header, nav, .d-flex.justify-content-between {
+            display: none !important;
+        }
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        body { font-size: 12px; }
+        h3 { font-size: 18px; }
+        h4 { font-size: 16px; }
+        h5 { font-size: 14px; }
+        h6 { font-size: 12px; }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

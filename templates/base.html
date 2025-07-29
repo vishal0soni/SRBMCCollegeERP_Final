@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SRBMC College Management ERP{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('index') }}">
+                <img src="{{ url_for('static', filename='images/college_logo.svg') }}" alt="SRBMC Logo" width="40" height="40" class="me-2">
+                <span class="college-name">SRBMC ERP</span>
+            </a>
+            
+            {% if current_user.is_authenticated %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    
+                    {% if current_user.role.role_name == 'Administrator' %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-cog"></i> Administration
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('admin_users') }}">User Management</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin_users') }}">Role Management</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    {% if current_user.role.role_name in ['Administrator', 'Admission Officer', 'Admission Assistant'] %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="studentsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-graduation-cap"></i> Students
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('students') }}">All Students</a></li>
+                            {% if current_user.role.access_type == 'Edit' %}
+                            <li><a class="dropdown-item" href="{{ url_for('add_student') }}">Add Student</a></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{{ url_for('student_summary') }}">Student Summary</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    {% if current_user.role.role_name in ['Administrator', 'Admission Officer'] %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="coursesDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-book"></i> Courses
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('courses') }}">All Courses</a></li>
+                            {% if current_user.role.access_type == 'Edit' %}
+                            <li><a class="dropdown-item" href="{{ url_for('add_course') }}">Add Course</a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    {% if current_user.role.role_name in ['Administrator', 'Accountant', 'Accountant Assistant'] %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="feesDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-money-bill"></i> Fees
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('fees') }}">Fee Management</a></li>
+                            {% if current_user.role.access_type == 'Edit' %}
+                            <li><a class="dropdown-item" href="{{ url_for('payment') }}">Process Payment</a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    {% if current_user.role.role_name in ['Administrator', 'Exam Controller', 'Exam Assistant'] %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="examsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-clipboard-list"></i> Exams
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('exams') }}">All Exams</a></li>
+                            {% if current_user.role.access_type == 'Edit' %}
+                            <li><a class="dropdown-item" href="{{ url_for('add_exam') }}">Add Exam Results</a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('analytics') }}">
+                            <i class="fas fa-chart-bar"></i> Analytics
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> {{ current_user.first_name }} {{ current_user.last_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#">Profile</a></li>
+                            <li><a class="dropdown-item" href="#">Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container-fluid mt-4">
+        <!-- College Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="college-header text-center">
+                    <img src="{{ url_for('static', filename='images/college_logo.svg') }}" alt="SRBMC Logo" class="college-logo">
+                    <h2 class="college-title">Shri Raghunath Bishnoi Memorial College (SRBMC), Raniwara</h2>
+                    <p class="college-subtitle">Excellence in Education</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Shri Raghunath Bishnoi Memorial College (SRBMC)</h5>
+                    <p class="text-muted">Raniwara, Rajasthan</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-muted">&copy; 2025 SRBMC College Management ERP</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

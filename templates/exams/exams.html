@@ -1,0 +1,439 @@
+{% extends "base.html" %}
+
+{% block title %}Examinations - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="fas fa-clipboard-list"></i> Examination Management
+            </h1>
+            {% if current_user.role.access_type == 'Edit' %}
+            <div>
+                <a href="{{ url_for('add_exam') }}" class="btn btn-primary me-2">
+                    <i class="fas fa-plus"></i> Add Exam Results
+                </a>
+                <a href="#" class="btn btn-success">
+                    <i class="fas fa-download"></i> Export Results
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Exam Statistics -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Exams</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ exams.total }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Pass Rate</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">87.5%</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Average Score</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">72.3%</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Failed Students</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">12</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="course" class="form-label">Course</label>
+                        <select name="course" id="course" class="form-select">
+                            <option value="">All Courses</option>
+                            <option value="BA">Bachelor of Arts (BA)</option>
+                            <option value="BSC">Bachelor of Science (BSC)</option>
+                            <option value="MA">Master of Arts (MA)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="semester" class="form-label">Semester</label>
+                        <select name="semester" id="semester" class="form-select">
+                            <option value="">All Semesters</option>
+                            <option value="1st">1st Semester</option>
+                            <option value="2nd">2nd Semester</option>
+                            <option value="3rd">3rd Semester</option>
+                            <option value="4th">4th Semester</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="result" class="form-label">Result</label>
+                        <select name="result" id="result" class="form-select">
+                            <option value="">All Results</option>
+                            <option value="Pass">Pass</option>
+                            <option value="Fail">Fail</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                            <a href="{{ url_for('exams') }}" class="btn btn-secondary">Clear</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Exam Results Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    Exam Results ({{ exams.total }} records)
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student</th>
+                                <th>Course</th>
+                                <th>Exam</th>
+                                <th>Semester</th>
+                                <th>Total Marks</th>
+                                <th>Obtained Marks</th>
+                                <th>Percentage</th>
+                                <th>Grade</th>
+                                <th>Result</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exam, student in exams.items %}
+                            <tr>
+                                <td>
+                                    <strong>{{ student.student_unique_id }}</strong><br>
+                                    <small>{{ student.first_name }} {{ student.last_name }}</small>
+                                </td>
+                                <td>{{ student.current_course }}</td>
+                                <td>{{ exam.exam_name }}</td>
+                                <td>{{ exam.semester }}</td>
+                                <td class="text-center">{{ exam.total_max_marks }}</td>
+                                <td class="text-center">{{ exam.total_obtained_marks }}</td>
+                                <td class="text-center">
+                                    {% if exam.percentage >= 75 %}
+                                        <span class="badge bg-success">{{ "%.1f"|format(exam.percentage) }}%</span>
+                                    {% elif exam.percentage >= 60 %}
+                                        <span class="badge bg-info">{{ "%.1f"|format(exam.percentage) }}%</span>
+                                    {% elif exam.percentage >= 40 %}
+                                        <span class="badge bg-warning">{{ "%.1f"|format(exam.percentage) }}%</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">{{ "%.1f"|format(exam.percentage) }}%</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if exam.grade in ['A+', 'A'] %}
+                                        <span class="badge bg-success">{{ exam.grade }}</span>
+                                    {% elif exam.grade in ['B+', 'B'] %}
+                                        <span class="badge bg-info">{{ exam.grade }}</span>
+                                    {% elif exam.grade in ['C+', 'C'] %}
+                                        <span class="badge bg-warning">{{ exam.grade }}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">{{ exam.grade }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if exam.overall_status == 'Pass' %}
+                                        <span class="badge bg-success">Pass</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Fail</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-info" onclick="viewExamDetails({{ exam.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <a href="{{ url_for('report_card_pdf', exam_id=exam.id) }}" class="btn btn-outline-primary" target="_blank">
+                                            <i class="fas fa-file-alt"></i> Report
+                                        </a>
+                                        {% if current_user.role.access_type == 'Edit' %}
+                                        <a href="#" class="btn btn-outline-secondary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if exam.overall_status == 'Pass' %}
+                                        <button class="btn btn-outline-success" onclick="promoteStudent({{ student.id }})">
+                                            <i class="fas fa-level-up-alt"></i> Promote
+                                        </button>
+                                        {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if exams.pages > 1 %}
+                <nav aria-label="Exam results pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if exams.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('exams', page=exams.prev_num, **request.args) }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in exams.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != exams.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('exams', page=page_num, **request.args) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if exams.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('exams', page=exams.next_num, **request.args) }}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Exam Analytics -->
+<div class="row mt-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Grade Distribution</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="gradeDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Subject-wise Performance</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="subjectPerformanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Performers -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Top Performers</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Student</th>
+                                <th>Course</th>
+                                <th>Percentage</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-warning">1st</span></td>
+                                <td>Priya Sharma</td>
+                                <td>BA</td>
+                                <td>94.5%</td>
+                                <td><span class="badge bg-success">A+</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-secondary">2nd</span></td>
+                                <td>Raj Kumar</td>
+                                <td>BSC</td>
+                                <td>92.3%</td>
+                                <td><span class="badge bg-success">A+</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-secondary">3rd</span></td>
+                                <td>Amit Singh</td>
+                                <td>BA</td>
+                                <td>89.7%</td>
+                                <td><span class="badge bg-success">A</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Exam Schedule</h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">BA Final Semester</h6>
+                            <small>15 Feb 2025</small>
+                        </div>
+                        <p class="mb-1">Final examination for BA students</p>
+                        <small class="text-muted">Duration: 3 hours each paper</small>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">BSC Mid-term</h6>
+                            <small>25 Feb 2025</small>
+                        </div>
+                        <p class="mb-1">Mid-semester examination for BSC</p>
+                        <small class="text-muted">Duration: 2 hours each paper</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewExamDetails(examId) {
+    // Open exam details modal
+    alert('View exam details for ID: ' + examId);
+}
+
+function promoteStudent(studentId) {
+    if (confirm('Are you sure you want to promote this student to next class?')) {
+        // In a real implementation, send promotion request
+        alert('Student promoted successfully! New fee record created.');
+    }
+}
+
+// Grade Distribution Chart
+document.addEventListener('DOMContentLoaded', function() {
+    const gradeCtx = document.getElementById('gradeDistributionChart').getContext('2d');
+    new Chart(gradeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['A+', 'A', 'B+', 'B', 'C+', 'C', 'F'],
+            datasets: [{
+                data: [15, 22, 18, 12, 8, 5, 3],
+                backgroundColor: [
+                    '#28a745', '#20c997', '#17a2b8', '#ffc107', 
+                    '#fd7e14', '#6f42c1', '#dc3545'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Subject Performance Chart
+    const subjectCtx = document.getElementById('subjectPerformanceChart').getContext('2d');
+    new Chart(subjectCtx, {
+        type: 'bar',
+        data: {
+            labels: ['English', 'Hindi', 'Mathematics', 'History', 'Political Science'],
+            datasets: [{
+                label: 'Average Score (%)',
+                data: [78, 82, 65, 75, 73],
+                backgroundColor: '#4e73df'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

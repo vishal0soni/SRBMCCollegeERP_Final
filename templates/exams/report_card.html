@@ -1,0 +1,461 @@
+{% extends "base.html" %}
+
+{% block title %}Report Card - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="fas fa-file-alt"></i> Student Report Card
+            </h1>
+            <div>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print Report Card
+                </button>
+                <a href="#" class="btn btn-success">
+                    <i class="fas fa-download"></i> Download PDF
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Card Display -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow" id="report-card-content">
+            <div class="card-body">
+                <!-- College Header -->
+                <div class="row mb-4">
+                    <div class="col-12 text-center">
+                        <img src="{{ url_for('static', filename='images/college_logo.svg') }}" alt="SRBMC Logo" width="100" height="100">
+                        <h2 class="mt-3">Shri Raghunath Bishnoi Memorial College (SRBMC)</h2>
+                        <h5 class="text-muted">Raniwara, Jalore, Rajasthan</h5>
+                        <h4 class="text-primary mt-3">STUDENT REPORT CARD</h4>
+                        <div class="border-bottom border-primary mt-2"></div>
+                    </div>
+                </div>
+                
+                <!-- Student Information -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="text-primary mb-3">Student Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td width="40%"><strong>Student ID:</strong></td>
+                                        <td>BA-25-001</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Student Name:</strong></td>
+                                        <td>Raj Kumar</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Father's Name:</strong></td>
+                                        <td>Suresh Kumar</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Course:</strong></td>
+                                        <td>Bachelor of Arts (BA)</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td width="40%"><strong>Academic Year:</strong></td>
+                                        <td>2024-25</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Semester:</strong></td>
+                                        <td>3rd Semester</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Examination:</strong></td>
+                                        <td>Final Semester Examination</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Exam Date:</strong></td>
+                                        <td>December 2024</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Subject-wise Marks -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="text-primary mb-3">Subject-wise Performance</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th rowspan="2" class="text-center align-middle">Sr. No.</th>
+                                        <th rowspan="2" class="text-center align-middle">Subject Name</th>
+                                        <th colspan="2" class="text-center">Marks</th>
+                                        <th rowspan="2" class="text-center align-middle">Percentage</th>
+                                        <th rowspan="2" class="text-center align-middle">Grade</th>
+                                        <th rowspan="2" class="text-center align-middle">Result</th>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-center">Max</th>
+                                        <th class="text-center">Obtained</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="text-center">1</td>
+                                        <td>English Literature</td>
+                                        <td class="text-center">100</td>
+                                        <td class="text-center">85</td>
+                                        <td class="text-center">85.0%</td>
+                                        <td class="text-center"><span class="badge bg-success">A</span></td>
+                                        <td class="text-center"><span class="badge bg-success">Pass</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center">2</td>
+                                        <td>Hindi Literature</td>
+                                        <td class="text-center">100</td>
+                                        <td class="text-center">78</td>
+                                        <td class="text-center">78.0%</td>
+                                        <td class="text-center"><span class="badge bg-info">B+</span></td>
+                                        <td class="text-center"><span class="badge bg-success">Pass</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center">3</td>
+                                        <td>Political Science</td>
+                                        <td class="text-center">100</td>
+                                        <td class="text-center">82</td>
+                                        <td class="text-center">82.0%</td>
+                                        <td class="text-center"><span class="badge bg-success">A</span></td>
+                                        <td class="text-center"><span class="badge bg-success">Pass</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center">4</td>
+                                        <td>History</td>
+                                        <td class="text-center">100</td>
+                                        <td class="text-center">75</td>
+                                        <td class="text-center">75.0%</td>
+                                        <td class="text-center"><span class="badge bg-info">B+</span></td>
+                                        <td class="text-center"><span class="badge bg-success">Pass</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center">5</td>
+                                        <td>Economics</td>
+                                        <td class="text-center">100</td>
+                                        <td class="text-center">70</td>
+                                        <td class="text-center">70.0%</td>
+                                        <td class="text-center"><span class="badge bg-info">B+</span></td>
+                                        <td class="text-center"><span class="badge bg-success">Pass</span></td>
+                                    </tr>
+                                    <tr class="table-secondary">
+                                        <td colspan="2" class="text-center"><strong>TOTAL</strong></td>
+                                        <td class="text-center"><strong>500</strong></td>
+                                        <td class="text-center"><strong>390</strong></td>
+                                        <td class="text-center"><strong>78.0%</strong></td>
+                                        <td class="text-center"><span class="badge bg-info fs-6">B+</span></td>
+                                        <td class="text-center"><span class="badge bg-success fs-6">PASS</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Performance Summary -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card bg-light h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">Performance Summary</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-borderless mb-0">
+                                    <tr>
+                                        <td><strong>Total Subjects:</strong></td>
+                                        <td>5</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Subjects Passed:</strong></td>
+                                        <td>5</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Subjects Failed:</strong></td>
+                                        <td>0</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Overall Percentage:</strong></td>
+                                        <td><strong>78.0%</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Overall Grade:</strong></td>
+                                        <td><span class="badge bg-info">B+</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Overall Result:</strong></td>
+                                        <td><span class="badge bg-success">PASS</span></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card bg-light h-100">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">Grade Analysis</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="gradeChart" width="200" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Class Performance Comparison -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card bg-light">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">Class Performance Comparison</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-md-3">
+                                        <h6>Class Highest</h6>
+                                        <h4 class="text-success">92.5%</h4>
+                                        <small class="text-muted">Priya Sharma</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h6>Class Average</h6>
+                                        <h4 class="text-primary">72.3%</h4>
+                                        <small class="text-muted">Overall Class</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h6>Student Rank</h6>
+                                        <h4 class="text-warning">3rd</h4>
+                                        <small class="text-muted">Out of 45 students</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h6>Improvement</h6>
+                                        <h4 class="text-success">+5.2%</h4>
+                                        <small class="text-muted">From last semester</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Grading Scale -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card bg-light">
+                            <div class="card-header bg-secondary text-white">
+                                <h6 class="mb-0">Grading Scale</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col">A+ : 90-100%</div>
+                                    <div class="col">A : 80-89%</div>
+                                    <div class="col">B+ : 70-79%</div>
+                                    <div class="col">B : 60-69%</div>
+                                    <div class="col">C+ : 50-59%</div>
+                                    <div class="col">C : 40-49%</div>
+                                    <div class="col">F : Below 40%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Remarks and Attendance -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card bg-light h-100">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0">Attendance Record</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-borderless mb-0">
+                                    <tr>
+                                        <td><strong>Total Working Days:</strong></td>
+                                        <td>120</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Days Present:</strong></td>
+                                        <td>115</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Days Absent:</strong></td>
+                                        <td>5</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Attendance %:</strong></td>
+                                        <td><strong>95.8%</strong></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card bg-light h-100">
+                            <div class="card-header bg-danger text-white">
+                                <h6 class="mb-0">Principal's Remarks</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-0">
+                                    <strong>Excellent performance!</strong> The student has shown consistent improvement 
+                                    and demonstrates strong academic capabilities. Regular attendance and good 
+                                    participation in class activities. Keep up the good work.
+                                </p>
+                                <hr>
+                                <p class="mb-0">
+                                    <strong>Suggestions for improvement:</strong> Focus more on Economics to achieve 
+                                    better grades. Consider participating in additional academic activities.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Promotion Status -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white text-center">
+                                <h5 class="mb-0">PROMOTION STATUS</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <h4 class="text-success mb-3">
+                                    <i class="fas fa-check-circle"></i> PROMOTED TO NEXT SEMESTER
+                                </h4>
+                                <p class="text-muted">
+                                    The student has successfully completed the requirements for this semester 
+                                    and is promoted to the 4th Semester.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Authorization -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <p><strong>Class Teacher</strong></p>
+                            <div class="signature-line">
+                                <br><br>
+                                ________________________
+                            </div>
+                            <p class="mt-2">Dr. Meera Sharma</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <p><strong>Exam Controller</strong></p>
+                            <div class="signature-line">
+                                <br><br>
+                                ________________________
+                            </div>
+                            <p class="mt-2">Prof. Rajesh Kumar</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <p><strong>Principal</strong></p>
+                            <div class="signature-line">
+                                <br><br>
+                                ________________________
+                            </div>
+                            <p class="mt-2">Dr. Vishal Bishnoi</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-12 text-center">
+                        <small class="text-muted">
+                            Date of Issue: {{ moment().format('DD/MM/YYYY') }}<br>
+                            This is a computer-generated report card. For verification, contact: admin@srbmc.edu.in
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Grade Distribution Chart for Student Performance
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('gradeChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['A Grade', 'B+ Grade', 'Other Grades'],
+            datasets: [{
+                data: [2, 3, 0],
+                backgroundColor: ['#28a745', '#17a2b8', '#6c757d']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            size: 10
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+
+// Print styles
+const style = document.createElement('style');
+style.textContent = `
+    @media print {
+        .btn, .d-flex.justify-content-between, nav {
+            display: none !important;
+        }
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        body { 
+            font-size: 11px; 
+        }
+        h2 { font-size: 20px; }
+        h4 { font-size: 16px; }
+        h5 { font-size: 14px; }
+        h6 { font-size: 12px; }
+        .table th, .table td {
+            padding: 0.3rem !important;
+            font-size: 10px;
+        }
+        .badge {
+            font-size: 9px !important;
+        }
+        .signature-line {
+            border-bottom: 1px solid #000;
+            margin: 10px 0;
+        }
+        @page {
+            margin: 0.5in;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

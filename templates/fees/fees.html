@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block title %}Fee Management - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="fas fa-money-bill"></i> Fee Management
+            </h1>
+            {% if current_user.role.access_type == 'Edit' %}
+            <div>
+                <a href="{{ url_for('payment') }}" class="btn btn-primary me-2">
+                    <i class="fas fa-plus"></i> Process Payment
+                </a>
+                <a href="#" class="btn btn-success">
+                    <i class="fas fa-download"></i> Export
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Fee Summary Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Fees Due</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">₹12,45,000</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Fees Collected</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">₹8,75,000</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-credit-card fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Dues</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">₹3,70,000</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Students with Dues</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">45</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="course" class="form-label">Course</label>
+                        <select name="course" id="course" class="form-select">
+                            <option value="">All Courses</option>
+                            <option value="BA">Bachelor of Arts (BA)</option>
+                            <option value="BSC">Bachelor of Science (BSC)</option>
+                            <option value="MA">Master of Arts (MA)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="payment_status" class="form-label">Payment Status</label>
+                        <select name="payment_status" id="payment_status" class="form-select">
+                            <option value="">All Status</option>
+                            <option value="paid">Fully Paid</option>
+                            <option value="partial">Partially Paid</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="scholarship" class="form-label">Scholarship Status</label>
+                        <select name="scholarship" id="scholarship" class="form-select">
+                            <option value="">All</option>
+                            <option value="approved">Approved</option>
+                            <option value="pending">Pending</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                            <a href="{{ url_for('fees') }}" class="btn btn-secondary">Clear</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fee Records Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    Student Fee Records ({{ fees.total }} records)
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student</th>
+                                <th>Course</th>
+                                <th>Total Fees</th>
+                                <th>Paid Amount</th>
+                                <th>Due Amount</th>
+                                <th>Installments</th>
+                                <th>Payment Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fee_record, student in fees.items %}
+                            {% set total_paid = (fee_record.installment_1 or 0) + (fee_record.installment_2 or 0) + (fee_record.installment_3 or 0) + (fee_record.installment_4 or 0) + (fee_record.installment_5 or 0) + (fee_record.installment_6 or 0) %}
+                            {% set due_amount = (fee_record.total_fee or 0) - total_paid %}
+                            <tr>
+                                <td>
+                                    <strong>{{ student.student_unique_id }}</strong><br>
+                                    <small>{{ student.first_name }} {{ student.last_name }}</small>
+                                </td>
+                                <td>{{ student.current_course }}</td>
+                                <td>
+                                    <strong>₹{{ "%.2f"|format(fee_record.total_fee or 0) }}</strong>
+                                </td>
+                                <td>
+                                    <span class="text-success">₹{{ "%.2f"|format(total_paid) }}</span>
+                                </td>
+                                <td>
+                                    {% if due_amount > 0 %}
+                                        <span class="text-danger">₹{{ "%.2f"|format(due_amount) }}</span>
+                                    {% else %}
+                                        <span class="text-success">₹0.00</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>
+                                        {% set installments = [
+                                            (fee_record.installment_1, fee_record.invoice1_number),
+                                            (fee_record.installment_2, fee_record.invoice2_number),
+                                            (fee_record.installment_3, fee_record.invoice3_number),
+                                            (fee_record.installment_4, fee_record.invoice4_number),
+                                            (fee_record.installment_5, fee_record.invoice5_number),
+                                            (fee_record.installment_6, fee_record.invoice6_number)
+                                        ] %}
+                                        {% for amount, invoice_num in installments %}
+                                            {% if amount and amount > 0 %}
+                                                <span class="badge bg-success mb-1">₹{{ amount }}</span><br>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </small>
+                                </td>
+                                <td>
+                                    {% if due_amount <= 0 %}
+                                        <span class="badge bg-success">Paid</span>
+                                    {% elif total_paid > 0 %}
+                                        <span class="badge bg-warning">Partial</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-info" onclick="viewFeeDetails({{ fee_record.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        {% if current_user.role.access_type == 'Edit' %}
+                                        <a href="{{ url_for('payment') }}?student_id={{ student.id }}" class="btn btn-outline-primary">
+                                            <i class="fas fa-plus"></i> Pay
+                                        </a>
+                                        {% endif %}
+                                        <button class="btn btn-outline-secondary" onclick="generateFeeStatement({{ student.id }})">
+                                            <i class="fas fa-print"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if fees.pages > 1 %}
+                <nav aria-label="Fee records pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if fees.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('fees', page=fees.prev_num, **request.args) }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in fees.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != fees.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('fees', page=page_num, **request.args) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if fees.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('fees', page=fees.next_num, **request.args) }}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fee Collection Chart -->
+<div class="row mt-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Monthly Fee Collection</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyCollectionChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Payment Mode Distribution</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="paymentModeChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewFeeDetails(feeId) {
+    // Open fee details modal
+    alert('View fee details for ID: ' + feeId);
+}
+
+function generateFeeStatement(studentId) {
+    // Generate fee statement PDF
+    window.open('/fee-statement/' + studentId + '/pdf', '_blank');
+}
+
+// Monthly Collection Chart
+document.addEventListener('DOMContentLoaded', function() {
+    const monthlyCtx = document.getElementById('monthlyCollectionChart').getContext('2d');
+    new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: [{
+                label: 'Collection (₹)',
+                data: [45000, 52000, 48000, 61000, 55000, 67000, 72000, 58000, 64000, 70000, 0, 0],
+                borderColor: '#1cc88a',
+                backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Payment Mode Chart
+    const paymentCtx = document.getElementById('paymentModeChart').getContext('2d');
+    new Chart(paymentCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Cash', 'Online', 'Cheque', 'DD'],
+            datasets: [{
+                data: [65, 25, 8, 2],
+                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
