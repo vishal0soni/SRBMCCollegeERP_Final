@@ -33,10 +33,11 @@ body {
 }
 
 .college-logo {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     margin-bottom: 1rem;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+    border: 3px solid rgba(255,255,255,0.3);
 }
 
 .college-title {
@@ -61,10 +62,13 @@ body {
 .navbar-brand img {
     border-radius: 50%;
     transition: transform 0.3s ease;
+    border: 2px solid rgba(255,255,255,0.2);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .navbar-brand:hover img {
     transform: scale(1.1);
+    border-color: rgba(255,255,255,0.4);
 }
 
 .navbar-nav .nav-link {
@@ -551,8 +555,8 @@ body {
     }
     
     .college-logo {
-        width: 60px;
-        height: 60px;
+        width: 80px;
+        height: 80px;
     }
     
     .stats-value {

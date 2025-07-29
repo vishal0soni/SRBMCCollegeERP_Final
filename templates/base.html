@@ -19,7 +19,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('index') }}">
-                <img src="{{ url_for('static', filename='images/college_logo.svg') }}" alt="SRBMC Logo" width="40" height="40" class="me-2">
+                <img src="{{ url_for('static', filename='images/college_logo.jpg') }}" alt="SRBMC Logo" width="50" height="50" class="me-2 rounded-circle">
                 <span class="college-name">SRBMC ERP</span>
             </a>
             
@@ -136,7 +136,7 @@
         <div class="row mb-4">
             <div class="col-12">
                 <div class="college-header text-center">
-                    <img src="{{ url_for('static', filename='images/college_logo.svg') }}" alt="SRBMC Logo" class="college-logo">
+                    <img src="{{ url_for('static', filename='images/college_logo.jpg') }}" alt="SRBMC Logo" class="college-logo rounded-circle">
                     <h2 class="college-title">Shri Raghunath Bishnoi Memorial College (SRBMC), Raniwara</h2>
                     <p class="college-subtitle">Excellence in Education</p>
                 </div>
