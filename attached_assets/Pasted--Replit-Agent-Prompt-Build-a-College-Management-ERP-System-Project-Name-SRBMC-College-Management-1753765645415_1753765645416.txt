@@ -1,0 +1,213 @@
+✅ Replit Agent Prompt: Build a College Management ERP System
+Project Name: SRBMC College Management ERP
+Project Description:
+Develop a web-based College Management ERP portal for Shri Raghunath Bishnoi Memorial College (SRBMC), Raniwara. The system will include modules for user administration, student admission, course and subject management, fees and financial handling, exam and grading system, and invoice tracking. The goal is to streamline administrative processes and ensure secure, role-based access for different users such as administrators, staff, and finance officers.
+
+✅ Target Platform
+Platform: Web
+ Frontend: Basic HTML templates (Flask Jinja2)
+ Backend: Python Flask
+ Database: PostgreSQL
+
+✅ Operating Environment
+Type: Online
+ (Ensure email and PDF generation features are supported)
+
+✅ Hosting Options
+To be hosted on: On Replit only
+
+✅ Language Preferences
+Language for Replit Agent communication: English
+
+
+Language for Application Interface: English
+
+
+
+✅ Interface Style
+Clean and user-friendly
+Tabular views with pagination and sorting
+Dashboard-style data visualizations per module
+Role-specific views and controls
+
+
+
+✅ Modules and Functionality
+
+🔐 Administrator Module:
+Tables:
+UserProfile: Role_Id, FirstName, LastName, Email, Phone, Gender, Birthdate, Street, Area_Village, City_Tehsil, State, UserName, Password_Hash, Status
+UserRole: Role_Id, RoleName, Role_Description, Access_type,  Access_level
+
+
+Features using UserProfile:
+Add/edit/delete user profiles with validation
+Default users: Vishal/Vishal, Sonali/Sonali, admin/admin
+Each logged-in user sees their name in the UI with a profile link. They can view and edit their own profile.
+Email-based temporary password on user creation
+Secure password hashing & storage
+Password reset/change features for all users (self-service + admin override)
+Administrator role has full access to manage users (Edit & Delete) within the User Management module.
+
+Features using UserRole:
+Role-based access control
+Access_type logic:
+Edit: Can add/edit/delete in their assigned modules
+Read: Can only view dashboards and listings
+Determines which dashboard buttons are shown
+
+
+Dashboards Behavior:
+When a user logs in:
+Fetch Role_Id → Access_type
+Show allowed dashboards
+Render buttons:
+If Access_type = Edit → Show Edit/Delete actions
+If Access_type = Read → Hide Edit/Delete actions
+
+
+
+🧾 Student Admission Module:
+Table: 
+Students : Student_Unique_ID (e.g., BA-25-001), External_ID, FirstName, LastName, FatherName, MotherName, Gender, Category, Email, Current_Course (references CourseDetails.Course_FullName, Subject_1_Name, Subject_2_Name, Subject_3_Name, Percentage,  Street, Area_Village, City_Tehsil, State, Phone, Aadhaar_Card_Number, SchoolName, Scholarship_Status, Rebate_Meera_Scholarship_Status,  Dropout_Status
+Features:
+Auto-generate Student_Unique_ID (e.g. BA-25-001) based on this logic: CourseShortname + Admission year + Student_ID.  
+External_ID support (for legacy IDs)
+Scholarship Status & Meera Rebate Status have dropdown values: Applied, Approved, Rejected 
+Admission form with dropdowns for course/year, multiselect for subjects
+Print-friendly Student Details Report
+‘All Student’ dashboard to list all students with sort capabilities for all column headers, and filters for:
+Course/class
+Gender (Male / Female / Other) 
+Category (General / SC / ST / OBC)
+Status (Active / Dropout)
+Government Scholarship and Meera Rebate distributions (Applied / Approved/ Rejected)
+‘Student Summary’ Dashboard: 
+Student admission counts by month/year/course, with filters for course, year etc.
+Role Based Access
+Edit Access Users
+Roles: Administrator, Admission Officer, Accountant, Exam Controller
+Permissions:
+Full CRUD on Student records (Add/Edit/Delete/View)
+Can access all dashboards and reports.
+Can manage scholarship & rebate statuses.
+Read Access users
+Roles: Admission Assistant, Accountant Assistant, Exam Assistant
+Permissions:
+View-only access to dashboards, student lists, and reports.
+No Add/Edit/Delete buttons.
+Can filter, search, and sort but cannot modify records.
+
+📚 Course Management Module:
+Tables:
+Courses: Course_Id, Course_ShortName, Course_FullName, Course_Category, Duration
+CourseDetails: Course_FullName, Course_ShortName (e.g., BA, BSC), Year_Semester, Course_Tuition_Fee, Course_Type, Misc_Course_fees_1	, Misc_Course_fees_2, Misc_Course_fees_3, Misc_Course_fees_4, Misc_Course_fees_5, Misc_Course_fees_6, Total_Course_Fees
+Subjects: Linked to Courses (via field Course_Shortname), with SubjectName and Subject_Type (Compulsory/Elective)
+
+
+Features:
+Add/Edit/Delete Courses.
+After adding a new course, the system should allow adding new subjects immediately (linked to that course). 
+Add/Edit/Delete Subjects linked to courses.
+UI Button to Add Miscellaneous Fees per course
+Auto-calculate and update Total_Course_Fees when fees are modified.
+Role Based Access: 
+Edit Access users: Administrator, Admission officer
+Full CRUD on courses, subjects, and fees.
+
+
+Read Access users: Admission Assistant
+View-only dashboards and lists.
+Cannot add/edit/delete.
+
+Dashboards: 
+Enrollments count per course/subject
+subject-wise distribution 
+course-wise distribution
+Sorting and filters (course category, duration, type).
+
+
+
+💵 Fees / Finance Management Module:
+Tables:
+CollegeFees: Student_Id, Course_Id, Course_Tuition_Fee (references CourseDetails.Total_Course_Fees), Enrollment_Fee, Eligibility_Certificate_Fee, University_Affiliation_Fee, University_Sports_Fee, University_Development_Fee, TC/CC_Fee, Miscellaneous_Fee_1, Miscellaneous_Fee_2, Miscellaneous_Fee_3, Total_Fee, Payment_Mode, Installment_1, Invoice1_Number, Installment_2, Invoice2_Number, Installment_3, Invoice3_Number, Installment_4, Invoice4_Number, Installment_5, Invoice5_Number, Installment_6, Invoice6_Number, Total_Fees_Paid, Meera_Rebate_Applied, Meera_Rebate_Approved, Meera_Rebate_Granted, Meera_Rebate_Amount, Scholarship_Applied, Scholarship_Approved, Scholarship_Granted, Government_Scholarship_Amount, Total_Amount_Due, Pending_Dues_For_Libraries (Yes/No), Pending_Dues_For_Hostel  (Yes/No), 	Exam_Admit_Card_Issued (Yes/No).
+Invoices: Student_Id, Course_Id, Invoice_Number, Date_Time, Invoice_Amount, Original_Invoice_Printed
+
+
+Features:
+For every payment, system will:
+Create a new entry in Invoices table
+Update current CollegeFees row for that Student+Course:
+Identify the next empty installment slot (e.g., Installment_3 if 2 paid)
+Fill Installment_3 and Invoice3_Number
+Support up to 6 Installments with tracking
+Students can pay installment of different values each time (not necessarily same)
+Add/Edit/Delete payments, Generate Invoice (PDF)
+Add miscellaneous fee heads dynamically
+Logic:
+Meera_Scholarship affects total due
+Government_Scholarship does NOT reduce paid total
+Include some logic to make sure CollegeFees.Course_Tuition_Fee = CourseDetails.Total_Course_Fees
+
+
+Dashboard (Along with appropriate sort and filtering capabilities):
+Fee collection summary (Total fees, fees paid till  date, due amount)
+Due reports per student and course (with ability to sort)
+Real-time deposit tracking 
+Admit card generation only if dues cleared
+Role Access: Accountant, Administrator
+📝 Examination & Grades Module:
+Table: Exams storing marks for up to 6 subjects
+Fields include:
+Student_Id, Course_Id, Semester, ExamName, Subject-wise Max/Obtained Marks, Total, Percentage, Grade, Overall_Status
+Features:
+Enter/Edit Marks
+Grade calculation + pass/fail logic
+Generate Report Card (PDF)
+View and print Result Summary
+Role Access: Exam Controller, Administrator
+Add button: “Promote to Next Class”
+Action: Only enabled if a student has passed the final exam. 
+On click:
+Create new entry in CollegeFees, using the same Student_Id
+Use next course/year/semester
+All fee fields initialized to 0
+In the ‘Student’ table, increment the ‘current_course’ to next year or semester.
+Dashboard: Exam results per course, year, with ability for subject-wise distribution, attended-school-wise distribution, area-wise distribution, course-wise distribution, along with appropriate filters and sort capabilities.
+Add a button to ‘Prompt to Next Class’, this happens only when a student clears current year class. Pressing this button would create a new entry for this student in the CollegeFees, using same student ID, but the course is the next year or semester course, and all Fees amounts default to  zero for that entry. 
+
+
+
+🧾 Invoice Management Module:
+Reuse Invoices table from Finance Module
+Auto-generate Invoice_Number
+Track Installments 1–6 with columns like Installment_1, Invoice1_Number, etc.
+Track original vs duplicate invoice. For this, use field: Original_Invoice_Printed → enable duplicate printing only after original
+Invoice Format:
+Student ID, Name, Course, Date-Time, Fee breakdown, Total Paid
+
+
+
+✅ Expected Outputs
+HTML pages for each module
+Dashboards per role/module for stats and finance
+Tabular views with sorting & pagination
+Printable Reports (Student Details, Report Cards, Invoices)
+Email integration for onboarding
+PDF Generation for Invoices and Report Cards
+
+✅ Additional Features
+Email integration for password delivery and password reset
+Secure authentication using Flask-Login
+Password hashing with Werkzeug or similar
+Responsive table components with sorting and pagination
+Role-based access enforced across views
+
+
+
+
+	
+
+
+
+
