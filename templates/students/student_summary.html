@@ -276,7 +276,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep
 new Chart(monthlyCtx, {
     type: 'line',
     data: {
-        labels: [{% for month, year, count in monthly_admissions %}'{{ monthNames[month-1] }} {{ year }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        labels: [{% for month, year, count in monthly_admissions %}'{{ monthNames[month|int - 1] }} {{ year }}'{% if not loop.last %},{% endif %}{% endfor %}],
         datasets: [{
             label: 'Admissions',
             data: [{% for month, year, count in monthly_admissions %}{{ count }}{% if not loop.last %},{% endif %}{% endfor %}],

@@ -1,0 +1,161 @@
+
+{% extends "base.html" %}
+
+{% block title %}Invoices - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="fas fa-file-invoice"></i> Invoice Management
+            </h1>
+            {% if current_user.role.access_type == 'Edit' %}
+            <div>
+                <a href="{{ url_for('payment') }}" class="btn btn-primary me-2">
+                    <i class="fas fa-plus"></i> Process Payment
+                </a>
+                <a href="#" class="btn btn-success">
+                    <i class="fas fa-download"></i> Export
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Invoices Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    All Invoices ({{ invoices.total }} records)
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Invoice Number</th>
+                                <th>Student</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Installment</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice, student in invoices.items %}
+                            <tr>
+                                <td>
+                                    <strong>{{ invoice.invoice_number }}</strong>
+                                </td>
+                                <td>
+                                    {{ student.student_unique_id }}<br>
+                                    <small class="text-muted">{{ student.first_name }} {{ student.last_name }}</small>
+                                </td>
+                                <td>{{ invoice.date_time.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>₹{{ "%.2f"|format(invoice.invoice_amount) }}</td>
+                                <td>
+                                    <span class="badge bg-info">Installment {{ invoice.installment_number }}</span>
+                                </td>
+                                <td>
+                                    {% if invoice.original_invoice_printed %}
+                                        <span class="badge bg-success">Printed</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Not Printed</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('invoice_pdf', invoice_id=invoice.id) }}" class="btn btn-outline-primary" target="_blank">
+                                            <i class="fas fa-file-pdf"></i> PDF
+                                        </a>
+                                        <button class="btn btn-outline-info" onclick="viewInvoice({{ invoice.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        {% if current_user.role.access_type == 'Edit' %}
+                                        <button class="btn btn-outline-success" onclick="markPrinted({{ invoice.id }})">
+                                            <i class="fas fa-print"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if invoices.pages > 1 %}
+                <nav aria-label="Invoice pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if invoices.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('invoices', page=invoices.prev_num) }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in invoices.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != invoices.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('invoices', page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if invoices.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('invoices', page=invoices.next_num) }}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewInvoice(invoiceId) {
+    // Open invoice details modal or redirect to detail page
+    window.open(`/invoice/${invoiceId}/pdf`, '_blank');
+}
+
+function markPrinted(invoiceId) {
+    if (confirm('Mark this invoice as printed?')) {
+        fetch(`/invoice/${invoiceId}/mark-printed`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error updating invoice status');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

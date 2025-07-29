@@ -104,7 +104,7 @@
                             
                             <div class="col-md-6 mb-3">
                                 <label for="paymentDate" class="form-label">Payment Date</label>
-                                <input type="date" class="form-control" id="paymentDate" value="{{ moment().format('YYYY-MM-DD') }}">
+                                <input type="date" class="form-control" id="paymentDate">
                             </div>
                         </div>
                         
@@ -301,6 +301,10 @@ function previewPayment() {
 
 // Event listeners
 document.getElementById('{{ form.payment_mode.id }}').addEventListener('change', updatePaymentSummary);
-document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+
+// Initialize payment date
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+});
 </script>
 {% endblock %}

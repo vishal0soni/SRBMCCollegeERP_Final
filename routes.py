@@ -498,6 +498,115 @@ def api_fee_stats():
         'amounts': [float(amount) for month, amount in monthly_collections]
     })
 
+# Subject Routes
+@app.route('/courses/<int:course_id>/subjects')
+@login_required
+def course_subjects(course_id):
+    if not can_edit_module(current_user, 'courses'):
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    course = Course.query.get_or_404(course_id)
+    subjects = Subject.query.filter_by(course_short_name=course.course_short_name).all()
+    return render_template('courses/subjects.html', course=course, subjects=subjects)
+
+@app.route('/courses/<int:course_id>/subjects/add', methods=['GET', 'POST'])
+@login_required
+def add_subject(course_id):
+    if not can_edit_module(current_user, 'courses'):
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    course = Course.query.get_or_404(course_id)
+    form = SubjectForm()
+    form.course_short_name.data = course.course_short_name
+    form.course_short_name.choices = [(course.course_short_name, course.course_full_name)]
+    
+    if form.validate_on_submit():
+        subject = Subject(
+            course_short_name=form.course_short_name.data,
+            subject_name=form.subject_name.data,
+            subject_type=form.subject_type.data
+        )
+        
+        try:
+            db.session.add(subject)
+            db.session.commit()
+            flash('Subject added successfully!', 'success')
+            return redirect(url_for('course_subjects', course_id=course_id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error adding subject: {str(e)}', 'error')
+    
+    return render_template('courses/subject_form.html', form=form, title='Add Subject', course=course)
+
+@app.route('/invoices')
+@login_required
+def invoices():
+    if not can_edit_module(current_user, 'fees'):
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    page = request.args.get('page', 1, type=int)
+    invoices = db.session.query(Invoice, Student).join(Student).paginate(page=page, per_page=20, error_out=False)
+    return render_template('fees/invoices.html', invoices=invoices)
+
+@app.route('/students/<int:student_id>')
+@login_required
+def view_student(student_id):
+    if not can_edit_module(current_user, 'students'):
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    student = Student.query.get_or_404(student_id)
+    return render_template('students/student_detail.html', student=student)
+
+@app.route('/students/edit/<int:student_id>', methods=['GET', 'POST'])
+@login_required
+def edit_student(student_id):
+    if not can_edit_module(current_user, 'students') or current_user.role.access_type != 'Edit':
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    student = Student.query.get_or_404(student_id)
+    form = StudentForm(obj=student)
+    form.current_course.choices = [(cd.course_full_name, cd.course_full_name) for cd in CourseDetails.query.all()]
+    
+    subjects = Subject.query.all()
+    form.subject_1_name.choices = [('', 'Select Subject')] + [(s.subject_name, s.subject_name) for s in subjects]
+    form.subject_2_name.choices = [('', 'Select Subject')] + [(s.subject_name, s.subject_name) for s in subjects]
+    form.subject_3_name.choices = [('', 'Select Subject')] + [(s.subject_name, s.subject_name) for s in subjects]
+    
+    if form.validate_on_submit():
+        form.populate_obj(student)
+        student.updated_at = datetime.utcnow()
+        
+        try:
+            db.session.commit()
+            flash('Student updated successfully!', 'success')
+            return redirect(url_for('students'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating student: {str(e)}', 'error')
+    
+    return render_template('students/student_form.html', form=form, title='Edit Student', student=student)
+
+@app.route('/students/delete/<int:student_id>', methods=['DELETE'])
+@login_required
+def delete_student(student_id):
+    if not can_edit_module(current_user, 'students') or current_user.role.access_type != 'Edit':
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    student = Student.query.get_or_404(student_id)
+    
+    try:
+        db.session.delete(student)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 # Export Routes
 @app.route('/export/students')
 @login_required

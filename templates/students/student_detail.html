@@ -1,0 +1,173 @@
+
+{% extends "base.html" %}
+
+{% block title %}Student Details - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('students') }}">Students</a></li>
+                <li class="breadcrumb-item active">{{ student.student_unique_id }}</li>
+            </ol>
+        </nav>
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="fas fa-user"></i> Student Details
+            </h1>
+            {% if current_user.role.access_type == 'Edit' %}
+            <a href="{{ url_for('edit_student', student_id=student.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Edit Student
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Personal Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <strong>Student ID:</strong> {{ student.student_unique_id }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>External ID:</strong> {{ student.external_id or 'N/A' }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Name:</strong> {{ student.first_name }} {{ student.last_name }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Father's Name:</strong> {{ student.father_name or 'N/A' }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Mother's Name:</strong> {{ student.mother_name or 'N/A' }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Gender:</strong> {{ student.gender }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Category:</strong> {{ student.category or 'N/A' }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Email:</strong> {{ student.email or 'N/A' }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Phone:</strong> {{ student.phone or 'N/A' }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Aadhaar:</strong> {{ student.aadhaar_card_number or 'N/A' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Academic Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <strong>Current Course:</strong> {{ student.current_course }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Admission Date:</strong> {{ student.admission_date.strftime('%d/%m/%Y') if student.admission_date else 'N/A' }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Subject 1:</strong> {{ student.subject_1_name or 'N/A' }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Subject 2:</strong> {{ student.subject_2_name or 'N/A' }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Subject 3:</strong> {{ student.subject_3_name or 'N/A' }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Percentage:</strong> {{ student.percentage or 'N/A' }}%
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>School Name:</strong> {{ student.school_name or 'N/A' }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Status:</strong> 
+                        {% if student.dropout_status == 'Active' %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-danger">Dropout</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Address</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Street:</strong> {{ student.street or 'N/A' }}</p>
+                <p><strong>Area/Village:</strong> {{ student.area_village or 'N/A' }}</p>
+                <p><strong>City/Tehsil:</strong> {{ student.city_tehsil or 'N/A' }}</p>
+                <p><strong>State:</strong> {{ student.state or 'N/A' }}</p>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Scholarship Status</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Government Scholarship:</strong> 
+                    {% if student.scholarship_status == 'Approved' %}
+                        <span class="badge bg-success">{{ student.scholarship_status }}</span>
+                    {% elif student.scholarship_status == 'Rejected' %}
+                        <span class="badge bg-danger">{{ student.scholarship_status }}</span>
+                    {% else %}
+                        <span class="badge bg-warning">{{ student.scholarship_status }}</span>
+                    {% endif %}
+                </p>
+                <p><strong>Meera Scholarship:</strong> 
+                    {% if student.rebate_meera_scholarship_status == 'Approved' %}
+                        <span class="badge bg-success">{{ student.rebate_meera_scholarship_status }}</span>
+                    {% elif student.rebate_meera_scholarship_status == 'Rejected' %}
+                        <span class="badge bg-danger">{{ student.rebate_meera_scholarship_status }}</span>
+                    {% else %}
+                        <span class="badge bg-warning">{{ student.rebate_meera_scholarship_status }}</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if current_user.role.access_type == 'Edit' %}
+                    <a href="{{ url_for('edit_student', student_id=student.id) }}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Student
+                    </a>
+                    <a href="{{ url_for('payment') }}?student_id={{ student.id }}" class="btn btn-success">
+                        <i class="fas fa-money-bill"></i> Process Payment
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('students') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Students
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

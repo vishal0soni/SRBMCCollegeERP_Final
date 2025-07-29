@@ -70,7 +70,7 @@
                                         <a href="#" class="btn btn-outline-primary">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="#" class="btn btn-outline-secondary">
+                                        <a href="{{ url_for('course_subjects', course_id=course.course_id) }}" class="btn btn-outline-secondary">
                                             <i class="fas fa-list"></i> Subjects
                                         </a>
                                         <button class="btn btn-outline-danger" onclick="deleteCourse({{ course.course_id }})">
