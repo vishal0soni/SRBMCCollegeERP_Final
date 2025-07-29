@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="error-template">
+                <h1>Oops!</h1>
+                <h2>500 - Internal Server Error</h2>
+                <div class="error-details">
+                    Something went wrong on our end. We're working to fix it!
+                </div>
+                <div class="error-actions mt-4">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home"></i> Take Me Home
+                    </a>
+                    <a href="javascript:history.back()" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-refresh"></i> Try Again
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-template {
+    padding: 40px 15px;
+    text-align: center;
+}
+.error-actions {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+.error-actions .btn {
+    margin-right: 10px;
+}
+</style>
+{% endblock %}
