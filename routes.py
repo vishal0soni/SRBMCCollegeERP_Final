@@ -294,12 +294,16 @@ def add_student():
             db.session.add(student)
             db.session.flush()  # Get student ID
             
-            # Create initial fee record
+            # Create initial fee record with course details sync
             course = Course.query.filter_by(course_short_name=course_short).first()
-            if course:
+            course_detail = CourseDetails.query.filter_by(course_full_name=form.current_course.data).first()
+            
+            if course and course_detail:
                 fee_record = CollegeFees(
                     student_id=student.id,
-                    course_id=course.course_id
+                    course_id=course.course_id,
+                    course_tuition_fee=course_detail.total_course_fees,
+                    total_fee=course_detail.total_course_fees
                 )
                 db.session.add(fee_record)
             
@@ -435,6 +439,13 @@ def add_course_details():
                     duration=3  # Default duration
                 )
                 db.session.add(course)
+            
+            # Update existing fee records for this course
+            if course:
+                existing_fees = CollegeFees.query.filter_by(course_id=course.course_id).all()
+                for fee_record in existing_fees:
+                    fee_record.course_tuition_fee = total_fees
+                    fee_record.total_fee = total_fees
             
             db.session.commit()
             flash('Course details added successfully!', 'success')
@@ -973,6 +984,22 @@ def promote_student(student_id):
 def analytics():
     return render_template('analytics/analytics.html')
 
+# API Routes for AJAX calls
+@app.route('/api/subjects/<course_name>')
+@login_required
+def api_get_subjects(course_name):
+    try:
+        # Extract course short name from full name
+        course_detail = CourseDetails.query.filter_by(course_full_name=course_name).first()
+        if course_detail:
+            subjects = Subject.query.filter_by(course_short_name=course_detail.course_short_name).all()
+            subject_list = [{'name': s.subject_name, 'type': s.subject_type} for s in subjects]
+            return jsonify({'success': True, 'subjects': subject_list})
+        else:
+            return jsonify({'success': False, 'subjects': []})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e), 'subjects': []})
+
 # API Routes for charts
 @app.route('/api/student-stats')
 @login_required
@@ -1091,7 +1118,41 @@ def invoices():
         return redirect(url_for('dashboard'))
     
     page = request.args.get('page', 1, type=int)
-    invoices = db.session.query(Invoice, Student).join(Student).paginate(page=page, per_page=20, error_out=False)
+    search = request.args.get('search', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    
+    query = db.session.query(Invoice, Student).join(Student)
+    
+    # Search filters
+    if search:
+        search_filter = or_(
+            Invoice.invoice_number.contains(search),
+            Student.first_name.contains(search),
+            Student.last_name.contains(search),
+            Student.student_unique_id.contains(search)
+        )
+        query = query.filter(search_filter)
+    
+    # Date filters
+    if date_from:
+        try:
+            from_date = datetime.strptime(date_from, '%Y-%m-%d').date()
+            query = query.filter(func.date(Invoice.date_time) >= from_date)
+        except ValueError:
+            pass
+    
+    if date_to:
+        try:
+            to_date = datetime.strptime(date_to, '%Y-%m-%d').date()
+            query = query.filter(func.date(Invoice.date_time) <= to_date)
+        except ValueError:
+            pass
+    
+    # Order by most recent first
+    query = query.order_by(Invoice.date_time.desc())
+    
+    invoices = query.paginate(page=page, per_page=20, error_out=False)
     return render_template('fees/invoices.html', invoices=invoices)
 
 @app.route('/students/<int:student_id>')

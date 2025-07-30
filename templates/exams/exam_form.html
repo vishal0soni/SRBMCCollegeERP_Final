@@ -297,9 +297,6 @@
                             <i class="fas fa-arrow-left"></i> Back to Examinations
                         </a>
                         <div>
-                            <button type="button" class="btn btn-outline-primary me-2" onclick="previewResults()">
-                                <i class="fas fa-eye"></i> Preview
-                            </button>
                             {{ form.submit(class="btn btn-primary") }}
                         </div>
                     </div>
@@ -463,13 +460,7 @@ function getGradeBadgeClass(grade) {
     }
 }
 
-function previewResults() {
-    const percentage = document.getElementById('calculatedPercentage').textContent;
-    const grade = document.getElementById('calculatedGrade').textContent;
-    const status = document.getElementById('overallStatus').textContent;
-    
-    alert(`Exam Results Preview:\nPercentage: ${percentage}\nGrade: ${grade}\nStatus: ${status}`);
-}
+
 
 // Initialize calculations on page load
 document.addEventListener('DOMContentLoaded', function() {

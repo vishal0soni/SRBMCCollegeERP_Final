@@ -54,8 +54,21 @@ class StudentForm(FlaskForm):
 class CourseForm(FlaskForm):
     course_short_name = StringField('Course Short Name', validators=[DataRequired(), Length(max=10)])
     course_full_name = StringField('Course Full Name', validators=[DataRequired(), Length(max=200)])
-    course_category = StringField('Course Category', validators=[Length(max=100)])
-    duration = IntegerField('Duration (Years)', validators=[DataRequired()])
+    course_category = SelectField('Course Category', choices=[
+        ('', 'Select Category'),
+        ('Undergraduate', 'Undergraduate'),
+        ('Postgraduate', 'Postgraduate'),
+        ('Diploma', 'Diploma'),
+        ('Certificate', 'Certificate')
+    ], validators=[DataRequired()])
+    duration = SelectField('Duration (Years)', choices=[
+        ('', 'Select Duration'),
+        ('1', '1 Year'),
+        ('2', '2 Years'),
+        ('3', '3 Years'),
+        ('4', '4 Years'),
+        ('5', '5 Years')
+    ], coerce=int, validators=[DataRequired()])
     submit = SubmitField('Save Course')
 
 class CourseDetailsForm(FlaskForm):

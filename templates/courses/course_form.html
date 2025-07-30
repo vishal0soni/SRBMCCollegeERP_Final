@@ -45,7 +45,7 @@
                         
                         <div class="col-md-6 mb-3">
                             {{ form.duration.label(class="form-label") }}
-                            {{ form.duration(class="form-control") }}
+                            {{ form.duration(class="form-select") }}
                             {% if form.duration.errors %}
                                 <div class="text-danger">
                                     {% for error in form.duration.errors %}
@@ -71,8 +71,7 @@
                     
                     <div class="mb-3">
                         {{ form.course_category.label(class="form-label") }}
-                        {{ form.course_category(class="form-control") }}
-                        <small class="text-muted">e.g., Undergraduate, Postgraduate, Diploma</small>
+                        {{ form.course_category(class="form-select") }}
                         {% if form.course_category.errors %}
                             <div class="text-danger">
                                 {% for error in form.course_category.errors %}

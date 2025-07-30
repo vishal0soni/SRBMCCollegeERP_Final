@@ -230,7 +230,7 @@
                     <ul class="pagination justify-content-center">
                         {% if students.has_prev %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('students', page=students.prev_num, **request.args) }}">Previous</a>
+                                <a class="page-link" href="{{ url_for('students', page=students.prev_num, course=request.args.get('course', ''), gender=request.args.get('gender', ''), category=request.args.get('category', ''), status=request.args.get('status', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Previous</a>
                             </li>
                         {% endif %}
 
