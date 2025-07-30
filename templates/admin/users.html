@@ -1,4 +1,7 @@
+The code has been updated to include improved sorting UI with visual indicators and sticky headers for the user table.
+```
 
+```html
 {% extends "base.html" %}
 
 {% block title %}User Management - SRBMC ERP{% endblock %}
@@ -80,57 +83,59 @@
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
-                        <thead class="table-light">
+                        <thead class="table-light sticky-top">
                             <tr>
-                                <th>
-                                    <a href="{{ url_for('admin_users', sort='id', order='desc' if request.args.get('sort') == 'id' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), role=request.args.get('role', '')) }}">
-                                        ID
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('admin_users', sort='id', order='desc' if request.args.get('sort') == 'id' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), role=request.args.get('role', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>ID</span>
                                         {% if request.args.get('sort') == 'id' %}
-                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th>
-                                    <a href="{{ url_for('admin_users', sort='first_name', order='desc' if request.args.get('sort') == 'first_name' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), role=request.args.get('role', '')) }}">
-                                        Name
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('admin_users', sort='first_name', order='desc' if request.args.get('sort') == 'first_name' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), role=request.args.get('role', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Name</span>
                                         {% if request.args.get('sort') == 'first_name' %}
-                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th>
-                                    <a href="{{ url_for('admin_users', sort='username', order='desc' if request.args.get('sort') == 'username' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), role=request.args.get('role', '')) }}">
-                                        Username
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('admin_users', sort='username', order='desc' if request.args.get('sort') == 'username' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), role=request.args.get('role', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Username</span>
                                         {% if request.args.get('sort') == 'username' %}
-                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th>
-                                    <a href="{{ url_for('admin_users', sort='email', order='desc' if request.args.get('sort') == 'email' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), role=request.args.get('role', '')) }}">
-                                        Email
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('admin_users', sort='email', order='desc' if request.args.get('sort') == 'email' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), role=request.args.get('role', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Email</span>
                                         {% if request.args.get('sort') == 'email' %}
-                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th>
-                                    <a href="{{ url_for('admin_users', sort='role_name', order='desc' if request.args.get('sort') == 'role_name' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), role=request.args.get('role', '')) }}">
-                                        Role
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('admin_users', sort='role_name', order='desc' if request.args.get('sort') == 'role_name' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), role=request.args.get('role', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Role</span>
                                         {% if request.args.get('sort') == 'role_name' %}
-                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
                                 <th>Status</th>
-                                <th>
-                                    <a href="{{ url_for('admin_users', sort='created_at', order='desc' if request.args.get('sort') == 'created_at' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), role=request.args.get('role', '')) }}">
-                                        Created
-                                        {% if request.args.get('sort') == 'created_at' %}
-                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
-                                        {% endif %}
-                                    </a>
-                                </th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -151,7 +156,6 @@
                                         <span class="badge bg-danger">Inactive</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ user.created_at.strftime('%d/%m/%Y') }}</td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
                                         <a href="{{ url_for('admin_edit_user', user_id=user.id) }}" class="btn btn-outline-primary">
@@ -169,7 +173,7 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <!-- Pagination -->
                 {% if users.pages > 1 %}
                 <nav aria-label="User pagination">
@@ -179,7 +183,7 @@
                                 <a class="page-link" href="{{ url_for('admin_users', page=users.prev_num, search=request.args.get('search', ''), role=request.args.get('role', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Previous</a>
                             </li>
                         {% endif %}
-                        
+
                         {% for page_num in users.iter_pages() %}
                             {% if page_num %}
                                 {% if page_num != users.page %}
@@ -197,7 +201,7 @@
                                 </li>
                             {% endif %}
                         {% endfor %}
-                        
+
                         {% if users.has_next %}
                             <li class="page-item">
                                 <a class="page-link" href="{{ url_for('admin_users', page=users.next_num, search=request.args.get('search', ''), role=request.args.get('role', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Next</a>

@@ -233,54 +233,122 @@ function showFormLoading(form) {
 
 // Initialize data tables
 function initializeDataTables() {
-    const tables = document.querySelectorAll('.table-sortable');
+    const tables = document.querySelectorAll('.table');
     
     tables.forEach(table => {
-        setupTableSorting(table);
+        setupTableInteractions(table);
         setupTableSearch(table);
     });
 }
 
-// Table sorting functionality
-function setupTableSorting(table) {
-    const headers = table.querySelectorAll('th[data-sortable]');
+// Enhanced table interactions
+function setupTableInteractions(table) {
+    // Add hover effects to sortable headers
+    const sortableHeaders = table.querySelectorAll('.sortable-header');
     
-    headers.forEach(header => {
-        header.style.cursor = 'pointer';
-        header.innerHTML += ' <i class="fas fa-sort text-muted"></i>';
+    sortableHeaders.forEach(header => {
+        header.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-1px)';
+        });
         
+        header.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+        
+        // Add click feedback
         header.addEventListener('click', function() {
-            sortTable(table, this);
+            showSortingFeedback(this);
+        });
+    });
+    
+    // Add row hover effects
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.classList.add('table-row-hover');
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.classList.remove('table-row-hover');
         });
     });
 }
 
-// Sort table function
-function sortTable(table, header) {
+// Show sorting feedback
+function showSortingFeedback(header) {
+    // Add loading class temporarily
+    const table = header.closest('table');
+    table.classList.add('sort-transition');
+    
+    // Remove after transition
+    setTimeout(() => {
+        table.classList.remove('sort-transition');
+    }, 300);
+    
+    // Show notification for sort action
+    const columnName = header.querySelector('span')?.textContent || 'Column';
+    const icon = header.querySelector('i');
+    let direction = 'ascending';
+    
+    if (icon && icon.classList.contains('fa-sort-down')) {
+        direction = 'descending';
+    }
+    
+    // Small visual feedback
+    header.style.background = 'rgba(78, 115, 223, 0.1)';
+    setTimeout(() => {
+        header.style.background = '';
+    }, 200);
+}
+
+// Enhanced client-side sorting for tables without server-side sorting
+function setupClientSideSorting(table) {
+    const headers = table.querySelectorAll('.sortable-header');
+    
+    headers.forEach((header, index) => {
+        // Skip if already has server-side sorting link
+        if (header.querySelector('a[href*="sort="]')) return;
+        
+        header.style.cursor = 'pointer';
+        header.addEventListener('click', function() {
+            sortTableClientSide(table, index);
+        });
+    });
+}
+
+// Client-side table sorting
+function sortTableClientSide(table, columnIndex) {
     const tbody = table.querySelector('tbody');
     const rows = Array.from(tbody.querySelectorAll('tr'));
-    const columnIndex = Array.from(header.parentNode.children).indexOf(header);
+    const header = table.querySelectorAll('.sortable-header')[columnIndex];
     const currentOrder = header.dataset.order || 'asc';
     const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
     
     // Clear all sort indicators
-    table.querySelectorAll('th i').forEach(icon => {
+    table.querySelectorAll('.sortable-header i').forEach(icon => {
         icon.className = 'fas fa-sort text-muted';
     });
     
     // Set new sort indicator
     const icon = header.querySelector('i');
-    icon.className = `fas fa-sort-${newOrder === 'asc' ? 'up' : 'down'} text-primary`;
+    if (icon) {
+        icon.className = `fas fa-sort-${newOrder === 'asc' ? 'up' : 'down'} text-primary`;
+    }
     header.dataset.order = newOrder;
     
     // Sort rows
     rows.sort((a, b) => {
-        const aValue = a.cells[columnIndex].textContent.trim();
-        const bValue = b.cells[columnIndex].textContent.trim();
+        const aCell = a.cells[columnIndex];
+        const bCell = b.cells[columnIndex];
+        
+        if (!aCell || !bCell) return 0;
+        
+        const aValue = aCell.textContent.trim();
+        const bValue = bCell.textContent.trim();
         
         // Try to parse as numbers
-        const aNum = parseFloat(aValue);
-        const bNum = parseFloat(bValue);
+        const aNum = parseFloat(aValue.replace(/[^0-9.-]/g, ''));
+        const bNum = parseFloat(bValue.replace(/[^0-9.-]/g, ''));
         
         if (!isNaN(aNum) && !isNaN(bNum)) {
             return newOrder === 'asc' ? aNum - bNum : bNum - aNum;
@@ -291,14 +359,84 @@ function sortTable(table, header) {
         }
     });
     
-    // Reorder table rows
-    rows.forEach(row => tbody.appendChild(row));
-    
-    // Add animation
+    // Add loading state
     tbody.style.opacity = '0.7';
+    tbody.style.transition = 'opacity 0.3s ease';
+    
+    // Reorder table rows with animation
     setTimeout(() => {
+        rows.forEach(row => tbody.appendChild(row));
         tbody.style.opacity = '1';
-    }, 300);
+        
+        // Add stagger animation to rows
+        rows.forEach((row, index) => {
+            row.style.animationDelay = `${index * 20}ms`;
+            row.classList.add('fade-in');
+        });
+    }, 150);
+}
+
+// Improved table search with highlighting
+function setupTableSearch(table) {
+    const searchInput = document.querySelector(`input[data-table-search="${table.id}"]`);
+    if (!searchInput) return;
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = table.querySelectorAll('tbody tr');
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const isVisible = searchTerm === '' || text.includes(searchTerm);
+            
+            if (isVisible) {
+                row.style.display = '';
+                row.classList.add('fade-in');
+                visibleCount++;
+                
+                // Highlight search terms
+                if (searchTerm) {
+                    highlightSearchTerm(row, searchTerm);
+                } else {
+                    removeHighlight(row);
+                }
+            } else {
+                row.style.display = 'none';
+                row.classList.remove('fade-in');
+            }
+        });
+        
+        // Update visible count if there's a counter
+        const counter = table.querySelector('.search-results-count');
+        if (counter) {
+            counter.textContent = `${visibleCount} results found`;
+        }
+    });
+}
+
+// Highlight search terms
+function highlightSearchTerm(row, term) {
+    const cells = row.querySelectorAll('td');
+    cells.forEach(cell => {
+        if (cell.querySelector('.btn-group')) return; // Skip action columns
+        
+        const originalText = cell.textContent;
+        const regex = new RegExp(`(${term})`, 'gi');
+        const highlightedText = originalText.replace(regex, '<mark class="bg-warning">$1</mark>');
+        
+        if (highlightedText !== originalText) {
+            cell.innerHTML = highlightedText;
+        }
+    });
+}
+
+// Remove highlighting
+function removeHighlight(row) {
+    const marks = row.querySelectorAll('mark');
+    marks.forEach(mark => {
+        mark.outerHTML = mark.textContent;
+    });
 }
 
 // Table search functionality

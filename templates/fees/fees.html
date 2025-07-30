@@ -40,7 +40,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-success shadow h-100 py-2">
             <div class="card-body">
@@ -56,7 +56,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-warning shadow h-100 py-2">
             <div class="card-body">
@@ -72,7 +72,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-info shadow h-100 py-2">
             <div class="card-body">
@@ -166,35 +166,50 @@
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover">
-                        <thead class="table-light">
+                        <thead class="table-light sticky-top">
                             <tr>
-                                <th>
-                                    <a href="{{ url_for('fees', sort='student_unique_id', order='desc' if request.args.get('sort') == 'student_unique_id' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), payment_status=request.args.get('payment_status', ''), scholarship=request.args.get('scholarship', '')) }}">
-                                        Student
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('fees', sort='student_unique_id', order='desc' if request.args.get('sort') == 'student_unique_id' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), payment_status=request.args.get('payment_status', ''), scholarship=request.args.get('scholarship', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Student ID</span>
                                         {% if request.args.get('sort') == 'student_unique_id' %}
-                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th>
-                                    <a href="{{ url_for('fees', sort='current_course', order='desc' if request.args.get('sort') == 'current_course' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), payment_status=request.args.get('payment_status', ''), scholarship=request.args.get('scholarship', '')) }}">
-                                        Course
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('fees', sort='first_name', order='desc' if request.args.get('sort') == 'first_name' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), payment_status=request.args.get('payment_status', ''), scholarship=request.args.get('scholarship', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Name</span>
+                                        {% if request.args.get('sort') == 'first_name' %}
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort text-muted"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('fees', sort='current_course', order='desc' if request.args.get('sort') == 'current_course' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), payment_status=request.args.get('payment_status', ''), scholarship=request.args.get('scholarship', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Course</span>
                                         {% if request.args.get('sort') == 'current_course' %}
-                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th>
-                                    <a href="{{ url_for('fees', sort='total_fee', order='desc' if request.args.get('sort') == 'total_fee' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), payment_status=request.args.get('payment_status', ''), scholarship=request.args.get('scholarship', '')) }}">
-                                        Total Fees
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('fees', sort='total_fee', order='desc' if request.args.get('sort') == 'total_fee' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), payment_status=request.args.get('payment_status', ''), scholarship=request.args.get('scholarship', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Total Fee</span>
                                         {% if request.args.get('sort') == 'total_fee' %}
-                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
                                 <th>Paid Amount</th>
-                                <th>Due Amount</th>
-                                <th>Installments</th>
+                                <th>Pending Amount</th>
                                 <th>Payment Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -268,7 +283,7 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <!-- Pagination -->
                 {% if fees.pages > 1 %}
                 <nav aria-label="Fee records pagination">
@@ -278,7 +293,7 @@
                                 <a class="page-link" href="{{ url_for('fees', page=fees.prev_num, course=request.args.get('course', ''), payment_status=request.args.get('payment_status', ''), scholarship=request.args.get('scholarship', ''), search=request.args.get('search', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Previous</a>
                             </li>
                         {% endif %}
-                        
+
                         {% for page_num in fees.iter_pages() %}
                             {% if page_num %}
                                 {% if page_num != fees.page %}
@@ -296,7 +311,7 @@
                                 </li>
                             {% endif %}
                         {% endfor %}
-                        
+
                         {% if fees.has_next %}
                             <li class="page-item">
                                 <a class="page-link" href="{{ url_for('fees', page=fees.next_num, course=request.args.get('course', ''), payment_status=request.args.get('payment_status', ''), scholarship=request.args.get('scholarship', ''), search=request.args.get('search', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Next</a>
@@ -322,7 +337,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-lg-6 mb-4">
         <div class="card shadow">
             <div class="card-header">

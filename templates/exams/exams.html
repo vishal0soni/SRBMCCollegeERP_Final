@@ -158,93 +158,93 @@
                     <table class="table table-bordered table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th>
-                                    <a href="{{ url_for('exams', sort='first_name', order='desc' if request.args.get('sort') == 'first_name' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
-                                        Student 
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('exams', sort='first_name', order='desc' if request.args.get('sort') == 'first_name' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), semester=request.args.get('semester', ''), result=request.args.get('result', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Student</span>
                                         {% if request.args.get('sort') == 'first_name' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
                                         {% else %}
-                                            <i class="fas fa-sort"></i>
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th>
-                                    <a href="{{ url_for('exams', sort='current_course', order='desc' if request.args.get('sort') == 'current_course' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
-                                        Course 
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('exams', sort='current_course', order='desc' if request.args.get('sort') == 'current_course' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), semester=request.args.get('semester', ''), result=request.args.get('result', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Course</span>
                                         {% if request.args.get('sort') == 'current_course' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
                                         {% else %}
-                                            <i class="fas fa-sort"></i>
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th>
-                                    <a href="{{ url_for('exams', sort='exam_name', order='desc' if request.args.get('sort') == 'exam_name' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
-                                        Exam 
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('exams', sort='exam_name', order='desc' if request.args.get('sort') == 'exam_name' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), semester=request.args.get('semester', ''), result=request.args.get('result', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Exam</span>
                                         {% if request.args.get('sort') == 'exam_name' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
                                         {% else %}
-                                            <i class="fas fa-sort"></i>
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th>
-                                    <a href="{{ url_for('exams', sort='semester', order='desc' if request.args.get('sort') == 'semester' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
-                                        Semester 
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('exams', sort='semester', order='desc' if request.args.get('sort') == 'semester' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), semester=request.args.get('semester', ''), result=request.args.get('result', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Semester</span>
                                         {% if request.args.get('sort') == 'semester' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
                                         {% else %}
-                                            <i class="fas fa-sort"></i>
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th>
-                                    <a href="{{ url_for('exams', sort='total_max_marks', order='desc' if request.args.get('sort') == 'total_max_marks' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
-                                        Total Marks 
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('exams', sort='total_max_marks', order='desc' if request.args.get('sort') == 'total_max_marks' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), semester=request.args.get('semester', ''), result=request.args.get('result', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Total Marks</span>
                                         {% if request.args.get('sort') == 'total_max_marks' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
                                         {% else %}
-                                            <i class="fas fa-sort"></i>
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th>
-                                    <a href="{{ url_for('exams', sort='total_obtained_marks', order='desc' if request.args.get('sort') == 'total_obtained_marks' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
-                                        Obtained Marks 
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('exams', sort='total_obtained_marks', order='desc' if request.args.get('sort') == 'total_obtained_marks' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), semester=request.args.get('semester', ''), result=request.args.get('result', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Obtained Marks</span>
                                         {% if request.args.get('sort') == 'total_obtained_marks' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
                                         {% else %}
-                                            <i class="fas fa-sort"></i>
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th>
-                                    <a href="{{ url_for('exams', sort='percentage', order='desc' if request.args.get('sort') == 'percentage' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
-                                        Percentage 
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('exams', sort='percentage', order='desc' if request.args.get('sort') == 'percentage' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), semester=request.args.get('semester', ''), result=request.args.get('result', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Percentage</span>
                                         {% if request.args.get('sort') == 'percentage' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
                                         {% else %}
-                                            <i class="fas fa-sort"></i>
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th>
-                                    <a href="{{ url_for('exams', sort='grade', order='desc' if request.args.get('sort') == 'grade' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
-                                        Grade 
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('exams', sort='grade', order='desc' if request.args.get('sort') == 'grade' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), semester=request.args.get('semester', ''), result=request.args.get('result', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Grade</span>
                                         {% if request.args.get('sort') == 'grade' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
                                         {% else %}
-                                            <i class="fas fa-sort"></i>
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th>
-                                    <a href="{{ url_for('exams', sort='overall_status', order='desc' if request.args.get('sort') == 'overall_status' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
-                                        Result 
+                                <th class="sortable-header">
+                                    <a href="{{ url_for('exams', sort='overall_status', order='desc' if request.args.get('sort') == 'overall_status' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), semester=request.args.get('semester', ''), result=request.args.get('result', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Result</span>
                                         {% if request.args.get('sort') == 'overall_status' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
                                         {% else %}
-                                            <i class="fas fa-sort"></i>
+                                            <i class="fas fa-sort text-muted"></i>
                                         {% endif %}
                                     </a>
                                 </th>
