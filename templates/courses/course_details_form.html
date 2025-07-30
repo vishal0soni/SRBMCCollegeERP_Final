@@ -1,0 +1,157 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('course_details') }}">Course Details</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+        
+        <h1 class="h3 mb-4">
+            <i class="fas fa-clipboard-list"></i> {{ title }}
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">{{ title }}</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="courseDetailsForm">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.course_full_name.label(class="form-label") }}
+                            {{ form.course_full_name(class="form-control") }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.course_short_name.label(class="form-label") }}
+                            {{ form.course_short_name(class="form-select") }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.year_semester.label(class="form-label") }}
+                            {{ form.year_semester(class="form-control") }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.course_type.label(class="form-label") }}
+                            {{ form.course_type(class="form-control") }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.course_tuition_fee.label(class="form-label") }}
+                            {{ form.course_tuition_fee(class="form-control fee-input", step="0.01") }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Total Course Fees</label>
+                            <input type="text" class="form-control" id="totalFees" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="m-0 font-weight-bold text-primary">Miscellaneous Fees</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    {{ form.misc_course_fees_1.label(class="form-label") }}
+                                    {{ form.misc_course_fees_1(class="form-control fee-input", step="0.01") }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.misc_course_fees_2.label(class="form-label") }}
+                                    {{ form.misc_course_fees_2(class="form-control fee-input", step="0.01") }}
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    {{ form.misc_course_fees_3.label(class="form-label") }}
+                                    {{ form.misc_course_fees_3(class="form-control fee-input", step="0.01") }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.misc_course_fees_4.label(class="form-label") }}
+                                    {{ form.misc_course_fees_4(class="form-control fee-input", step="0.01") }}
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    {{ form.misc_course_fees_5.label(class="form-label") }}
+                                    {{ form.misc_course_fees_5(class="form-control fee-input", step="0.01") }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.misc_course_fees_6.label(class="form-label") }}
+                                    {{ form.misc_course_fees_6(class="form-control fee-input", step="0.01") }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            {{ form.submit(class="btn btn-primary me-2") }}
+                            <a href="{{ url_for('course_details') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Help</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Course Details:</strong> Define the fee structure for each course year/semester.</p>
+                <p><strong>Auto-calculation:</strong> Total fees are calculated automatically when you modify any fee field.</p>
+                <p><strong>Miscellaneous Fees:</strong> Use these fields for additional fees like lab fees, library fees, etc.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const feeInputs = document.querySelectorAll('.fee-input');
+    const totalFeesInput = document.getElementById('totalFees');
+    
+    function calculateTotal() {
+        let total = 0;
+        feeInputs.forEach(input => {
+            const value = parseFloat(input.value || 0);
+            total += value;
+        });
+        totalFeesInput.value = '₹' + total.toFixed(2);
+    }
+    
+    // Calculate total on page load
+    calculateTotal();
+    
+    // Add event listeners to all fee inputs
+    feeInputs.forEach(input => {
+        input.addEventListener('input', calculateTotal);
+        input.addEventListener('change', calculateTotal);
+    });
+});
+</script>
+{% endblock %}

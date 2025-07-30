@@ -359,6 +359,139 @@ def student_summary():
                          category_counts=category_counts,
                          monthly_admissions=monthly_admissions)
 
+# CourseDetails Routes
+@app.route('/course-details')
+@login_required
+def course_details():
+    if not can_edit_module(current_user, 'courses'):
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '')
+    course_filter = request.args.get('course', '')
+    
+    query = CourseDetails.query
+    
+    # Search filters
+    if search:
+        search_filter = or_(
+            CourseDetails.course_full_name.contains(search),
+            CourseDetails.course_short_name.contains(search),
+            CourseDetails.year_semester.contains(search)
+        )
+        query = query.filter(search_filter)
+    
+    if course_filter:
+        query = query.filter(CourseDetails.course_short_name == course_filter)
+    
+    course_details = query.paginate(page=page, per_page=20, error_out=False)
+    courses = Course.query.all()
+    
+    return render_template('courses/course_details.html', course_details=course_details, courses=courses)
+
+@app.route('/course-details/add', methods=['GET', 'POST'])
+@login_required
+def add_course_details():
+    if not can_edit_module(current_user, 'courses'):
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    form = CourseDetailsForm()
+    form.course_short_name.choices = [(c.course_short_name, f"{c.course_short_name} - {c.course_full_name}") for c in Course.query.all()]
+    
+    if form.validate_on_submit():
+        # Calculate total course fees
+        total_fees = (form.course_tuition_fee.data + form.misc_course_fees_1.data + 
+                     form.misc_course_fees_2.data + form.misc_course_fees_3.data + 
+                     form.misc_course_fees_4.data + form.misc_course_fees_5.data + 
+                     form.misc_course_fees_6.data)
+        
+        course_detail = CourseDetails(
+            course_full_name=form.course_full_name.data,
+            course_short_name=form.course_short_name.data,
+            year_semester=form.year_semester.data,
+            course_tuition_fee=form.course_tuition_fee.data,
+            course_type=form.course_type.data,
+            misc_course_fees_1=form.misc_course_fees_1.data,
+            misc_course_fees_2=form.misc_course_fees_2.data,
+            misc_course_fees_3=form.misc_course_fees_3.data,
+            misc_course_fees_4=form.misc_course_fees_4.data,
+            misc_course_fees_5=form.misc_course_fees_5.data,
+            misc_course_fees_6=form.misc_course_fees_6.data,
+            total_course_fees=total_fees
+        )
+        
+        try:
+            db.session.add(course_detail)
+            
+            # Check if course exists, if not create it
+            course = Course.query.filter_by(course_short_name=form.course_short_name.data).first()
+            if not course:
+                course = Course(
+                    course_short_name=form.course_short_name.data,
+                    course_full_name=form.course_full_name.data,
+                    course_category='General',
+                    duration=3  # Default duration
+                )
+                db.session.add(course)
+            
+            db.session.commit()
+            flash('Course details added successfully!', 'success')
+            return redirect(url_for('course_details'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error adding course details: {str(e)}', 'error')
+    
+    return render_template('courses/course_details_form.html', form=form, title='Add Course Details')
+
+@app.route('/course-details/edit/<int:detail_id>', methods=['GET', 'POST'])
+@login_required
+def edit_course_details(detail_id):
+    if not can_edit_module(current_user, 'courses') or current_user.role.access_type != 'Edit':
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    course_detail = CourseDetails.query.get_or_404(detail_id)
+    form = CourseDetailsForm(obj=course_detail)
+    form.course_short_name.choices = [(c.course_short_name, f"{c.course_short_name} - {c.course_full_name}") for c in Course.query.all()]
+    
+    if form.validate_on_submit():
+        # Calculate total course fees
+        total_fees = (form.course_tuition_fee.data + form.misc_course_fees_1.data + 
+                     form.misc_course_fees_2.data + form.misc_course_fees_3.data + 
+                     form.misc_course_fees_4.data + form.misc_course_fees_5.data + 
+                     form.misc_course_fees_6.data)
+        
+        form.populate_obj(course_detail)
+        course_detail.total_course_fees = total_fees
+        
+        try:
+            db.session.commit()
+            flash('Course details updated successfully!', 'success')
+            return redirect(url_for('course_details'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating course details: {str(e)}', 'error')
+    
+    return render_template('courses/course_details_form.html', form=form, title='Edit Course Details', course_detail=course_detail)
+
+@app.route('/course-details/delete/<int:detail_id>', methods=['DELETE'])
+@login_required
+def delete_course_details(detail_id):
+    if not can_edit_module(current_user, 'courses') or current_user.role.access_type != 'Edit':
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    course_detail = CourseDetails.query.get_or_404(detail_id)
+    
+    try:
+        db.session.delete(course_detail)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 # Course Routes
 @app.route('/courses')
 @login_required
@@ -908,6 +1041,47 @@ def add_subject(course_id):
             flash(f'Error adding subject: {str(e)}', 'error')
     
     return render_template('courses/subject_form.html', form=form, title='Add Subject', course=course)
+
+@app.route('/subjects/edit/<int:subject_id>', methods=['GET', 'POST'])
+@login_required
+def edit_subject(subject_id):
+    if not can_edit_module(current_user, 'courses') or current_user.role.access_type != 'Edit':
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    subject = Subject.query.get_or_404(subject_id)
+    course = Course.query.filter_by(course_short_name=subject.course_short_name).first()
+    form = SubjectForm(obj=subject)
+    form.course_short_name.choices = [(course.course_short_name, course.course_full_name)]
+    
+    if form.validate_on_submit():
+        form.populate_obj(subject)
+        
+        try:
+            db.session.commit()
+            flash('Subject updated successfully!', 'success')
+            return redirect(url_for('course_subjects', course_id=course.course_id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating subject: {str(e)}', 'error')
+    
+    return render_template('courses/subject_form.html', form=form, title='Edit Subject', course=course, subject=subject)
+
+@app.route('/subjects/delete/<int:subject_id>', methods=['DELETE'])
+@login_required
+def delete_subject(subject_id):
+    if not can_edit_module(current_user, 'courses') or current_user.role.access_type != 'Edit':
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    subject = Subject.query.get_or_404(subject_id)
+    
+    try:
+        db.session.delete(subject)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/invoices')
 @login_required

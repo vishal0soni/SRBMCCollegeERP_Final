@@ -54,22 +54,23 @@ class StudentForm(FlaskForm):
 class CourseForm(FlaskForm):
     course_short_name = StringField('Course Short Name', validators=[DataRequired(), Length(max=10)])
     course_full_name = StringField('Course Full Name', validators=[DataRequired(), Length(max=200)])
-    course_category = SelectField('Course Category', choices=[
-        ('', 'Select Category'),
-        ('Undergraduate', 'Undergraduate'),
-        ('Postgraduate', 'Postgraduate'),
-        ('Diploma', 'Diploma'),
-        ('Certificate', 'Certificate')
-    ], validators=[DataRequired()])
-    duration = SelectField('Duration (Years)', choices=[
-        ('', 'Select Duration'),
-        ('1', '1 Year'),
-        ('2', '2 Years'),
-        ('3', '3 Years'),
-        ('4', '4 Years'),
-        ('5', '5 Years')
-    ], validators=[DataRequired()])
+    course_category = StringField('Course Category', validators=[Length(max=100)])
+    duration = IntegerField('Duration (Years)', validators=[DataRequired()])
     submit = SubmitField('Save Course')
+
+class CourseDetailsForm(FlaskForm):
+    course_full_name = StringField('Course Full Name', validators=[DataRequired(), Length(max=200)])
+    course_short_name = SelectField('Course Short Name', coerce=str, validators=[DataRequired()])
+    year_semester = StringField('Year/Semester', validators=[DataRequired(), Length(max=20)])
+    course_tuition_fee = DecimalField('Course Tuition Fee', validators=[Optional()], default=0)
+    course_type = StringField('Course Type', validators=[Length(max=50)])
+    misc_course_fees_1 = DecimalField('Misc Fee 1', validators=[Optional()], default=0)
+    misc_course_fees_2 = DecimalField('Misc Fee 2', validators=[Optional()], default=0)
+    misc_course_fees_3 = DecimalField('Misc Fee 3', validators=[Optional()], default=0)
+    misc_course_fees_4 = DecimalField('Misc Fee 4', validators=[Optional()], default=0)
+    misc_course_fees_5 = DecimalField('Misc Fee 5', validators=[Optional()], default=0)
+    misc_course_fees_6 = DecimalField('Misc Fee 6', validators=[Optional()], default=0)
+    submit = SubmitField('Save Course Details')
 
 class SubjectForm(FlaskForm):
     course_short_name = SelectField('Course', validators=[DataRequired()])
@@ -89,20 +90,20 @@ class ExamForm(FlaskForm):
     semester = StringField('Semester', validators=[DataRequired(), Length(max=20)])
     exam_name = StringField('Exam Name', validators=[DataRequired(), Length(max=100)])
     exam_date = DateField('Exam Date', validators=[DataRequired()])
-    
+
     # Subject marks
     subject1_name = StringField('Subject 1 Name')
     subject1_max_marks = IntegerField('Max Marks', default=100)
     subject1_obtained_marks = IntegerField('Obtained Marks', default=0)
-    
+
     subject2_name = StringField('Subject 2 Name')
     subject2_max_marks = IntegerField('Max Marks', default=100)
     subject2_obtained_marks = IntegerField('Obtained Marks', default=0)
-    
+
     subject3_name = StringField('Subject 3 Name')
     subject3_max_marks = IntegerField('Max Marks', default=100)
     subject3_obtained_marks = IntegerField('Obtained Marks', default=0)
-    
+
     submit = SubmitField('Save Exam Results')
 
 class ChangePasswordForm(FlaskForm):
@@ -110,7 +111,7 @@ class ChangePasswordForm(FlaskForm):
     new_password = PasswordField('New Password', validators=[DataRequired(), Length(min=4, max=128)])
     confirm_password = PasswordField('Confirm New Password', validators=[DataRequired()])
     submit = SubmitField('Change Password')
-    
+
     def validate_confirm_password(self, field):
         if field.data != self.new_password.data:
             raise ValidationError('New passwords must match.')

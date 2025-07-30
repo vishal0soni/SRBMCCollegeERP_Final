@@ -72,6 +72,9 @@
                             {% if current_user.role.access_type == 'Edit' %}
                             <li><a class="dropdown-item" href="{{ url_for('add_course') }}">Add Course</a></li>
                             {% endif %}
+                            <div class="collapse-divider"></div>
+                            <li><a class="dropdown-item" href="{{ url_for('course_details') }}">Course Details</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('add_course_details') }}">Add Course Details</a></li>
                         </ul>
                     </li>
                     {% endif %}
