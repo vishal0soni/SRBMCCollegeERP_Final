@@ -387,7 +387,7 @@ def add_course():
             course_short_name=form.course_short_name.data,
             course_full_name=form.course_full_name.data,
             course_category=form.course_category.data,
-            duration=form.duration.data
+            duration=int(form.duration.data)
         )
         
         try:
@@ -422,7 +422,10 @@ def edit_course(course_id):
     form = CourseForm(obj=course)
     
     if form.validate_on_submit():
-        form.populate_obj(course)
+        course.course_short_name = form.course_short_name.data
+        course.course_full_name = form.course_full_name.data
+        course.course_category = form.course_category.data
+        course.duration = int(form.duration.data)
         
         try:
             db.session.commit()

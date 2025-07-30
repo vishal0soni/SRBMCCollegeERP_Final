@@ -68,7 +68,7 @@ class CourseForm(FlaskForm):
         ('3', '3 Years'),
         ('4', '4 Years'),
         ('5', '5 Years')
-    ], coerce=int, validators=[DataRequired()])
+    ], validators=[DataRequired()])
     submit = SubmitField('Save Course')
 
 class SubjectForm(FlaskForm):
