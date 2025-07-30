@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block title %}Invoices - SRBMC ERP{% endblock %}
@@ -35,39 +36,14 @@
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover">
-                        <thead class="table-light sticky-top">
+                        <thead class="table-light">
                             <tr>
-                                <th class="sortable-header">
-                                    <span class="d-flex align-items-center justify-content-between">
-                                        <span>Invoice Number</span>
-                                        <i class="fas fa-sort text-muted"></i>
-                                    </span>
-                                </th>
-                                <th class="sortable-header">
-                                    <span class="d-flex align-items-center justify-content-between">
-                                        <span>Student</span>
-                                        <i class="fas fa-sort text-muted"></i>
-                                    </span>
-                                </th>
-                                <th class="sortable-header">
-                                    <span class="d-flex align-items-center justify-content-between">
-                                        <span>Course</span>
-                                        <i class="fas fa-sort text-muted"></i>
-                                    </span>
-                                </th>
-                                <th class="sortable-header">
-                                    <span class="d-flex align-items-center justify-content-between">
-                                        <span>Amount</span>
-                                        <i class="fas fa-sort text-muted"></i>
-                                    </span>
-                                </th>
-                                <th class="sortable-header">
-                                    <span class="d-flex align-items-center justify-content-between">
-                                        <span>Date</span>
-                                        <i class="fas fa-sort text-muted"></i>
-                                    </span>
-                                </th>
+                                <th>Invoice Number</th>
+                                <th>Student</th>
+                                <th>Date</th>
+                                <th>Amount</th>
                                 <th>Installment</th>
+                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -113,7 +89,7 @@
                         </tbody>
                     </table>
                 </div>
-
+                
                 <!-- Pagination -->
                 {% if invoices.pages > 1 %}
                 <nav aria-label="Invoice pagination">
@@ -123,7 +99,7 @@
                                 <a class="page-link" href="{{ url_for('invoices', page=invoices.prev_num) }}">Previous</a>
                             </li>
                         {% endif %}
-
+                        
                         {% for page_num in invoices.iter_pages() %}
                             {% if page_num %}
                                 {% if page_num != invoices.page %}
@@ -141,7 +117,7 @@
                                 </li>
                             {% endif %}
                         {% endfor %}
-
+                        
                         {% if invoices.has_next %}
                             <li class="page-item">
                                 <a class="page-link" href="{{ url_for('invoices', page=invoices.next_num) }}">Next</a>

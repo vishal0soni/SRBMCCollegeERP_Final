@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block title %}Courses - SRBMC ERP{% endblock %}
@@ -88,48 +89,49 @@
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover">
-                        <thead class="table-light sticky-top">
+                        <thead class="table-light">
                             <tr>
-                                <th class="sortable-header">
-                                    <a href="{{ url_for('courses', sort='course_short_name', order='desc' if request.args.get('sort') == 'course_short_name' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), category=request.args.get('category', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
-                                        <span>Short Name</span>
+                                <th>
+                                    <a href="{{ url_for('courses', sort='course_id', order='desc' if request.args.get('sort') == 'course_id' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), category=request.args.get('category', '')) }}">
+                                        Course ID
+                                        {% if request.args.get('sort') == 'course_id' %}
+                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('courses', sort='course_short_name', order='desc' if request.args.get('sort') == 'course_short_name' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), category=request.args.get('category', '')) }}">
+                                        Short Name
                                         {% if request.args.get('sort') == 'course_short_name' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
-                                        {% else %}
-                                            <i class="fas fa-sort text-muted"></i>
+                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th class="sortable-header">
-                                    <a href="{{ url_for('courses', sort='course_full_name', order='desc' if request.args.get('sort') == 'course_full_name' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), category=request.args.get('category', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
-                                        <span>Full Name</span>
+                                <th>
+                                    <a href="{{ url_for('courses', sort='course_full_name', order='desc' if request.args.get('sort') == 'course_full_name' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), category=request.args.get('category', '')) }}">
+                                        Full Name
                                         {% if request.args.get('sort') == 'course_full_name' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
-                                        {% else %}
-                                            <i class="fas fa-sort text-muted"></i>
+                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th class="sortable-header">
-                                    <a href="{{ url_for('courses', sort='course_category', order='desc' if request.args.get('sort') == 'course_category' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), category=request.args.get('category', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
-                                        <span>Category</span>
+                                <th>
+                                    <a href="{{ url_for('courses', sort='course_category', order='desc' if request.args.get('sort') == 'course_category' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), category=request.args.get('category', '')) }}">
+                                        Category
                                         {% if request.args.get('sort') == 'course_category' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
-                                        {% else %}
-                                            <i class="fas fa-sort text-muted"></i>
+                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th class="sortable-header">
-                                    <a href="{{ url_for('courses', sort='duration', order='desc' if request.args.get('sort') == 'duration' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), category=request.args.get('category', '')) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
-                                        <span>Duration (Years)</span>
+                                <th>
+                                    <a href="{{ url_for('courses', sort='duration', order='desc' if request.args.get('sort') == 'duration' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), category=request.args.get('category', '')) }}">
+                                        Duration
                                         {% if request.args.get('sort') == 'duration' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }} text-primary"></i>
-                                        {% else %}
-                                            <i class="fas fa-sort text-muted"></i>
+                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
                                         {% endif %}
                                     </a>
                                 </th>
+                                <th>Subjects</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -171,7 +173,7 @@
                         </tbody>
                     </table>
                 </div>
-
+                
                 <!-- Pagination -->
                 {% if courses.pages > 1 %}
                 <nav aria-label="Course pagination">
@@ -181,7 +183,7 @@
                                 <a class="page-link" href="{{ url_for('courses', page=courses.prev_num, search=request.args.get('search', ''), category=request.args.get('category', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Previous</a>
                             </li>
                         {% endif %}
-
+                        
                         {% for page_num in courses.iter_pages() %}
                             {% if page_num %}
                                 {% if page_num != courses.page %}
@@ -199,7 +201,7 @@
                                 </li>
                             {% endif %}
                         {% endfor %}
-
+                        
                         {% if courses.has_next %}
                             <li class="page-item">
                                 <a class="page-link" href="{{ url_for('courses', page=courses.next_num, search=request.args.get('search', ''), category=request.args.get('category', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Next</a>
