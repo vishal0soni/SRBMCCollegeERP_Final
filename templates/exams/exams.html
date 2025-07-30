@@ -90,44 +90,52 @@
     </div>
 </div>
 
-<!-- Filters -->
+<!-- Search and Filters -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
             <div class="card-body">
                 <form method="GET" class="row g-3">
                     <div class="col-md-3">
+                        <label for="search" class="form-label">Search</label>
+                        <input type="text" name="search" id="search" class="form-control" 
+                               placeholder="Search by student name, ID, exam..." value="{{ request.args.get('search', '') }}">
+                    </div>
+                    <div class="col-md-2">
                         <label for="course" class="form-label">Course</label>
                         <select name="course" id="course" class="form-select">
                             <option value="">All Courses</option>
-                            <option value="BA">Bachelor of Arts (BA)</option>
-                            <option value="BSC">Bachelor of Science (BSC)</option>
-                            <option value="MA">Master of Arts (MA)</option>
+                            {% for course in courses %}
+                            <option value="{{ course }}" {% if request.args.get('course') == course %}selected{% endif %}>{{ course }}</option>
+                            {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label for="semester" class="form-label">Semester</label>
                         <select name="semester" id="semester" class="form-select">
                             <option value="">All Semesters</option>
-                            <option value="1st">1st Semester</option>
-                            <option value="2nd">2nd Semester</option>
-                            <option value="3rd">3rd Semester</option>
-                            <option value="4th">4th Semester</option>
+                            {% for semester in semesters %}
+                            <option value="{{ semester }}" {% if request.args.get('semester') == semester %}selected{% endif %}>{{ semester }}</option>
+                            {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label for="result" class="form-label">Result</label>
                         <select name="result" id="result" class="form-select">
                             <option value="">All Results</option>
-                            <option value="Pass">Pass</option>
-                            <option value="Fail">Fail</option>
+                            <option value="Pass" {% if request.args.get('result') == 'Pass' %}selected{% endif %}>Pass</option>
+                            <option value="Fail" {% if request.args.get('result') == 'Fail' %}selected{% endif %}>Fail</option>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">&nbsp;</label>
                         <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">Filter</button>
-                            <a href="{{ url_for('exams') }}" class="btn btn-secondary">Clear</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                            <a href="{{ url_for('exams') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Clear
+                            </a>
                         </div>
                     </div>
                 </form>
@@ -150,15 +158,96 @@
                     <table class="table table-bordered table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th>Student</th>
-                                <th>Course</th>
-                                <th>Exam</th>
-                                <th>Semester</th>
-                                <th>Total Marks</th>
-                                <th>Obtained Marks</th>
-                                <th>Percentage</th>
-                                <th>Grade</th>
-                                <th>Result</th>
+                                <th>
+                                    <a href="{{ url_for('exams', sort='first_name', order='desc' if request.args.get('sort') == 'first_name' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
+                                        Student 
+                                        {% if request.args.get('sort') == 'first_name' %}
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('exams', sort='current_course', order='desc' if request.args.get('sort') == 'current_course' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
+                                        Course 
+                                        {% if request.args.get('sort') == 'current_course' %}
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('exams', sort='exam_name', order='desc' if request.args.get('sort') == 'exam_name' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
+                                        Exam 
+                                        {% if request.args.get('sort') == 'exam_name' %}
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('exams', sort='semester', order='desc' if request.args.get('sort') == 'semester' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
+                                        Semester 
+                                        {% if request.args.get('sort') == 'semester' %}
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('exams', sort='total_max_marks', order='desc' if request.args.get('sort') == 'total_max_marks' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
+                                        Total Marks 
+                                        {% if request.args.get('sort') == 'total_max_marks' %}
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('exams', sort='total_obtained_marks', order='desc' if request.args.get('sort') == 'total_obtained_marks' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
+                                        Obtained Marks 
+                                        {% if request.args.get('sort') == 'total_obtained_marks' %}
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('exams', sort='percentage', order='desc' if request.args.get('sort') == 'percentage' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
+                                        Percentage 
+                                        {% if request.args.get('sort') == 'percentage' %}
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('exams', sort='grade', order='desc' if request.args.get('sort') == 'grade' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
+                                        Grade 
+                                        {% if request.args.get('sort') == 'grade' %}
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('exams', sort='overall_status', order='desc' if request.args.get('sort') == 'overall_status' and request.args.get('order') == 'asc' else 'asc', **request.args) }}" class="text-decoration-none text-dark">
+                                        Result 
+                                        {% if request.args.get('sort') == 'overall_status' %}
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -205,14 +294,14 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-info" onclick="viewExamDetails({{ exam.id }})">
+                                        <a href="{{ url_for('view_exam', exam_id=exam.id) }}" class="btn btn-outline-info">
                                             <i class="fas fa-eye"></i>
-                                        </button>
+                                        </a>
                                         <a href="{{ url_for('report_card_pdf', exam_id=exam.id) }}" class="btn btn-outline-primary" target="_blank">
                                             <i class="fas fa-file-alt"></i> Report
                                         </a>
                                         {% if current_user.role.access_type == 'Edit' %}
-                                        <a href="#" class="btn btn-outline-secondary">
+                                        <a href="{{ url_for('edit_exam', exam_id=exam.id) }}" class="btn btn-outline-secondary">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         {% if exam.overall_status == 'Pass' %}
@@ -235,7 +324,7 @@
                     <ul class="pagination justify-content-center">
                         {% if exams.has_prev %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('exams', page=exams.prev_num, **request.args) }}">Previous</a>
+                                <a class="page-link" href="{{ url_for('exams', page=exams.prev_num, search=request.args.get('search', ''), course=request.args.get('course', ''), semester=request.args.get('semester', ''), result=request.args.get('result', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Previous</a>
                             </li>
                         {% endif %}
                         
@@ -243,7 +332,7 @@
                             {% if page_num %}
                                 {% if page_num != exams.page %}
                                     <li class="page-item">
-                                        <a class="page-link" href="{{ url_for('exams', page=page_num, **request.args) }}">{{ page_num }}</a>
+                                        <a class="page-link" href="{{ url_for('exams', page=page_num, search=request.args.get('search', ''), course=request.args.get('course', ''), semester=request.args.get('semester', ''), result=request.args.get('result', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">{{ page_num }}</a>
                                     </li>
                                 {% else %}
                                     <li class="page-item active">
@@ -259,7 +348,7 @@
                         
                         {% if exams.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('exams', page=exams.next_num, **request.args) }}">Next</a>
+                                <a class="page-link" href="{{ url_for('exams', page=exams.next_num, search=request.args.get('search', ''), course=request.args.get('course', ''), semester=request.args.get('semester', ''), result=request.args.get('result', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Next</a>
                             </li>
                         {% endif %}
                     </ul>
@@ -382,8 +471,25 @@ function viewExamDetails(examId) {
 
 function promoteStudent(studentId) {
     if (confirm('Are you sure you want to promote this student to next class?')) {
-        // In a real implementation, send promotion request
-        alert('Student promoted successfully! New fee record created.');
+        fetch(`/students/promote/${studentId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while promoting the student.');
+        });
     }
 }
 

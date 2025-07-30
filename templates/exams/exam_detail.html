@@ -1,0 +1,202 @@
+
+{% extends "base.html" %}
+
+{% block title %}Exam Details - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="fas fa-clipboard-list"></i> Exam Details
+            </h1>
+            <div>
+                <a href="{{ url_for('exams') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Exams
+                </a>
+                {% if current_user.role.access_type == 'Edit' %}
+                <a href="{{ url_for('edit_exam', exam_id=exam.id) }}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                {% endif %}
+                <a href="{{ url_for('report_card_pdf', exam_id=exam.id) }}" class="btn btn-primary" target="_blank">
+                    <i class="fas fa-file-pdf"></i> Print Report Card
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Exam Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Student:</strong></td>
+                                <td>{{ exam.student.first_name }} {{ exam.student.last_name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Student ID:</strong></td>
+                                <td>{{ exam.student.student_unique_id }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Course:</strong></td>
+                                <td>{{ exam.student.current_course }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Exam Name:</strong></td>
+                                <td>{{ exam.exam_name }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Semester:</strong></td>
+                                <td>{{ exam.semester }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Exam Date:</strong></td>
+                                <td>{{ exam.exam_date.strftime('%d/%m/%Y') if exam.exam_date else 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Marks:</strong></td>
+                                <td>{{ exam.total_obtained_marks }}/{{ exam.total_max_marks }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Result:</strong></td>
+                                <td>
+                                    {% if exam.overall_status == 'Pass' %}
+                                        <span class="badge bg-success">Pass</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Fail</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Performance Summary</h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <h2 class="display-4">{{ "%.1f"|format(exam.percentage) }}%</h2>
+                    <p class="text-muted">Overall Percentage</p>
+                </div>
+                <div class="mb-3">
+                    {% if exam.grade in ['A+', 'A'] %}
+                        <span class="badge bg-success fs-5">{{ exam.grade }}</span>
+                    {% elif exam.grade in ['B+', 'B'] %}
+                        <span class="badge bg-info fs-5">{{ exam.grade }}</span>
+                    {% elif exam.grade in ['C+', 'C'] %}
+                        <span class="badge bg-warning fs-5">{{ exam.grade }}</span>
+                    {% else %}
+                        <span class="badge bg-danger fs-5">{{ exam.grade }}</span>
+                    {% endif %}
+                    <p class="text-muted mt-2">Grade</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Subject-wise Marks</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th class="text-center">Max Marks</th>
+                                <th class="text-center">Obtained Marks</th>
+                                <th class="text-center">Percentage</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if exam.subject1_name %}
+                            <tr>
+                                <td>{{ exam.subject1_name }}</td>
+                                <td class="text-center">{{ exam.subject1_max_marks }}</td>
+                                <td class="text-center">{{ exam.subject1_obtained_marks }}</td>
+                                <td class="text-center">{{ "%.1f"|format((exam.subject1_obtained_marks / exam.subject1_max_marks * 100) if exam.subject1_max_marks > 0 else 0) }}%</td>
+                                <td class="text-center">
+                                    {% if (exam.subject1_obtained_marks / exam.subject1_max_marks * 100) >= 40 %}
+                                        <span class="badge bg-success">Pass</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Fail</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% if exam.subject2_name %}
+                            <tr>
+                                <td>{{ exam.subject2_name }}</td>
+                                <td class="text-center">{{ exam.subject2_max_marks }}</td>
+                                <td class="text-center">{{ exam.subject2_obtained_marks }}</td>
+                                <td class="text-center">{{ "%.1f"|format((exam.subject2_obtained_marks / exam.subject2_max_marks * 100) if exam.subject2_max_marks > 0 else 0) }}%</td>
+                                <td class="text-center">
+                                    {% if (exam.subject2_obtained_marks / exam.subject2_max_marks * 100) >= 40 %}
+                                        <span class="badge bg-success">Pass</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Fail</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% if exam.subject3_name %}
+                            <tr>
+                                <td>{{ exam.subject3_name }}</td>
+                                <td class="text-center">{{ exam.subject3_max_marks }}</td>
+                                <td class="text-center">{{ exam.subject3_obtained_marks }}</td>
+                                <td class="text-center">{{ "%.1f"|format((exam.subject3_obtained_marks / exam.subject3_max_marks * 100) if exam.subject3_max_marks > 0 else 0) }}%</td>
+                                <td class="text-center">
+                                    {% if (exam.subject3_obtained_marks / exam.subject3_max_marks * 100) >= 40 %}
+                                        <span class="badge bg-success">Pass</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Fail</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                        <tfoot class="table-dark">
+                            <tr>
+                                <th>Total</th>
+                                <th class="text-center">{{ exam.total_max_marks }}</th>
+                                <th class="text-center">{{ exam.total_obtained_marks }}</th>
+                                <th class="text-center">{{ "%.1f"|format(exam.percentage) }}%</th>
+                                <th class="text-center">
+                                    {% if exam.overall_status == 'Pass' %}
+                                        <span class="badge bg-success">Pass</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Fail</span>
+                                    {% endif %}
+                                </th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

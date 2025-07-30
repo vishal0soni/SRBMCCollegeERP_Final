@@ -633,8 +633,57 @@ def exams():
         return redirect(url_for('dashboard'))
     
     page = request.args.get('page', 1, type=int)
-    exams = db.session.query(Exam, Student).join(Student).paginate(page=page, per_page=20, error_out=False)
-    return render_template('exams/exams.html', exams=exams)
+    search = request.args.get('search', '')
+    course_filter = request.args.get('course', '')
+    semester_filter = request.args.get('semester', '')
+    result_filter = request.args.get('result', '')
+    sort_by = request.args.get('sort', 'exam_name')
+    sort_order = request.args.get('order', 'asc')
+    
+    query = db.session.query(Exam, Student).join(Student)
+    
+    # Search filters
+    if search:
+        search_filter = or_(
+            Student.first_name.contains(search),
+            Student.last_name.contains(search),
+            Student.student_unique_id.contains(search),
+            Exam.exam_name.contains(search),
+            Student.current_course.contains(search)
+        )
+        query = query.filter(search_filter)
+    
+    if course_filter:
+        query = query.filter(Student.current_course.contains(course_filter))
+    
+    if semester_filter:
+        query = query.filter(Exam.semester == semester_filter)
+    
+    if result_filter:
+        query = query.filter(Exam.overall_status == result_filter)
+    
+    # Sorting
+    if hasattr(Exam, sort_by):
+        if sort_order == 'desc':
+            query = query.order_by(getattr(Exam, sort_by).desc())
+        else:
+            query = query.order_by(getattr(Exam, sort_by))
+    elif hasattr(Student, sort_by):
+        if sort_order == 'desc':
+            query = query.order_by(getattr(Student, sort_by).desc())
+        else:
+            query = query.order_by(getattr(Student, sort_by))
+    
+    exams = query.paginate(page=page, per_page=20, error_out=False)
+    
+    # Get filter options
+    courses = db.session.query(Student.current_course).distinct().filter(Student.current_course != None).all()
+    courses = [course[0] for course in courses]
+    
+    semesters = db.session.query(Exam.semester).distinct().filter(Exam.semester != None).all()
+    semesters = [sem[0] for sem in semesters]
+    
+    return render_template('exams/exams.html', exams=exams, courses=courses, semesters=semesters)
 
 @app.route('/exams/add', methods=['GET', 'POST'])
 @login_required
@@ -693,6 +742,97 @@ def add_exam():
             flash(f'Error saving exam results: {str(e)}', 'error')
     
     return render_template('exams/exam_form.html', form=form, title='Add Exam Results')
+
+@app.route('/exams/view/<int:exam_id>')
+@login_required
+def view_exam(exam_id):
+    if not can_edit_module(current_user, 'exams'):
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    exam = Exam.query.get_or_404(exam_id)
+    return render_template('exams/exam_detail.html', exam=exam)
+
+@app.route('/exams/edit/<int:exam_id>', methods=['GET', 'POST'])
+@login_required
+def edit_exam(exam_id):
+    if not can_edit_module(current_user, 'exams') or current_user.role.access_type != 'Edit':
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    exam = Exam.query.get_or_404(exam_id)
+    form = ExamForm(obj=exam)
+    form.student_id.choices = [(s.id, f"{s.student_unique_id} - {s.first_name} {s.last_name}") for s in Student.query.all()]
+    form.course_id.choices = [(c.course_id, c.course_full_name) for c in Course.query.all()]
+    
+    if form.validate_on_submit():
+        # Calculate totals and grade
+        subjects_data = [
+            (form.subject1_name.data, form.subject1_max_marks.data, form.subject1_obtained_marks.data),
+            (form.subject2_name.data, form.subject2_max_marks.data, form.subject2_obtained_marks.data),
+            (form.subject3_name.data, form.subject3_max_marks.data, form.subject3_obtained_marks.data),
+        ]
+        
+        total_max = sum(max_marks for name, max_marks, obtained in subjects_data if name)
+        total_obtained = sum(obtained for name, max_marks, obtained in subjects_data if name)
+        percentage = (total_obtained / total_max * 100) if total_max > 0 else 0
+        grade = calculate_grade(percentage)
+        status = 'Pass' if percentage >= 40 else 'Fail'
+        
+        exam.student_id = form.student_id.data
+        exam.course_id = form.course_id.data
+        exam.semester = form.semester.data
+        exam.exam_name = form.exam_name.data
+        exam.exam_date = form.exam_date.data
+        exam.subject1_name = form.subject1_name.data
+        exam.subject1_max_marks = form.subject1_max_marks.data
+        exam.subject1_obtained_marks = form.subject1_obtained_marks.data
+        exam.subject2_name = form.subject2_name.data
+        exam.subject2_max_marks = form.subject2_max_marks.data
+        exam.subject2_obtained_marks = form.subject2_obtained_marks.data
+        exam.subject3_name = form.subject3_name.data
+        exam.subject3_max_marks = form.subject3_max_marks.data
+        exam.subject3_obtained_marks = form.subject3_obtained_marks.data
+        exam.total_max_marks = total_max
+        exam.total_obtained_marks = total_obtained
+        exam.percentage = percentage
+        exam.grade = grade
+        exam.overall_status = status
+        
+        try:
+            db.session.commit()
+            flash('Exam results updated successfully!', 'success')
+            return redirect(url_for('exams'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating exam results: {str(e)}', 'error')
+    
+    return render_template('exams/exam_form.html', form=form, title='Edit Exam Results', exam=exam)
+
+@app.route('/students/promote/<int:student_id>', methods=['POST'])
+@login_required
+def promote_student(student_id):
+    if not can_edit_module(current_user, 'exams') or current_user.role.access_type != 'Edit':
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    student = Student.query.get_or_404(student_id)
+    
+    try:
+        # Create new fee record for next class
+        course = Course.query.filter_by(course_full_name=student.current_course).first()
+        if course:
+            fee_record = CollegeFees(
+                student_id=student.id,
+                course_id=course.course_id
+            )
+            db.session.add(fee_record)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Student promoted successfully! New fee record created.'})
+        else:
+            return jsonify({'error': 'Course not found'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 # Analytics Routes
 @app.route('/analytics')
@@ -884,6 +1024,22 @@ def view_fee_detail(fee_id):
     return render_template('fees/fee_detail.html', fee_record=fee_record, student=student, invoices=invoices)
 
 # PDF Generation Routes
+@app.route('/students/<int:student_id>/pdf')
+@login_required
+def student_pdf(student_id):
+    if not can_edit_module(current_user, 'students'):
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    student = Student.query.get_or_404(student_id)
+    pdf_data = generate_pdf_student_report(student)
+    
+    response = make_response(pdf_data)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=student_report_{student.student_unique_id}.pdf'
+    
+    return response
+
 @app.route('/invoice/<int:invoice_id>/pdf')
 @login_required
 def invoice_pdf(invoice_id):
