@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SelectField, TextAreaField, DateField, IntegerField, DecimalField, BooleanField, SubmitField
-from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional
+from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional, ValidationError
 from wtforms.widgets import TextArea
 
 class LoginForm(FlaskForm):
@@ -54,8 +54,21 @@ class StudentForm(FlaskForm):
 class CourseForm(FlaskForm):
     course_short_name = StringField('Course Short Name', validators=[DataRequired(), Length(max=10)])
     course_full_name = StringField('Course Full Name', validators=[DataRequired(), Length(max=200)])
-    course_category = StringField('Course Category', validators=[Optional(), Length(max=100)])
-    duration = IntegerField('Duration (Years)', validators=[DataRequired(), NumberRange(min=1, max=10)])
+    course_category = SelectField('Course Category', choices=[
+        ('', 'Select Category'),
+        ('Undergraduate', 'Undergraduate'),
+        ('Postgraduate', 'Postgraduate'),
+        ('Diploma', 'Diploma'),
+        ('Certificate', 'Certificate')
+    ], validators=[DataRequired()])
+    duration = SelectField('Duration (Years)', choices=[
+        ('', 'Select Duration'),
+        ('1', '1 Year'),
+        ('2', '2 Years'),
+        ('3', '3 Years'),
+        ('4', '4 Years'),
+        ('5', '5 Years')
+    ], coerce=int, validators=[DataRequired()])
     submit = SubmitField('Save Course')
 
 class SubjectForm(FlaskForm):
@@ -91,3 +104,13 @@ class ExamForm(FlaskForm):
     subject3_obtained_marks = IntegerField('Obtained Marks', default=0)
     
     submit = SubmitField('Save Exam Results')
+
+class ChangePasswordForm(FlaskForm):
+    current_password = PasswordField('Current Password', validators=[DataRequired()])
+    new_password = PasswordField('New Password', validators=[DataRequired(), Length(min=4, max=128)])
+    confirm_password = PasswordField('Confirm New Password', validators=[DataRequired()])
+    submit = SubmitField('Change Password')
+    
+    def validate_confirm_password(self, field):
+        if field.data != self.new_password.data:
+            raise ValidationError('New passwords must match.')

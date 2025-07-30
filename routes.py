@@ -71,8 +71,42 @@ def admin_users():
         return redirect(url_for('dashboard'))
     
     page = request.args.get('page', 1, type=int)
-    users = UserProfile.query.paginate(page=page, per_page=20, error_out=False)
-    return render_template('admin/users.html', users=users)
+    search = request.args.get('search', '')
+    role_filter = request.args.get('role', '')
+    sort_by = request.args.get('sort', 'first_name')
+    sort_order = request.args.get('order', 'asc')
+    
+    query = UserProfile.query.join(UserRole)
+    
+    # Search filters
+    if search:
+        search_filter = or_(
+            UserProfile.first_name.contains(search),
+            UserProfile.last_name.contains(search),
+            UserProfile.username.contains(search),
+            UserProfile.email.contains(search)
+        )
+        query = query.filter(search_filter)
+    
+    if role_filter:
+        query = query.filter(UserProfile.role_id == role_filter)
+    
+    # Sorting
+    if hasattr(UserProfile, sort_by):
+        if sort_order == 'desc':
+            query = query.order_by(getattr(UserProfile, sort_by).desc())
+        else:
+            query = query.order_by(getattr(UserProfile, sort_by))
+    elif sort_by == 'role_name':
+        if sort_order == 'desc':
+            query = query.order_by(UserRole.role_name.desc())
+        else:
+            query = query.order_by(UserRole.role_name)
+    
+    users = query.paginate(page=page, per_page=20, error_out=False)
+    roles = UserRole.query.all()
+    
+    return render_template('admin/users.html', users=users, roles=roles)
 
 @app.route('/admin/users/add', methods=['GET', 'POST'])
 @login_required
@@ -145,6 +179,25 @@ def admin_edit_user(user_id):
             flash(f'Error updating user: {str(e)}', 'error')
     
     return render_template('admin/user_form.html', form=form, title='Edit User', user=user)
+
+@app.route('/admin/users/delete/<int:user_id>', methods=['DELETE'])
+@login_required
+def admin_delete_user(user_id):
+    if not can_edit_module(current_user, 'admin'):
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    if user_id == current_user.id:
+        return jsonify({'error': 'Cannot delete your own account'}), 400
+    
+    user = UserProfile.query.get_or_404(user_id)
+    
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 # Student Routes
 @app.route('/students')
@@ -288,8 +341,38 @@ def student_summary():
 @login_required
 def courses():
     page = request.args.get('page', 1, type=int)
-    courses = Course.query.paginate(page=page, per_page=20, error_out=False)
-    return render_template('courses/courses.html', courses=courses)
+    search = request.args.get('search', '')
+    category_filter = request.args.get('category', '')
+    sort_by = request.args.get('sort', 'course_full_name')
+    sort_order = request.args.get('order', 'asc')
+    
+    query = Course.query
+    
+    # Search filters
+    if search:
+        search_filter = or_(
+            Course.course_short_name.contains(search),
+            Course.course_full_name.contains(search)
+        )
+        query = query.filter(search_filter)
+    
+    if category_filter:
+        query = query.filter(Course.course_category == category_filter)
+    
+    # Sorting
+    if hasattr(Course, sort_by):
+        if sort_order == 'desc':
+            query = query.order_by(getattr(Course, sort_by).desc())
+        else:
+            query = query.order_by(getattr(Course, sort_by))
+    
+    courses = query.paginate(page=page, per_page=20, error_out=False)
+    
+    # Get unique categories for filter
+    categories = db.session.query(Course.course_category).distinct().filter(Course.course_category != None).all()
+    categories = [cat[0] for cat in categories]
+    
+    return render_template('courses/courses.html', courses=courses, categories=categories)
 
 @app.route('/courses/add', methods=['GET', 'POST'])
 @login_required
@@ -317,6 +400,62 @@ def add_course():
             flash(f'Error adding course: {str(e)}', 'error')
     
     return render_template('courses/course_form.html', form=form, title='Add Course')
+
+@app.route('/courses/view/<int:course_id>')
+@login_required
+def view_course(course_id):
+    if not can_edit_module(current_user, 'courses'):
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    course = Course.query.get_or_404(course_id)
+    return render_template('courses/course_detail.html', course=course)
+
+@app.route('/courses/edit/<int:course_id>', methods=['GET', 'POST'])
+@login_required
+def edit_course(course_id):
+    if not can_edit_module(current_user, 'courses') or current_user.role.access_type != 'Edit':
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    course = Course.query.get_or_404(course_id)
+    form = CourseForm(obj=course)
+    
+    if form.validate_on_submit():
+        form.populate_obj(course)
+        
+        try:
+            db.session.commit()
+            flash('Course updated successfully!', 'success')
+            return redirect(url_for('courses'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating course: {str(e)}', 'error')
+    
+    return render_template('courses/course_form.html', form=form, title='Edit Course', course=course)
+
+@app.route('/courses/delete/<int:course_id>', methods=['DELETE'])
+@login_required
+def delete_course(course_id):
+    if not can_edit_module(current_user, 'courses') or current_user.role.access_type != 'Edit':
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    course = Course.query.get_or_404(course_id)
+    
+    try:
+        # Delete related subjects first
+        Subject.query.filter_by(course_short_name=course.course_short_name).delete()
+        
+        # Delete course details
+        CourseDetails.query.filter_by(course_short_name=course.course_short_name).delete()
+        
+        # Delete the course
+        db.session.delete(course)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 # Fee Routes
 @app.route('/fees')
@@ -664,6 +803,65 @@ def report_card_pdf(exam_id):
     response.headers['Content-Disposition'] = f'attachment; filename=report_card_{exam.student.student_unique_id}.pdf'
     
     return response
+
+# Profile Routes
+@app.route('/profile')
+@login_required
+def profile():
+    return render_template('profile.html', user=current_user)
+
+@app.route('/profile/edit', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    form = UserForm(obj=current_user)
+    form.role_id.choices = [(current_user.role_id, current_user.role.role_name)]
+    form.role_id.data = current_user.role_id
+    form.status.data = current_user.status
+    
+    if form.validate_on_submit():
+        current_user.first_name = form.first_name.data
+        current_user.last_name = form.last_name.data
+        current_user.email = form.email.data
+        current_user.phone = form.phone.data
+        current_user.gender = form.gender.data
+        current_user.birthdate = form.birthdate.data
+        current_user.street = form.street.data
+        current_user.area_village = form.area_village.data
+        current_user.city_tehsil = form.city_tehsil.data
+        current_user.state = form.state.data
+        current_user.updated_at = datetime.utcnow()
+        
+        try:
+            db.session.commit()
+            flash('Profile updated successfully!', 'success')
+            return redirect(url_for('profile'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating profile: {str(e)}', 'error')
+    
+    return render_template('profile_edit.html', form=form, title='Edit Profile')
+
+@app.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    form = ChangePasswordForm()
+    
+    if form.validate_on_submit():
+        if check_password_hash(current_user.password_hash, form.current_password.data):
+            current_user.password_hash = generate_password_hash(form.new_password.data)
+            current_user.updated_at = datetime.utcnow()
+            
+            try:
+                db.session.commit()
+                flash('Password changed successfully!', 'success')
+                return redirect(url_for('profile'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error changing password: {str(e)}', 'error')
+        else:
+            flash('Current password is incorrect.', 'error')
+    
+    return render_template('change_password.html', form=form, title='Change Password')
 
 # Error handlers
 @app.errorhandler(404)
