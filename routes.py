@@ -212,6 +212,8 @@ def students():
     gender_filter = request.args.get('gender', '')
     category_filter = request.args.get('category', '')
     status_filter = request.args.get('status', '')
+    sort_by = request.args.get('sort', 'first_name')
+    sort_order = request.args.get('order', 'asc')
     
     query = Student.query
     
@@ -224,10 +226,18 @@ def students():
     if status_filter:
         query = query.filter_by(dropout_status=status_filter)
     
+    # Sorting
+    if hasattr(Student, sort_by):
+        if sort_order == 'desc':
+            query = query.order_by(getattr(Student, sort_by).desc())
+        else:
+            query = query.order_by(getattr(Student, sort_by))
+    
     students = query.paginate(page=page, per_page=20, error_out=False)
     
     # Get filter options
-    courses = db.session.query(Student.current_course).distinct().all()
+    courses = db.session.query(Student.current_course).distinct().filter(Student.current_course != None).all()
+    courses = [course[0] for course in courses]
     
     return render_template('students/students.html', students=students, courses=courses)
 
@@ -309,26 +319,39 @@ def student_summary():
     course_counts = db.session.query(
         Student.current_course, 
         func.count(Student.id)
-    ).group_by(Student.current_course).all()
+    ).filter(Student.current_course != None).group_by(Student.current_course).all()
     
     gender_counts = db.session.query(
         Student.gender, 
         func.count(Student.id)
-    ).group_by(Student.gender).all()
+    ).filter(Student.gender != None).group_by(Student.gender).all()
     
     category_counts = db.session.query(
         Student.category, 
         func.count(Student.id)
-    ).group_by(Student.category).all()
+    ).filter(Student.category != None).group_by(Student.category).all()
     
     monthly_admissions = db.session.query(
         func.extract('month', Student.admission_date),
         func.extract('year', Student.admission_date),
         func.count(Student.id)
-    ).group_by(
+    ).filter(Student.admission_date != None).group_by(
         func.extract('month', Student.admission_date),
         func.extract('year', Student.admission_date)
+    ).order_by(
+        func.extract('year', Student.admission_date),
+        func.extract('month', Student.admission_date)
     ).all()
+    
+    # Provide default empty data if no students exist
+    if not course_counts:
+        course_counts = []
+    if not gender_counts:
+        gender_counts = []
+    if not category_counts:
+        category_counts = []
+    if not monthly_admissions:
+        monthly_admissions = []
     
     return render_template('students/student_summary.html', 
                          course_counts=course_counts,
@@ -469,8 +492,72 @@ def fees():
         return redirect(url_for('dashboard'))
     
     page = request.args.get('page', 1, type=int)
-    fees = db.session.query(CollegeFees, Student).join(Student).paginate(page=page, per_page=20, error_out=False)
-    return render_template('fees/fees.html', fees=fees)
+    search = request.args.get('search', '')
+    course_filter = request.args.get('course', '')
+    payment_status_filter = request.args.get('payment_status', '')
+    scholarship_filter = request.args.get('scholarship', '')
+    sort_by = request.args.get('sort', 'student_unique_id')
+    sort_order = request.args.get('order', 'asc')
+    
+    query = db.session.query(CollegeFees, Student).join(Student)
+    
+    # Search filters
+    if search:
+        search_filter = or_(
+            Student.first_name.contains(search),
+            Student.last_name.contains(search),
+            Student.student_unique_id.contains(search),
+            Student.current_course.contains(search)
+        )
+        query = query.filter(search_filter)
+    
+    if course_filter:
+        query = query.filter(Student.current_course.contains(course_filter))
+    
+    if scholarship_filter:
+        query = query.filter(Student.scholarship_status == scholarship_filter)
+    
+    # Payment status filtering
+    if payment_status_filter:
+        if payment_status_filter == 'paid':
+            query = query.filter(
+                (CollegeFees.installment_1 + CollegeFees.installment_2 + CollegeFees.installment_3 + 
+                 CollegeFees.installment_4 + CollegeFees.installment_5 + CollegeFees.installment_6) >= CollegeFees.total_fee
+            )
+        elif payment_status_filter == 'pending':
+            query = query.filter(
+                (CollegeFees.installment_1 + CollegeFees.installment_2 + CollegeFees.installment_3 + 
+                 CollegeFees.installment_4 + CollegeFees.installment_5 + CollegeFees.installment_6) == 0
+            )
+        elif payment_status_filter == 'partial':
+            query = query.filter(
+                and_(
+                    (CollegeFees.installment_1 + CollegeFees.installment_2 + CollegeFees.installment_3 + 
+                     CollegeFees.installment_4 + CollegeFees.installment_5 + CollegeFees.installment_6) > 0,
+                    (CollegeFees.installment_1 + CollegeFees.installment_2 + CollegeFees.installment_3 + 
+                     CollegeFees.installment_4 + CollegeFees.installment_5 + CollegeFees.installment_6) < CollegeFees.total_fee
+                )
+            )
+    
+    # Sorting
+    if hasattr(Student, sort_by):
+        if sort_order == 'desc':
+            query = query.order_by(getattr(Student, sort_by).desc())
+        else:
+            query = query.order_by(getattr(Student, sort_by))
+    elif hasattr(CollegeFees, sort_by):
+        if sort_order == 'desc':
+            query = query.order_by(getattr(CollegeFees, sort_by).desc())
+        else:
+            query = query.order_by(getattr(CollegeFees, sort_by))
+    
+    fees = query.paginate(page=page, per_page=20, error_out=False)
+    
+    # Get unique courses for filter
+    courses = db.session.query(Student.current_course).distinct().filter(Student.current_course != None).all()
+    courses = [course[0] for course in courses]
+    
+    return render_template('fees/fees.html', fees=fees, courses=courses)
 
 @app.route('/fees/payment', methods=['GET', 'POST'])
 @login_required
@@ -781,6 +868,20 @@ def export_students():
     response.headers['Content-type'] = 'text/csv'
     
     return response
+
+# Fee Detail Routes
+@app.route('/fees/view/<int:fee_id>')
+@login_required
+def view_fee_detail(fee_id):
+    if not can_edit_module(current_user, 'fees'):
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    fee_record = CollegeFees.query.get_or_404(fee_id)
+    student = Student.query.get_or_404(fee_record.student_id)
+    invoices = Invoice.query.filter_by(student_id=student.id).all()
+    
+    return render_template('fees/fee_detail.html', fee_record=fee_record, student=student, invoices=invoices)
 
 # PDF Generation Routes
 @app.route('/invoice/<int:invoice_id>/pdf')

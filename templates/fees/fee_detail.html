@@ -1,0 +1,139 @@
+
+{% extends "base.html" %}
+
+{% block title %}Fee Details - {{ student.student_unique_id }} - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('fees') }}">Fee Management</a></li>
+                <li class="breadcrumb-item active">Fee Details</li>
+            </ol>
+        </nav>
+        
+        <h1 class="h3 mb-4">
+            <i class="fas fa-money-bill"></i> Fee Details - {{ student.student_unique_id }}
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Student Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Student ID:</strong> {{ student.student_unique_id }}</p>
+                        <p><strong>Name:</strong> {{ student.first_name }} {{ student.last_name }}</p>
+                        <p><strong>Course:</strong> {{ student.current_course }}</p>
+                        <p><strong>Email:</strong> {{ student.email or 'N/A' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Phone:</strong> {{ student.phone or 'N/A' }}</p>
+                        <p><strong>Admission Date:</strong> {{ student.admission_date.strftime('%d/%m/%Y') if student.admission_date else 'N/A' }}</p>
+                        <p><strong>Scholarship Status:</strong> {{ student.scholarship_status }}</p>
+                        <p><strong>Status:</strong> {{ student.dropout_status }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Payment History</h6>
+            </div>
+            <div class="card-body">
+                {% if invoices %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Installment</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice in invoices %}
+                            <tr>
+                                <td>{{ invoice.invoice_number }}</td>
+                                <td>{{ invoice.date_time.strftime('%d/%m/%Y') }}</td>
+                                <td>₹{{ "%.2f"|format(invoice.invoice_amount) }}</td>
+                                <td>{{ invoice.installment_number }}</td>
+                                <td>
+                                    <a href="{{ url_for('invoice_pdf', invoice_id=invoice.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-print"></i> Print
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No payment history available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Fee Summary</h6>
+            </div>
+            <div class="card-body">
+                {% set total_paid = (fee_record.installment_1 or 0) + (fee_record.installment_2 or 0) + (fee_record.installment_3 or 0) + (fee_record.installment_4 or 0) + (fee_record.installment_5 or 0) + (fee_record.installment_6 or 0) %}
+                {% set due_amount = (fee_record.total_fee or 0) - total_paid %}
+                
+                <div class="mb-3">
+                    <strong>Total Fee:</strong>
+                    <span class="float-end">₹{{ "%.2f"|format(fee_record.total_fee or 0) }}</span>
+                </div>
+                <div class="mb-3">
+                    <strong>Total Paid:</strong>
+                    <span class="float-end text-success">₹{{ "%.2f"|format(total_paid) }}</span>
+                </div>
+                <div class="mb-3">
+                    <strong>Balance Due:</strong>
+                    <span class="float-end {% if due_amount > 0 %}text-danger{% else %}text-success{% endif %}">
+                        ₹{{ "%.2f"|format(due_amount) }}
+                    </span>
+                </div>
+                
+                <hr>
+                
+                <h6>Installments Paid:</h6>
+                {% set installments = [
+                    (fee_record.installment_1, fee_record.invoice1_number, 1),
+                    (fee_record.installment_2, fee_record.invoice2_number, 2),
+                    (fee_record.installment_3, fee_record.invoice3_number, 3),
+                    (fee_record.installment_4, fee_record.invoice4_number, 4),
+                    (fee_record.installment_5, fee_record.invoice5_number, 5),
+                    (fee_record.installment_6, fee_record.invoice6_number, 6)
+                ] %}
+                
+                {% for amount, invoice_num, num in installments %}
+                    {% if amount and amount > 0 %}
+                        <div class="mb-2">
+                            <small>
+                                <strong>Installment {{ num }}:</strong>
+                                <span class="float-end">₹{{ amount }}</span><br>
+                                <em>Invoice: {{ invoice_num }}</em>
+                            </small>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

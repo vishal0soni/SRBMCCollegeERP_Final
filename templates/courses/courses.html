@@ -215,30 +215,7 @@
     </div>
 </div>
 
-<!-- Course Statistics -->
-<div class="row mt-4">
-    <div class="col-lg-6 mb-4">
-        <div class="card shadow">
-            <div class="card-header">
-                <h6 class="m-0 font-weight-bold text-primary">Course Categories</h6>
-            </div>
-            <div class="card-body">
-                <canvas id="courseCategoryChart"></canvas>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-lg-6 mb-4">
-        <div class="card shadow">
-            <div class="card-header">
-                <h6 class="m-0 font-weight-bold text-primary">Duration Distribution</h6>
-            </div>
-            <div class="card-body">
-                <canvas id="courseDurationChart"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -265,50 +242,6 @@ function deleteCourse(courseId) {
     }
 }
 
-// Course Category Chart
-document.addEventListener('DOMContentLoaded', function() {
-    // You would fetch this data from an API endpoint
-    const categoryCtx = document.getElementById('courseCategoryChart').getContext('2d');
-    new Chart(categoryCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Undergraduate', 'Postgraduate', 'Diploma', 'Certificate'],
-            datasets: [{
-                data: [12, 5, 3, 2],
-                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e']
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    });
 
-    // Course Duration Chart
-    const durationCtx = document.getElementById('courseDurationChart').getContext('2d');
-    new Chart(durationCtx, {
-        type: 'bar',
-        data: {
-            labels: ['1 Year', '2 Years', '3 Years', '4 Years', '5 Years'],
-            datasets: [{
-                label: 'Number of Courses',
-                data: [2, 5, 12, 3, 1],
-                backgroundColor: '#4e73df'
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-});
 </script>
 {% endblock %}

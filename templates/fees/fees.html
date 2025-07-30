@@ -90,45 +90,63 @@
     </div>
 </div>
 
-<!-- Filters -->
+<!-- Search and Filter Controls -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="card">
+        <div class="card shadow">
             <div class="card-body">
                 <form method="GET" class="row g-3">
                     <div class="col-md-3">
+                        <label for="search" class="form-label">Search</label>
+                        <input type="text" name="search" id="search" class="form-control" 
+                               placeholder="Search by name, ID, course..." 
+                               value="{{ request.args.get('search', '') }}">
+                    </div>
+                    <div class="col-md-2">
                         <label for="course" class="form-label">Course</label>
                         <select name="course" id="course" class="form-select">
                             <option value="">All Courses</option>
-                            <option value="BA">Bachelor of Arts (BA)</option>
-                            <option value="BSC">Bachelor of Science (BSC)</option>
-                            <option value="MA">Master of Arts (MA)</option>
+                            {% for course in courses %}
+                                <option value="{{ course }}" {% if request.args.get('course') == course %}selected{% endif %}>
+                                    {{ course }}
+                                </option>
+                            {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label for="payment_status" class="form-label">Payment Status</label>
                         <select name="payment_status" id="payment_status" class="form-select">
                             <option value="">All Status</option>
-                            <option value="paid">Fully Paid</option>
-                            <option value="partial">Partially Paid</option>
-                            <option value="pending">Pending</option>
+                            <option value="paid" {% if request.args.get('payment_status') == 'paid' %}selected{% endif %}>Fully Paid</option>
+                            <option value="partial" {% if request.args.get('payment_status') == 'partial' %}selected{% endif %}>Partially Paid</option>
+                            <option value="pending" {% if request.args.get('payment_status') == 'pending' %}selected{% endif %}>Pending</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label for="scholarship" class="form-label">Scholarship Status</label>
+                    <div class="col-md-2">
+                        <label for="scholarship" class="form-label">Scholarship</label>
                         <select name="scholarship" id="scholarship" class="form-select">
                             <option value="">All</option>
-                            <option value="approved">Approved</option>
-                            <option value="pending">Pending</option>
-                            <option value="rejected">Rejected</option>
+                            <option value="Applied" {% if request.args.get('scholarship') == 'Applied' %}selected{% endif %}>Applied</option>
+                            <option value="Approved" {% if request.args.get('scholarship') == 'Approved' %}selected{% endif %}>Approved</option>
+                            <option value="Rejected" {% if request.args.get('scholarship') == 'Rejected' %}selected{% endif %}>Rejected</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">&nbsp;</label>
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">Filter</button>
-                            <a href="{{ url_for('fees') }}" class="btn btn-secondary">Clear</a>
-                        </div>
+                    <div class="col-md-2">
+                        <label for="sort" class="form-label">Sort By</label>
+                        <select name="sort" id="sort" class="form-select">
+                            <option value="student_unique_id" {% if request.args.get('sort') == 'student_unique_id' %}selected{% endif %}>Student ID</option>
+                            <option value="first_name" {% if request.args.get('sort') == 'first_name' %}selected{% endif %}>Name</option>
+                            <option value="current_course" {% if request.args.get('sort') == 'current_course' %}selected{% endif %}>Course</option>
+                            <option value="total_fee" {% if request.args.get('sort') == 'total_fee' %}selected{% endif %}>Total Fee</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        <a href="{{ url_for('fees') }}" class="btn btn-secondary ms-2">
+                            <i class="fas fa-times"></i>
+                        </a>
                     </div>
                 </form>
             </div>
@@ -150,9 +168,30 @@
                     <table class="table table-bordered table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th>Student</th>
-                                <th>Course</th>
-                                <th>Total Fees</th>
+                                <th>
+                                    <a href="{{ url_for('fees', sort='student_unique_id', order='desc' if request.args.get('sort') == 'student_unique_id' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), payment_status=request.args.get('payment_status', ''), scholarship=request.args.get('scholarship', '')) }}">
+                                        Student
+                                        {% if request.args.get('sort') == 'student_unique_id' %}
+                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('fees', sort='current_course', order='desc' if request.args.get('sort') == 'current_course' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), payment_status=request.args.get('payment_status', ''), scholarship=request.args.get('scholarship', '')) }}">
+                                        Course
+                                        {% if request.args.get('sort') == 'current_course' %}
+                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('fees', sort='total_fee', order='desc' if request.args.get('sort') == 'total_fee' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), payment_status=request.args.get('payment_status', ''), scholarship=request.args.get('scholarship', '')) }}">
+                                        Total Fees
+                                        {% if request.args.get('sort') == 'total_fee' %}
+                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
                                 <th>Paid Amount</th>
                                 <th>Due Amount</th>
                                 <th>Installments</th>
@@ -211,9 +250,9 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-info" onclick="viewFeeDetails({{ fee_record.id }})">
+                                        <a href="{{ url_for('view_fee_detail', fee_id=fee_record.id) }}" class="btn btn-outline-info">
                                             <i class="fas fa-eye"></i>
-                                        </button>
+                                        </a>
                                         {% if current_user.role.access_type == 'Edit' %}
                                         <a href="{{ url_for('payment') }}?student_id={{ student.id }}" class="btn btn-outline-primary">
                                             <i class="fas fa-plus"></i> Pay
@@ -236,7 +275,7 @@
                     <ul class="pagination justify-content-center">
                         {% if fees.has_prev %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('fees', page=fees.prev_num, **request.args) }}">Previous</a>
+                                <a class="page-link" href="{{ url_for('fees', page=fees.prev_num, course=request.args.get('course', ''), payment_status=request.args.get('payment_status', ''), scholarship=request.args.get('scholarship', ''), search=request.args.get('search', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Previous</a>
                             </li>
                         {% endif %}
                         
@@ -244,7 +283,7 @@
                             {% if page_num %}
                                 {% if page_num != fees.page %}
                                     <li class="page-item">
-                                        <a class="page-link" href="{{ url_for('fees', page=page_num, **request.args) }}">{{ page_num }}</a>
+                                        <a class="page-link" href="{{ url_for('fees', page=page_num, course=request.args.get('course', ''), payment_status=request.args.get('payment_status', ''), scholarship=request.args.get('scholarship', ''), search=request.args.get('search', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">{{ page_num }}</a>
                                     </li>
                                 {% else %}
                                     <li class="page-item active">
@@ -260,7 +299,7 @@
                         
                         {% if fees.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('fees', page=fees.next_num, **request.args) }}">Next</a>
+                                <a class="page-link" href="{{ url_for('fees', page=fees.next_num, course=request.args.get('course', ''), payment_status=request.args.get('payment_status', ''), scholarship=request.args.get('scholarship', ''), search=request.args.get('search', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Next</a>
                             </li>
                         {% endif %}
                     </ul>
