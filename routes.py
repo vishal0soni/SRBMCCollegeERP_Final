@@ -299,16 +299,38 @@ def add_student():
             course_detail = CourseDetails.query.filter_by(course_full_name=form.current_course.data).first()
             
             if course and course_detail:
+                # Get fee data from form (submitted via JavaScript)
+                course_tuition_fee = float(request.form.get('fee_course_tuition_fee', course_detail.total_course_fees) or 0)
+                enrollment_fee = float(request.form.get('fee_enrollment_fee', 0) or 0)
+                eligibility_certificate_fee = float(request.form.get('fee_eligibility_certificate_fee', 0) or 0)
+                university_affiliation_fee = float(request.form.get('fee_university_affiliation_fee', 0) or 0)
+                university_sports_fee = float(request.form.get('fee_university_sports_fee', 0) or 0)
+                university_development_fee = float(request.form.get('fee_university_development_fee', 0) or 0)
+                tc_cc_fee = float(request.form.get('fee_tc_cc_fee', 0) or 0)
+                miscellaneous_fee_1 = float(request.form.get('fee_miscellaneous_fee_1', 0) or 0)
+                miscellaneous_fee_2 = float(request.form.get('fee_miscellaneous_fee_2', 0) or 0)
+                miscellaneous_fee_3 = float(request.form.get('fee_miscellaneous_fee_3', 0) or 0)
+                total_fee = float(request.form.get('fee_total_fee', course_detail.total_course_fees) or 0)
+                
                 fee_record = CollegeFees(
                     student_id=student.id,
                     course_id=course.course_id,
-                    course_tuition_fee=course_detail.total_course_fees,
-                    total_fee=course_detail.total_course_fees
+                    course_tuition_fee=course_tuition_fee,
+                    enrollment_fee=enrollment_fee,
+                    eligibility_certificate_fee=eligibility_certificate_fee,
+                    university_affiliation_fee=university_affiliation_fee,
+                    university_sports_fee=university_sports_fee,
+                    university_development_fee=university_development_fee,
+                    tc_cc_fee=tc_cc_fee,
+                    miscellaneous_fee_1=miscellaneous_fee_1,
+                    miscellaneous_fee_2=miscellaneous_fee_2,
+                    miscellaneous_fee_3=miscellaneous_fee_3,
+                    total_fee=total_fee
                 )
                 db.session.add(fee_record)
             
             db.session.commit()
-            flash('Student added successfully!', 'success')
+            flash('Student added successfully with fee record!', 'success')
             return redirect(url_for('students'))
         except Exception as e:
             db.session.rollback()
@@ -999,6 +1021,28 @@ def api_get_subjects(course_name):
             return jsonify({'success': False, 'subjects': []})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e), 'subjects': []})
+
+@app.route('/api/course-fees/<course_name>')
+@login_required
+def api_get_course_fees(course_name):
+    try:
+        course_detail = CourseDetails.query.filter_by(course_full_name=course_name).first()
+        if course_detail:
+            fees_data = {
+                'course_tuition_fee': float(course_detail.course_tuition_fee or 0),
+                'misc_course_fees_1': float(course_detail.misc_course_fees_1 or 0),
+                'misc_course_fees_2': float(course_detail.misc_course_fees_2 or 0),
+                'misc_course_fees_3': float(course_detail.misc_course_fees_3 or 0),
+                'misc_course_fees_4': float(course_detail.misc_course_fees_4 or 0),
+                'misc_course_fees_5': float(course_detail.misc_course_fees_5 or 0),
+                'misc_course_fees_6': float(course_detail.misc_course_fees_6 or 0),
+                'total_course_fees': float(course_detail.total_course_fees or 0)
+            }
+            return jsonify({'success': True, 'fees': fees_data})
+        else:
+            return jsonify({'success': False, 'fees': None})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e), 'fees': None})
 
 # API Routes for charts
 @app.route('/api/student-stats')

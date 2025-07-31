@@ -209,8 +209,101 @@
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            {{ form.rebate_meera_scholarship_status.label(class="form-select") }}
                             {{ form.rebate_meera_scholarship_status.label(class="form-label") }}
+                            {{ form.rebate_meera_scholarship_status(class="form-select") }}
+                        </div>
+                    </div>
+
+                    <!-- Fee Details -->
+                    <h6 class="text-primary mb-3 mt-4">Fee Details</h6>
+                    <div id="feeDetailsSection" class="card border-light">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-secondary mb-3">Course Fees</h6>
+                                    <div class="mb-2">
+                                        <strong>Course Tuition Fee:</strong>
+                                        <span class="float-end" id="courseTuitionFee">₹0.00</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Misc Fee 1:</strong>
+                                        <span class="float-end" id="miscFee1">₹0.00</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Misc Fee 2:</strong>
+                                        <span class="float-end" id="miscFee2">₹0.00</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Misc Fee 3:</strong>
+                                        <span class="float-end" id="miscFee3">₹0.00</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Misc Fee 4:</strong>
+                                        <span class="float-end" id="miscFee4">₹0.00</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Misc Fee 5:</strong>
+                                        <span class="float-end" id="miscFee5">₹0.00</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Misc Fee 6:</strong>
+                                        <span class="float-end" id="miscFee6">₹0.00</span>
+                                    </div>
+                                    <hr>
+                                    <div class="mb-2">
+                                        <strong>Total Course Fees:</strong>
+                                        <span class="float-end text-primary fw-bold" id="totalCourseFees">₹0.00</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-secondary mb-3">Additional Fees</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Enrollment Fee</label>
+                                        <input type="number" class="form-control additional-fee-input" id="enrollmentFee" step="0.01" value="0" data-fee="enrollment_fee">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Eligibility Certificate Fee</label>
+                                        <input type="number" class="form-control additional-fee-input" id="eligibilityCertificateFee" step="0.01" value="0" data-fee="eligibility_certificate_fee">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">University Affiliation Fee</label>
+                                        <input type="number" class="form-control additional-fee-input" id="universityAffiliationFee" step="0.01" value="0" data-fee="university_affiliation_fee">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">University Sports Fee</label>
+                                        <input type="number" class="form-control additional-fee-input" id="universitySportsFee" step="0.01" value="0" data-fee="university_sports_fee">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">University Development Fee</label>
+                                        <input type="number" class="form-control additional-fee-input" id="universityDevelopmentFee" step="0.01" value="0" data-fee="university_development_fee">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">TC/CC Fee</label>
+                                        <input type="number" class="form-control additional-fee-input" id="tcCcFee" step="0.01" value="0" data-fee="tc_cc_fee">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Miscellaneous Fee 1</label>
+                                        <input type="number" class="form-control additional-fee-input" id="miscellaneousFee1" step="0.01" value="0" data-fee="miscellaneous_fee_1">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Miscellaneous Fee 2</label>
+                                        <input type="number" class="form-control additional-fee-input" id="miscellaneousFee2" step="0.01" value="0" data-fee="miscellaneous_fee_2">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Miscellaneous Fee 3</label>
+                                        <input type="number" class="form-control additional-fee-input" id="miscellaneousFee3" step="0.01" value="0" data-fee="miscellaneous_fee_3">
+                                    </div>
+                                    <hr>
+                                    <div class="mb-2">
+                                        <strong>Total Additional Fees:</strong>
+                                        <span class="float-end text-info fw-bold" id="totalAdditionalFees">₹0.00</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Grand Total:</strong>
+                                        <span class="float-end text-success fw-bold" id="grandTotalFees">₹0.00</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -262,14 +355,125 @@ function updateSubjects() {
                 console.error('Error fetching subjects:', error);
             });
     }
+    
+    // Update course fees
+    updateCourseFees();
 }
 
-// Initialize subjects on page load if course is already selected
+function updateCourseFees() {
+    const courseSelect = document.getElementById('{{ form.current_course.id }}');
+    const courseName = courseSelect.value;
+    
+    if (courseName) {
+        fetch(`/api/course-fees/${encodeURIComponent(courseName)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.fees) {
+                    const fees = data.fees;
+                    
+                    // Update course fee displays
+                    document.getElementById('courseTuitionFee').textContent = `₹${parseFloat(fees.course_tuition_fee || 0).toFixed(2)}`;
+                    document.getElementById('miscFee1').textContent = `₹${parseFloat(fees.misc_course_fees_1 || 0).toFixed(2)}`;
+                    document.getElementById('miscFee2').textContent = `₹${parseFloat(fees.misc_course_fees_2 || 0).toFixed(2)}`;
+                    document.getElementById('miscFee3').textContent = `₹${parseFloat(fees.misc_course_fees_3 || 0).toFixed(2)}`;
+                    document.getElementById('miscFee4').textContent = `₹${parseFloat(fees.misc_course_fees_4 || 0).toFixed(2)}`;
+                    document.getElementById('miscFee5').textContent = `₹${parseFloat(fees.misc_course_fees_5 || 0).toFixed(2)}`;
+                    document.getElementById('miscFee6').textContent = `₹${parseFloat(fees.misc_course_fees_6 || 0).toFixed(2)}`;
+                    document.getElementById('totalCourseFees').textContent = `₹${parseFloat(fees.total_course_fees || 0).toFixed(2)}`;
+                    
+                    // Store course fees data for form submission
+                    window.courseFees = fees;
+                    
+                    calculateTotalFees();
+                } else {
+                    // Clear fee displays if no course selected or error
+                    clearFeeDisplays();
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching course fees:', error);
+                clearFeeDisplays();
+            });
+    } else {
+        clearFeeDisplays();
+    }
+}
+
+function clearFeeDisplays() {
+    document.getElementById('courseTuitionFee').textContent = '₹0.00';
+    document.getElementById('miscFee1').textContent = '₹0.00';
+    document.getElementById('miscFee2').textContent = '₹0.00';
+    document.getElementById('miscFee3').textContent = '₹0.00';
+    document.getElementById('miscFee4').textContent = '₹0.00';
+    document.getElementById('miscFee5').textContent = '₹0.00';
+    document.getElementById('miscFee6').textContent = '₹0.00';
+    document.getElementById('totalCourseFees').textContent = '₹0.00';
+    window.courseFees = null;
+    calculateTotalFees();
+}
+
+function calculateTotalFees() {
+    const courseFees = parseFloat(window.courseFees?.total_course_fees || 0);
+    
+    let additionalFees = 0;
+    document.querySelectorAll('.additional-fee-input').forEach(input => {
+        additionalFees += parseFloat(input.value || 0);
+    });
+    
+    const grandTotal = courseFees + additionalFees;
+    
+    document.getElementById('totalAdditionalFees').textContent = `₹${additionalFees.toFixed(2)}`;
+    document.getElementById('grandTotalFees').textContent = `₹${grandTotal.toFixed(2)}`;
+}
+
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     const courseSelect = document.getElementById('{{ form.current_course.id }}');
+    
+    // Set up event listeners
+    courseSelect.addEventListener('change', function() {
+        updateSubjects();
+    });
+    
+    // Set up additional fee input listeners
+    document.querySelectorAll('.additional-fee-input').forEach(input => {
+        input.addEventListener('input', calculateTotalFees);
+    });
+    
+    // Initialize if course is already selected
     if (courseSelect.value) {
         updateSubjects();
     }
+    
+    // Override form submission to include fee data
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        if (window.courseFees) {
+            // Add hidden inputs for fee data
+            const feeData = {
+                course_tuition_fee: window.courseFees.course_tuition_fee || 0,
+                enrollment_fee: document.getElementById('enrollmentFee').value || 0,
+                eligibility_certificate_fee: document.getElementById('eligibilityCertificateFee').value || 0,
+                university_affiliation_fee: document.getElementById('universityAffiliationFee').value || 0,
+                university_sports_fee: document.getElementById('universitySportsFee').value || 0,
+                university_development_fee: document.getElementById('universityDevelopmentFee').value || 0,
+                tc_cc_fee: document.getElementById('tcCcFee').value || 0,
+                miscellaneous_fee_1: document.getElementById('miscellaneousFee1').value || 0,
+                miscellaneous_fee_2: document.getElementById('miscellaneousFee2').value || 0,
+                miscellaneous_fee_3: document.getElementById('miscellaneousFee3').value || 0,
+                total_fee: parseFloat(document.getElementById('grandTotalFees').textContent.replace('₹', '')) || 0
+            };
+            
+            // Add hidden inputs for each fee field
+            Object.keys(feeData).forEach(key => {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = `fee_${key}`;
+                hiddenInput.value = feeData[key];
+                form.appendChild(hiddenInput);
+            });
+        }
+    });
 });
 </script>
 {% endblock %}
