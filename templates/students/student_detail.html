@@ -161,6 +161,12 @@
                         <i class="fas fa-money-bill"></i> Process Payment
                     </a>
                     {% endif %}
+                    <a href="{{ url_for('student_pdf', student_id=student.id) }}" class="btn btn-info" target="_blank">
+                        <i class="fas fa-file-pdf"></i> Download PDF
+                    </a>
+                    <button onclick="printStudentReport()" class="btn btn-outline-primary">
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
                     <a href="{{ url_for('students') }}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Back to Students
                     </a>

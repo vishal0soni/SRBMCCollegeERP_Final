@@ -294,44 +294,166 @@ def generate_pdf_report_card(exam):
     return buffer.getvalue()
 
 def generate_pdf_student_report(student):
-    # Create PDF for student details report
-    buffer = io.BytesIO()
+    """Generate a PDF report for student details"""
+    try:
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from reportlab.lib import colors
+        from datetime import datetime
+        
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.5*inch)
+        
+        # Get styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            spaceAfter=30,
+            alignment=1  # Center alignment
+        )
+        
+        # Build content
+        story = []
+        
+        # Title
+        title = Paragraph("SRBMC College - Student Details Report", title_style)
+        story.append(title)
+        story.append(Spacer(1, 20))
+        
+        # Personal Information
+        story.append(Paragraph("<b>Personal Information</b>", styles['Heading2']))
+        personal_data = [
+            ['Student ID:', student.student_unique_id or 'N/A'],
+            ['Name:', f"{student.first_name} {student.last_name}"],
+            ['Father\'s Name:', student.father_name or 'N/A'],
+            ['Mother\'s Name:', student.mother_name or 'N/A'],
+            ['Gender:', student.gender or 'N/A'],
+            ['Category:', student.category or 'N/A'],
+            ['Email:', student.email or 'N/A'],
+            ['Phone:', student.phone or 'N/A'],
+        ]
+        
+        personal_table = Table(personal_data, colWidths=[2*inch, 4*inch])
+        personal_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        story.append(personal_table)
+        story.append(Spacer(1, 20))
+        
+        # Academic Information
+        story.append(Paragraph("<b>Academic Information</b>", styles['Heading2']))
+        academic_data = [
+            ['Current Course:', student.current_course or 'N/A'],
+            ['Subject 1:', student.subject_1_name or 'N/A'],
+            ['Subject 2:', student.subject_2_name or 'N/A'],
+            ['Subject 3:', student.subject_3_name or 'N/A'],
+            ['Percentage:', f"{student.percentage}%" if student.percentage else 'N/A'],
+            ['School Name:', student.school_name or 'N/A'],
+            ['Admission Date:', student.admission_date.strftime('%d/%m/%Y') if student.admission_date else 'N/A'],
+            ['Status:', student.dropout_status or 'N/A'],
+        ]
+        
+        academic_table = Table(academic_data, colWidths=[2*inch, 4*inch])
+        academic_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        story.append(academic_table)
+        story.append(Spacer(1, 20))
+        
+        # Address Information
+        story.append(Paragraph("<b>Address Information</b>", styles['Heading2']))
+        address_data = [
+            ['Street:', student.street or 'N/A'],
+            ['Area/Village:', student.area_village or 'N/A'],
+            ['City/Tehsil:', student.city_tehsil or 'N/A'],
+            ['State:', student.state or 'N/A'],
+        ]
+        
+        address_table = Table(address_data, colWidths=[2*inch, 4*inch])
+        address_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        story.append(address_table)
+        story.append(Spacer(1, 20))
+        
+        # Other Information
+        story.append(Paragraph("<b>Other Information</b>", styles['Heading2']))
+        other_data = [
+            ['Aadhaar Number:', student.aadhaar_card_number or 'N/A'],
+            ['Government Scholarship:', student.scholarship_status or 'N/A'],
+            ['Meera Scholarship:', student.rebate_meera_scholarship_status or 'N/A'],
+        ]
+        
+        other_table = Table(other_data, colWidths=[2*inch, 4*inch])
+        other_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        story.append(other_table)
+        story.append(Spacer(1, 30))
+        
+        # Footer
+        footer_text = f"Generated on: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"
+        story.append(Paragraph(footer_text, styles['Normal']))
+        
+        # Build PDF
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()
+        
+    except ImportError:
+        # Fallback to simple text-based PDF if reportlab is not available
+        buffer = io.BytesIO()
+        content = f"""SRBMC College - Student Details Report
 
-    # Simple text-based PDF content
-    content = f"""
-    SRBMC College - Student Details Report
+Personal Information:
+Student ID: {student.student_unique_id or 'N/A'}
+Name: {student.first_name} {student.last_name}
+Father's Name: {student.father_name or 'N/A'}
+Mother's Name: {student.mother_name or 'N/A'}
+Gender: {student.gender or 'N/A'}
+Category: {student.category or 'N/A'}
+Email: {student.email or 'N/A'}
+Phone: {student.phone or 'N/A'}
 
-    Personal Information:
-    Student ID: {student.student_unique_id}
-    Name: {student.first_name} {student.last_name}
-    Father's Name: {student.father_name}
-    Mother's Name: {student.mother_name}
-    Gender: {student.gender}
-    Category: {student.category}
-    Email: {student.email}
-    Phone: {student.phone}
+Academic Information:
+Current Course: {student.current_course or 'N/A'}
+Subject 1: {student.subject_1_name or 'N/A'}
+Subject 2: {student.subject_2_name or 'N/A'}
+Subject 3: {student.subject_3_name or 'N/A'}
+Percentage: {student.percentage}% if student.percentage else 'N/A'
+School Name: {student.school_name or 'N/A'}
+Admission Date: {student.admission_date.strftime('%d/%m/%Y') if student.admission_date else 'N/A'}
+Status: {student.dropout_status or 'N/A'}
 
-    Academic Information:
-    Current Course: {student.current_course}
-    Subject 1: {student.subject_1_name}
-    Subject 2: {student.subject_2_name}
-    Subject 3: {student.subject_3_name}
-    Percentage: {student.percentage}%
+Address Information:
+Street: {student.street or 'N/A'}
+Area/Village: {student.area_village or 'N/A'}
+City/Tehsil: {student.city_tehsil or 'N/A'}
+State: {student.state or 'N/A'}
 
-    Address Information:
-    Street: {student.street}
-    Area/Village: {student.area_village}
-    City/Tehsil: {student.city_tehsil}
-    State: {student.state}
+Other Information:
+Aadhaar Number: {student.aadhaar_card_number or 'N/A'}
+Government Scholarship: {student.scholarship_status or 'N/A'}
+Meera Scholarship: {student.rebate_meera_scholarship_status or 'N/A'}
 
-    Other Information:
-    Aadhaar Number: {student.aadhaar_card_number}
-    School Name: {student.school_name}
-    Scholarship Status: {student.scholarship_status}
-    Admission Date: {student.admission_date}
-    Status: {student.dropout_status}
-    """
-
-    buffer.write(content.encode('utf-8'))
-    buffer.seek(0)
-    return buffer.getvalue()
+Generated on: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
+"""
+        buffer.write(content.encode('utf-8'))
+        buffer.seek(0)
+        return buffer.getvalue()()
