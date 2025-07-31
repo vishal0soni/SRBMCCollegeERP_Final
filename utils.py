@@ -21,11 +21,24 @@ def generate_student_id(course_short, year):
     """Generate unique student ID like BA-25-001"""
     year_short = str(year)[-2:]  # Last 2 digits of year
 
-    # Count existing students for this course and year
+    # Find existing students for this course and year pattern
     pattern = f"{course_short}-{year_short}-%"
-    count = Student.query.filter(Student.student_unique_id.like(pattern)).count()
-
-    next_number = count + 1
+    existing_students = Student.query.filter(Student.student_unique_id.like(pattern)).all()
+    
+    # Extract the highest number from existing IDs
+    max_number = 0
+    for student in existing_students:
+        try:
+            # Extract number from ID like "BA-25-001" -> 1
+            id_parts = student.student_unique_id.split('-')
+            if len(id_parts) >= 3:
+                number = int(id_parts[2])
+                max_number = max(max_number, number)
+        except (ValueError, IndexError):
+            continue
+    
+    # Generate next number
+    next_number = max_number + 1
     return f"{course_short}-{year_short}-{next_number:03d}"
 
 def generate_invoice_number():

@@ -260,8 +260,23 @@ def add_student():
     if form.validate_on_submit():
         # Generate student unique ID
         course_details = CourseDetails.query.filter_by(course_full_name=form.current_course.data).first()
-        course_short = course_details.course_short_name if course_details else 'STD'
+        if not course_details:
+            flash('Course details not found. Please select a valid course.', 'error')
+            return render_template('students/student_form.html', form=form, title='Add Student')
+        
+        course_short = course_details.course_short_name
         student_unique_id = generate_student_id(course_short, date.today().year)
+        
+        # Double-check for uniqueness (safety measure)
+        existing_student = Student.query.filter_by(student_unique_id=student_unique_id).first()
+        counter = 1
+        base_id = student_unique_id
+        while existing_student:
+            # If somehow we still have a duplicate, increment until unique
+            year_short = str(date.today().year)[-2:]
+            counter += 1
+            student_unique_id = f"{course_short}-{year_short}-{counter:03d}"
+            existing_student = Student.query.filter_by(student_unique_id=student_unique_id).first()
         
         student = Student(
             student_unique_id=student_unique_id,
