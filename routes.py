@@ -10,7 +10,7 @@ import pandas as pd
 from app import app, db
 from models import *
 from forms import *
-from utils import generate_student_id, generate_invoice_number, calculate_grade, can_edit_module, send_email, generate_pdf_invoice, generate_pdf_report_card
+from utils import generate_student_id, generate_invoice_number, calculate_grade, can_edit_module, send_email, generate_pdf_invoice, generate_pdf_report_card, generate_pdf_student_report
 
 @app.route('/')
 def index():
@@ -1084,6 +1084,80 @@ def api_fee_stats():
         'months': [int(month) for month, amount in monthly_collections],
         'amounts': [float(amount) for month, amount in monthly_collections]
     })
+
+@app.route('/api/search-students')
+@login_required
+def api_search_students():
+    query = request.args.get('q', '').strip()
+    
+    if len(query) < 2:
+        return jsonify({'success': False, 'students': []})
+    
+    try:
+        # Search students by name or ID
+        search_filter = or_(
+            Student.first_name.ilike(f'%{query}%'),
+            Student.last_name.ilike(f'%{query}%'),
+            Student.student_unique_id.ilike(f'%{query}%'),
+            func.concat(Student.first_name, ' ', Student.last_name).ilike(f'%{query}%')
+        )
+        
+        students = Student.query.filter(search_filter).limit(10).all()
+        
+        students_data = []
+        for student in students:
+            students_data.append({
+                'id': student.id,
+                'student_unique_id': student.student_unique_id,
+                'first_name': student.first_name,
+                'last_name': student.last_name,
+                'current_course': student.current_course or 'No Course Assigned'
+            })
+        
+        return jsonify({'success': True, 'students': students_data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e), 'students': []})
+
+@app.route('/api/student-fee-details/<int:student_id>')
+@login_required
+def api_student_fee_details(student_id):
+    try:
+        student = Student.query.get_or_404(student_id)
+        fee_record = CollegeFees.query.filter_by(student_id=student_id).first()
+        
+        if not fee_record:
+            return jsonify({
+                'success': True,
+                'fee_data': {
+                    'total_fee': 0,
+                    'paid_amount': 0,
+                    'due_amount': 0
+                }
+            })
+        
+        # Calculate paid amount
+        paid_amount = (
+            (fee_record.installment_1 or 0) +
+            (fee_record.installment_2 or 0) +
+            (fee_record.installment_3 or 0) +
+            (fee_record.installment_4 or 0) +
+            (fee_record.installment_5 or 0) +
+            (fee_record.installment_6 or 0)
+        )
+        
+        total_fee = fee_record.total_fee or 0
+        due_amount = total_fee - paid_amount
+        
+        return jsonify({
+            'success': True,
+            'fee_data': {
+                'total_fee': float(total_fee),
+                'paid_amount': float(paid_amount),
+                'due_amount': float(due_amount)
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 # Subject Routes
 @app.route('/courses/<int:course_id>/subjects')
