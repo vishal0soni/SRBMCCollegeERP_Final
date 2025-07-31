@@ -307,7 +307,7 @@ def add_student():
         
         try:
             db.session.add(student)
-            db.session.flush()  # Get student ID
+            db.session.flush()  # This will assign the auto-generated ID
             
             # Create initial fee record with course details sync
             course = Course.query.filter_by(course_short_name=course_short).first()

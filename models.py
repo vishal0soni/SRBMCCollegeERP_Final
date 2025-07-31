@@ -6,7 +6,7 @@ from sqlalchemy import func
 class UserRole(db.Model):
     __tablename__ = 'user_roles'
     
-    role_id = db.Column(db.Integer, primary_key=True)
+    role_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     role_name = db.Column(db.String(100), nullable=False, unique=True)
     role_description = db.Column(db.Text)
     access_type = db.Column(db.String(20), nullable=False)  # 'Edit' or 'Read'
@@ -18,7 +18,7 @@ class UserRole(db.Model):
 class UserProfile(UserMixin, db.Model):
     __tablename__ = 'user_profiles'
     
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     role_id = db.Column(db.Integer, db.ForeignKey('user_roles.role_id'), nullable=False)
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
@@ -39,7 +39,7 @@ class UserProfile(UserMixin, db.Model):
 class Course(db.Model):
     __tablename__ = 'courses'
     
-    course_id = db.Column(db.Integer, primary_key=True)
+    course_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     course_short_name = db.Column(db.String(10), nullable=False, unique=True)
     course_full_name = db.Column(db.String(200), nullable=False)
     course_category = db.Column(db.String(100))
@@ -52,7 +52,7 @@ class Course(db.Model):
 class CourseDetails(db.Model):
     __tablename__ = 'course_details'
     
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     course_full_name = db.Column(db.String(200), nullable=False)
     course_short_name = db.Column(db.String(10), db.ForeignKey('courses.course_short_name'), nullable=False)
     year_semester = db.Column(db.String(20), nullable=False)
@@ -69,7 +69,7 @@ class CourseDetails(db.Model):
 class Subject(db.Model):
     __tablename__ = 'subjects'
     
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     course_short_name = db.Column(db.String(10), db.ForeignKey('courses.course_short_name'), nullable=False)
     subject_name = db.Column(db.String(200), nullable=False)
     subject_type = db.Column(db.String(20), nullable=False)  # 'Compulsory' or 'Elective'
@@ -77,7 +77,7 @@ class Subject(db.Model):
 class Student(db.Model):
     __tablename__ = 'students'
     
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     student_unique_id = db.Column(db.String(20), unique=True, nullable=False)
     external_id = db.Column(db.String(50))
     first_name = db.Column(db.String(100), nullable=False)
@@ -113,7 +113,7 @@ class Student(db.Model):
 class CollegeFees(db.Model):
     __tablename__ = 'college_fees'
     
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('courses.course_id'))
     course_tuition_fee = db.Column(db.Numeric(10, 2), default=0)
@@ -148,7 +148,7 @@ class CollegeFees(db.Model):
 class Invoice(db.Model):
     __tablename__ = 'invoices'
     
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('courses.course_id'))
     invoice_number = db.Column(db.String(50), unique=True, nullable=False)
@@ -160,7 +160,7 @@ class Invoice(db.Model):
 class Exam(db.Model):
     __tablename__ = 'exams'
     
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('courses.course_id'))
     semester = db.Column(db.String(20))
