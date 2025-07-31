@@ -218,37 +218,14 @@
             </div>
         </div>
         
-        <!-- Recent Payments -->
+        <!-- Student's Payment History -->
         <div class="card shadow mt-4">
             <div class="card-header">
-                <h6 class="m-0 font-weight-bold text-primary">Recent Payments</h6>
+                <h6 class="m-0 font-weight-bold text-primary">Student's Payment History</h6>
             </div>
             <div class="card-body">
                 <div class="list-group list-group-flush">
-                    <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">BA-25-001</h6>
-                            <small>2 hours ago</small>
-                        </div>
-                        <p class="mb-1">₹15,000 - Cash</p>
-                        <small>Raj Kumar</small>
-                    </div>
-                    <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">BSC-25-003</h6>
-                            <small>1 day ago</small>
-                        </div>
-                        <p class="mb-1">₹12,500 - Online</p>
-                        <small>Priya Sharma</small>
-                    </div>
-                    <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">BA-25-005</h6>
-                            <small>2 days ago</small>
-                        </div>
-                        <p class="mb-1">₹8,000 - Cheque</p>
-                        <small>Amit Singh</small>
-                    </div>
+                    <div class="list-group-item text-muted">Select a student to view payment history</div>
                 </div>
             </div>
         </div>
@@ -337,6 +314,7 @@ function loadStudentDetails(student = null) {
             .then(data => {
                 if (data.success) {
                     const feeData = data.fee_data;
+                    window.studentFeeData = feeData; // Store for later use
                     
                     document.getElementById('studentDetails').style.display = 'block';
                     document.getElementById('studentId').textContent = student.student_unique_id;
@@ -345,6 +323,9 @@ function loadStudentDetails(student = null) {
                     document.getElementById('totalFees').textContent = parseFloat(feeData.total_fee || 0).toLocaleString();
                     document.getElementById('paidAmount').textContent = parseFloat(feeData.paid_amount || 0).toLocaleString();
                     document.getElementById('dueAmount').textContent = parseFloat(feeData.due_amount || 0).toLocaleString();
+                    
+                    // Update payment history
+                    updatePaymentHistory(data.payment_history || []);
                     
                     // Show additional details and payment summary
                     document.getElementById('additionalDetails').style.display = 'block';
@@ -362,6 +343,31 @@ function loadStudentDetails(student = null) {
         document.getElementById('additionalDetails').style.display = 'none';
         document.getElementById('paymentSummary').style.display = 'none';
     }
+}
+
+function updatePaymentHistory(paymentHistory) {
+    const paymentHistoryContainer = document.querySelector('.card:nth-last-child(1) .list-group');
+    if (!paymentHistoryContainer) return;
+    
+    paymentHistoryContainer.innerHTML = '';
+    
+    if (paymentHistory.length === 0) {
+        paymentHistoryContainer.innerHTML = '<div class="list-group-item text-muted">No payment history found</div>';
+        return;
+    }
+    
+    paymentHistory.forEach(payment => {
+        const paymentItem = document.createElement('div');
+        paymentItem.className = 'list-group-item';
+        paymentItem.innerHTML = `
+            <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">Installment ${payment.installment_number}</h6>
+                <small>${payment.date}</small>
+            </div>
+            <p class="mb-1">₹${parseFloat(payment.amount).toLocaleString()} - Invoice #${payment.invoice_number}</p>
+        `;
+        paymentHistoryContainer.appendChild(paymentItem);
+    });
 }
 
 function validateAmount() {
@@ -396,8 +402,8 @@ function updatePaymentSummary() {
 }
 
 function getNextInstallmentNumber() {
-    // In a real implementation, this would come from the server
-    return '3'; // Mock installment number
+    // Get from the loaded student data
+    return window.studentFeeData?.next_installment || 1;
 }
 
 

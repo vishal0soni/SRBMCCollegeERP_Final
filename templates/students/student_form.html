@@ -322,6 +322,8 @@
 
 {% block scripts %}
 <script>
+let allSubjects = [];
+
 function updateSubjects() {
     const courseSelect = document.getElementById('{{ form.current_course.id }}');
     const courseName = courseSelect.value;
@@ -340,15 +342,8 @@ function updateSubjects() {
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.subjects) {
-                    data.subjects.forEach(subject => {
-                        const option1 = new Option(subject.name, subject.name);
-                        const option2 = new Option(subject.name, subject.name);
-                        const option3 = new Option(subject.name, subject.name);
-
-                        subject1Select.add(option1);
-                        subject2Select.add(option2);
-                        subject3Select.add(option3);
-                    });
+                    allSubjects = data.subjects;
+                    updateSubjectOptions();
                 }
             })
             .catch(error => {
@@ -358,6 +353,44 @@ function updateSubjects() {
     
     // Update course fees
     updateCourseFees();
+}
+
+function updateSubjectOptions() {
+    const subject1Select = document.getElementById('{{ form.subject_1_name.id }}');
+    const subject2Select = document.getElementById('{{ form.subject_2_name.id }}');
+    const subject3Select = document.getElementById('{{ form.subject_3_name.id }}');
+    
+    const selectedSubjects = [
+        subject1Select.value,
+        subject2Select.value,
+        subject3Select.value
+    ];
+    
+    // Update each select with filtered options
+    updateSingleSubjectSelect(subject1Select, selectedSubjects, 0);
+    updateSingleSubjectSelect(subject2Select, selectedSubjects, 1);
+    updateSingleSubjectSelect(subject3Select, selectedSubjects, 2);
+}
+
+function updateSingleSubjectSelect(selectElement, selectedSubjects, currentIndex) {
+    const currentValue = selectElement.value;
+    
+    // Clear options
+    selectElement.innerHTML = '<option value="">Select Subject</option>';
+    
+    // Add available subjects (excluding already selected ones)
+    allSubjects.forEach(subject => {
+        const isSelected = selectedSubjects.includes(subject.name) && 
+                          selectedSubjects[currentIndex] !== subject.name;
+        
+        if (!isSelected) {
+            const option = new Option(subject.name, subject.name);
+            if (subject.name === currentValue) {
+                option.selected = true;
+            }
+            selectElement.add(option);
+        }
+    });
 }
 
 function updateCourseFees() {
@@ -429,11 +462,19 @@ function calculateTotalFees() {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     const courseSelect = document.getElementById('{{ form.current_course.id }}');
+    const subject1Select = document.getElementById('{{ form.subject_1_name.id }}');
+    const subject2Select = document.getElementById('{{ form.subject_2_name.id }}');
+    const subject3Select = document.getElementById('{{ form.subject_3_name.id }}');
     
     // Set up event listeners
     courseSelect.addEventListener('change', function() {
         updateSubjects();
     });
+    
+    // Set up subject change listeners to update other dropdowns
+    subject1Select.addEventListener('change', updateSubjectOptions);
+    subject2Select.addEventListener('change', updateSubjectOptions);
+    subject3Select.addEventListener('change', updateSubjectOptions);
     
     // Set up additional fee input listeners
     document.querySelectorAll('.additional-fee-input').forEach(input => {

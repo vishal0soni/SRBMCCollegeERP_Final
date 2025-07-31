@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block title %}Invoices - SRBMC ERP{% endblock %}
@@ -125,7 +124,7 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <!-- Pagination -->
                 {% if invoices.pages > 1 %}
                 <nav aria-label="Invoice pagination">
@@ -135,7 +134,7 @@
                                 <a class="page-link" href="{{ url_for('invoices', page=invoices.prev_num) }}">Previous</a>
                             </li>
                         {% endif %}
-                        
+
                         {% for page_num in invoices.iter_pages() %}
                             {% if page_num %}
                                 {% if page_num != invoices.page %}
@@ -153,7 +152,7 @@
                                 </li>
                             {% endif %}
                         {% endfor %}
-                        
+
                         {% if invoices.has_next %}
                             <li class="page-item">
                                 <a class="page-link" href="{{ url_for('invoices', page=invoices.next_num) }}">Next</a>
@@ -192,6 +191,10 @@ function markPrinted(invoiceId) {
             }
         });
     }
+}
+
+function printInvoiceReport() {
+    window.print();
 }
 </script>
 {% endblock %}

@@ -591,7 +591,7 @@ def add_course():
             course_short_name=form.course_short_name.data,
             course_full_name=form.course_full_name.data,
             course_category=form.course_category.data,
-            duration=int(form.duration.data)
+            duration=int(form.duration.data) if form.duration.data else 3
         )
 
         try:
@@ -629,7 +629,7 @@ def edit_course(course_id):
         course.course_short_name = form.course_short_name.data
         course.course_full_name = form.course_full_name.data
         course.course_category = form.course_category.data
-        course.duration = int(form.duration.data)
+        course.duration = int(form.duration.data) if form.duration.data else course.duration
 
         try:
             db.session.commit()
@@ -1131,30 +1131,56 @@ def api_student_fee_details(student_id):
                 'fee_data': {
                     'total_fee': 0,
                     'paid_amount': 0,
-                    'due_amount': 0
-                }
+                    'due_amount': 0,
+                    'next_installment': 1
+                },
+                'payment_history': []
             })
         
-        # Calculate paid amount
-        paid_amount = (
-            (fee_record.installment_1 or 0) +
-            (fee_record.installment_2 or 0) +
-            (fee_record.installment_3 or 0) +
-            (fee_record.installment_4 or 0) +
-            (fee_record.installment_5 or 0) +
-            (fee_record.installment_6 or 0)
-        )
+        # Calculate paid amount and next installment
+        installments = [
+            fee_record.installment_1 or 0,
+            fee_record.installment_2 or 0,
+            fee_record.installment_3 or 0,
+            fee_record.installment_4 or 0,
+            fee_record.installment_5 or 0,
+            fee_record.installment_6 or 0
+        ]
+        
+        paid_amount = sum(installments)
+        next_installment = 1
+        
+        # Find next available installment
+        for i, amount in enumerate(installments):
+            if amount == 0:
+                next_installment = i + 1
+                break
+        else:
+            next_installment = 7  # All installments paid
         
         total_fee = fee_record.total_fee or 0
         due_amount = total_fee - paid_amount
+        
+        # Get payment history
+        invoices = Invoice.query.filter_by(student_id=student_id).order_by(Invoice.date_time.desc()).limit(5).all()
+        payment_history = []
+        for invoice in invoices:
+            payment_history.append({
+                'invoice_number': invoice.invoice_number,
+                'amount': float(invoice.invoice_amount),
+                'date': invoice.date_time.strftime('%Y-%m-%d'),
+                'installment_number': invoice.installment_number
+            })
         
         return jsonify({
             'success': True,
             'fee_data': {
                 'total_fee': float(total_fee),
                 'paid_amount': float(paid_amount),
-                'due_amount': float(due_amount)
-            }
+                'due_amount': float(due_amount),
+                'next_installment': next_installment
+            },
+            'payment_history': payment_history
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
