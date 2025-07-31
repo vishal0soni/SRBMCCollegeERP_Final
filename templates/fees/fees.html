@@ -141,8 +141,8 @@
                         </select>
                     </div>
                     <div class="col-md-auto">
-                        <button type="button" class="btn btn-info me-2" onclick="printFeesReport()">
-                            <i class="fas fa-print"></i> Print Report
+                        <button type="submit" class="btn btn-info me-2">
+                            <i class="fas fa-search"></i> Search
                         </button>
                         <a href="{{ url_for('payment') }}" class="btn btn-primary">
                             <i class="fas fa-credit-card"></i> Process Payment
@@ -347,9 +347,7 @@ function generateFeeStatement(studentId) {
     // Generate fee statement PDF
     window.open('/fee-statement/' + studentId + '/pdf', '_blank');
 }
-function printFeesReport() {
-    window.print();
-}
+
 
 // Monthly Collection Chart
 document.addEventListener('DOMContentLoaded', function() {
