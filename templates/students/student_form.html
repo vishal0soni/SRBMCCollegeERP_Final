@@ -305,121 +305,111 @@
                                 </div>
                             </div>
                             
-                            <!-- New Fee Management Fields -->
-                            <h6 class="text-primary mb-3 mt-4">Fee Management & Scholarships</h6>
-                            <div class="row">
+                            <!-- Fee Management & Scholarships -->
+                            <h6 class="text-primary mb-4 mt-4">Fee Management & Scholarships</h6>
+                            
+                            <!-- Meera Rebate Row -->
+                            <div class="row align-items-center mb-3 py-2 border-bottom">
+                                <div class="col-md-3">
+                                    <strong>Meera Rebate</strong>
+                                </div>
                                 <div class="col-md-6">
-                                    <h6 class="text-secondary mb-3">Payment Information</h6>
-                                    <div class="mb-3">
-                                        <label class="form-label">Total Fees Paid</label>
-                                        <input type="number" class="form-control" id="totalFeesPaid" step="0.01" value="0" data-fee="total_fees_paid">
+                                    <div class="d-flex gap-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="meeraRebateApplied" data-fee="meera_rebate_applied">
+                                            <label class="form-check-label" for="meeraRebateApplied">Applied</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="meeraRebateApproved" data-fee="meera_rebate_approved">
+                                            <label class="form-check-label" for="meeraRebateApproved">Approved</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="meeraRebateGranted" data-fee="meera_rebate_granted">
+                                            <label class="form-check-label" for="meeraRebateGranted">Granted</label>
+                                        </div>
                                     </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div>
+                                        <label class="form-label mb-1"><small>Rebate Amount</small></label>
+                                        <input type="number" class="form-control form-control-sm" id="meeraRebateAmount" step="0.01" value="0" data-fee="meera_rebate_amount" placeholder="0">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Government Scholarship Row -->
+                            <div class="row align-items-center mb-4 py-2">
+                                <div class="col-md-3">
+                                    <strong>Government Scholarship</strong>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex gap-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="scholarshipApplied" data-fee="scholarship_applied">
+                                            <label class="form-check-label" for="scholarshipApplied">Applied</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="scholarshipApproved" data-fee="scholarship_approved">
+                                            <label class="form-check-label" for="scholarshipApproved">Approved</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="scholarshipGranted" data-fee="scholarship_granted">
+                                            <label class="form-check-label" for="scholarshipGranted">Granted</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div>
+                                        <label class="form-label mb-1"><small>Government Scholarship Amount</small></label>
+                                        <input type="number" class="form-control form-control-sm" id="governmentScholarshipAmount" step="0.01" value="0" data-fee="government_scholarship_amount" placeholder="0">
+                                        <small class="text-muted">Note: Does not reduce total paid amount</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Payment Summary -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">Total Amount Due</label>
-                                        <input type="number" class="form-control" id="totalAmountDue" step="0.01" value="0" data-fee="total_amount_due" readonly>
+                                        <label class="form-label"><strong>Total Amount Paid till date</strong></label>
+                                        <input type="number" class="form-control" id="totalFeesPaid" step="0.01" value="0" data-fee="total_fees_paid" placeholder="0">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <h6 class="text-secondary mb-3">Meera Rebate</h6>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="meeraRebateApplied" data-fee="meera_rebate_applied">
-                                                <label class="form-check-label" for="meeraRebateApplied">
-                                                    Applied
-                                                </label>
-                                            </div>
+                                    <div class="mb-3">
+                                        <label class="form-label"><strong>Total Amount Due</strong></label>
+                                        <input type="number" class="form-control" id="totalAmountDue" step="0.01" value="0" data-fee="total_amount_due" readonly style="background-color: #f8f9fa;">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Other Status (Hidden by default - can be shown if needed) -->
+                            <div class="collapse" id="otherStatusCollapse">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="pendingDuesLibraries" data-fee="pending_dues_for_libraries">
+                                            <label class="form-check-label" for="pendingDuesLibraries">Pending Dues for Libraries</label>
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="meeraRebateApproved" data-fee="meera_rebate_approved">
-                                                <label class="form-check-label" for="meeraRebateApproved">
-                                                    Approved
-                                                </label>
-                                            </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="pendingDuesHostel" data-fee="pending_dues_for_hostel">
+                                            <label class="form-check-label" for="pendingDuesHostel">Pending Dues for Hostel</label>
                                         </div>
                                     </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="meeraRebateGranted" data-fee="meera_rebate_granted">
-                                                <label class="form-check-label" for="meeraRebateGranted">
-                                                    Granted
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Rebate Amount</label>
-                                            <input type="number" class="form-control" id="meeraRebateAmount" step="0.01" value="0" data-fee="meera_rebate_amount">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="examAdmitCardIssued" data-fee="exam_admit_card_issued">
+                                            <label class="form-check-label" for="examAdmitCardIssued">Exam Admit Card Issued</label>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6 class="text-secondary mb-3">Government Scholarship</h6>
-                                    <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="scholarshipApplied" data-fee="scholarship_applied">
-                                                <label class="form-check-label" for="scholarshipApplied">
-                                                    Applied
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="scholarshipApproved" data-fee="scholarship_approved">
-                                                <label class="form-check-label" for="scholarshipApproved">
-                                                    Approved
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="scholarshipGranted" data-fee="scholarship_granted">
-                                                <label class="form-check-label" for="scholarshipGranted">
-                                                    Granted
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Government Scholarship Amount</label>
-                                        <input type="number" class="form-control" id="governmentScholarshipAmount" step="0.01" value="0" data-fee="government_scholarship_amount">
-                                        <small class="text-muted">Note: Does not reduce total paid amount</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6 class="text-secondary mb-3">Other Status</h6>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="pendingDuesLibraries" data-fee="pending_dues_for_libraries">
-                                                <label class="form-check-label" for="pendingDuesLibraries">
-                                                    Pending Dues for Libraries
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="pendingDuesHostel" data-fee="pending_dues_for_hostel">
-                                                <label class="form-check-label" for="pendingDuesHostel">
-                                                    Pending Dues for Hostel
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="examAdmitCardIssued" data-fee="exam_admit_card_issued">
-                                            <label class="form-check-label" for="examAdmitCardIssued">
-                                                Exam Admit Card Issued
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
+                            <!-- Toggle button for additional options -->
+                            <div class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#otherStatusCollapse">
+                                    <i class="fas fa-plus"></i> Additional Options
+                                </button>
                             </div>
                         </div>
                     </div>
