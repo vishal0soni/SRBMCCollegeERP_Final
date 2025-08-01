@@ -143,6 +143,21 @@ class CollegeFees(db.Model):
     installment_6 = db.Column(db.Numeric(10, 2), default=0)
     invoice6_number = db.Column(db.String(50))
     
+    # New fields requested by user
+    total_fees_paid = db.Column(db.Numeric(10, 2), default=0)
+    meera_rebate_applied = db.Column(db.Boolean, default=False)
+    meera_rebate_approved = db.Column(db.Boolean, default=False)
+    meera_rebate_granted = db.Column(db.Boolean, default=False)
+    meera_rebate_amount = db.Column(db.Numeric(10, 2), default=0)
+    scholarship_applied = db.Column(db.Boolean, default=False)
+    scholarship_approved = db.Column(db.Boolean, default=False)
+    scholarship_granted = db.Column(db.Boolean, default=False)
+    government_scholarship_amount = db.Column(db.Numeric(10, 2), default=0)
+    total_amount_due = db.Column(db.Numeric(10, 2), default=0)
+    pending_dues_for_libraries = db.Column(db.Boolean, default=False)
+    pending_dues_for_hostel = db.Column(db.Boolean, default=False)
+    exam_admit_card_issued = db.Column(db.Boolean, default=False)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Invoice(db.Model):

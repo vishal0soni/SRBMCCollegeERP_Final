@@ -327,6 +327,21 @@ def add_student():
                 miscellaneous_fee_3 = float(request.form.get('fee_miscellaneous_fee_3', 0) or 0)
                 total_fee = float(request.form.get('fee_total_fee', course_detail.total_course_fees) or 0)
 
+                # Get new fee management fields from form
+                total_fees_paid = float(request.form.get('fee_total_fees_paid', 0) or 0)
+                meera_rebate_applied = request.form.get('fee_meera_rebate_applied') == 'true'
+                meera_rebate_approved = request.form.get('fee_meera_rebate_approved') == 'true'
+                meera_rebate_granted = request.form.get('fee_meera_rebate_granted') == 'true'
+                meera_rebate_amount = float(request.form.get('fee_meera_rebate_amount', 0) or 0)
+                scholarship_applied = request.form.get('fee_scholarship_applied') == 'true'
+                scholarship_approved = request.form.get('fee_scholarship_approved') == 'true'
+                scholarship_granted = request.form.get('fee_scholarship_granted') == 'true'
+                government_scholarship_amount = float(request.form.get('fee_government_scholarship_amount', 0) or 0)
+                total_amount_due = float(request.form.get('fee_total_amount_due', 0) or 0)
+                pending_dues_for_libraries = request.form.get('fee_pending_dues_for_libraries') == 'true'
+                pending_dues_for_hostel = request.form.get('fee_pending_dues_for_hostel') == 'true'
+                exam_admit_card_issued = request.form.get('fee_exam_admit_card_issued') == 'true'
+
                 fee_record = CollegeFees(
                     student_id=student.id,
                     course_id=course.course_id,
@@ -340,7 +355,21 @@ def add_student():
                     miscellaneous_fee_1=miscellaneous_fee_1,
                     miscellaneous_fee_2=miscellaneous_fee_2,
                     miscellaneous_fee_3=miscellaneous_fee_3,
-                    total_fee=total_fee
+                    total_fee=total_fee,
+                    # New fee management fields
+                    total_fees_paid=total_fees_paid,
+                    meera_rebate_applied=meera_rebate_applied,
+                    meera_rebate_approved=meera_rebate_approved,
+                    meera_rebate_granted=meera_rebate_granted,
+                    meera_rebate_amount=meera_rebate_amount,
+                    scholarship_applied=scholarship_applied,
+                    scholarship_approved=scholarship_approved,
+                    scholarship_granted=scholarship_granted,
+                    government_scholarship_amount=government_scholarship_amount,
+                    total_amount_due=total_amount_due,
+                    pending_dues_for_libraries=pending_dues_for_libraries,
+                    pending_dues_for_hostel=pending_dues_for_hostel,
+                    exam_admit_card_issued=exam_admit_card_issued
                 )
                 db.session.add(fee_record)
 
@@ -1178,7 +1207,32 @@ def api_student_fee_details(student_id):
                 'total_fee': float(total_fee),
                 'paid_amount': float(paid_amount),
                 'due_amount': float(due_amount),
-                'next_installment': next_installment
+                'next_installment': next_installment,
+                # New fee management fields
+                'total_fees_paid': float(fee_record.total_fees_paid or 0),
+                'meera_rebate_applied': fee_record.meera_rebate_applied or False,
+                'meera_rebate_approved': fee_record.meera_rebate_approved or False,
+                'meera_rebate_granted': fee_record.meera_rebate_granted or False,
+                'meera_rebate_amount': float(fee_record.meera_rebate_amount or 0),
+                'scholarship_applied': fee_record.scholarship_applied or False,
+                'scholarship_approved': fee_record.scholarship_approved or False,
+                'scholarship_granted': fee_record.scholarship_granted or False,
+                'government_scholarship_amount': float(fee_record.government_scholarship_amount or 0),
+                'total_amount_due': float(fee_record.total_amount_due or 0),
+                'pending_dues_for_libraries': fee_record.pending_dues_for_libraries or False,
+                'pending_dues_for_hostel': fee_record.pending_dues_for_hostel or False,
+                'exam_admit_card_issued': fee_record.exam_admit_card_issued or False,
+                # Existing fee structure fields
+                'course_tuition_fee': float(fee_record.course_tuition_fee or 0),
+                'enrollment_fee': float(fee_record.enrollment_fee or 0),
+                'eligibility_certificate_fee': float(fee_record.eligibility_certificate_fee or 0),
+                'university_affiliation_fee': float(fee_record.university_affiliation_fee or 0),
+                'university_sports_fee': float(fee_record.university_sports_fee or 0),
+                'university_development_fee': float(fee_record.university_development_fee or 0),
+                'tc_cc_fee': float(fee_record.tc_cc_fee or 0),
+                'miscellaneous_fee_1': float(fee_record.miscellaneous_fee_1 or 0),
+                'miscellaneous_fee_2': float(fee_record.miscellaneous_fee_2 or 0),
+                'miscellaneous_fee_3': float(fee_record.miscellaneous_fee_3 or 0)
             },
             'payment_history': payment_history
         })
@@ -1344,8 +1398,50 @@ def edit_student(student_id):
         student.updated_at = datetime.utcnow()
 
         try:
+            # Update fee record if fee data is provided
+            fee_record = CollegeFees.query.filter_by(student_id=student.id).first()
+            if fee_record:
+                # Update existing fee record with new fee management fields
+                fee_record.total_fees_paid = float(request.form.get('fee_total_fees_paid', fee_record.total_fees_paid) or 0)
+                fee_record.meera_rebate_applied = request.form.get('fee_meera_rebate_applied') == 'true'
+                fee_record.meera_rebate_approved = request.form.get('fee_meera_rebate_approved') == 'true'
+                fee_record.meera_rebate_granted = request.form.get('fee_meera_rebate_granted') == 'true'
+                fee_record.meera_rebate_amount = float(request.form.get('fee_meera_rebate_amount', fee_record.meera_rebate_amount) or 0)
+                fee_record.scholarship_applied = request.form.get('fee_scholarship_applied') == 'true'
+                fee_record.scholarship_approved = request.form.get('fee_scholarship_approved') == 'true'
+                fee_record.scholarship_granted = request.form.get('fee_scholarship_granted') == 'true'
+                fee_record.government_scholarship_amount = float(request.form.get('fee_government_scholarship_amount', fee_record.government_scholarship_amount) or 0)
+                fee_record.total_amount_due = float(request.form.get('fee_total_amount_due', fee_record.total_amount_due) or 0)
+                fee_record.pending_dues_for_libraries = request.form.get('fee_pending_dues_for_libraries') == 'true'
+                fee_record.pending_dues_for_hostel = request.form.get('fee_pending_dues_for_hostel') == 'true'
+                fee_record.exam_admit_card_issued = request.form.get('fee_exam_admit_card_issued') == 'true'
+                
+                # Update other fee fields if provided
+                if request.form.get('fee_course_tuition_fee'):
+                    fee_record.course_tuition_fee = float(request.form.get('fee_course_tuition_fee', 0) or 0)
+                if request.form.get('fee_enrollment_fee'):
+                    fee_record.enrollment_fee = float(request.form.get('fee_enrollment_fee', 0) or 0)
+                if request.form.get('fee_eligibility_certificate_fee'):
+                    fee_record.eligibility_certificate_fee = float(request.form.get('fee_eligibility_certificate_fee', 0) or 0)
+                if request.form.get('fee_university_affiliation_fee'):
+                    fee_record.university_affiliation_fee = float(request.form.get('fee_university_affiliation_fee', 0) or 0)
+                if request.form.get('fee_university_sports_fee'):
+                    fee_record.university_sports_fee = float(request.form.get('fee_university_sports_fee', 0) or 0)
+                if request.form.get('fee_university_development_fee'):
+                    fee_record.university_development_fee = float(request.form.get('fee_university_development_fee', 0) or 0)
+                if request.form.get('fee_tc_cc_fee'):
+                    fee_record.tc_cc_fee = float(request.form.get('fee_tc_cc_fee', 0) or 0)
+                if request.form.get('fee_miscellaneous_fee_1'):
+                    fee_record.miscellaneous_fee_1 = float(request.form.get('fee_miscellaneous_fee_1', 0) or 0)
+                if request.form.get('fee_miscellaneous_fee_2'):
+                    fee_record.miscellaneous_fee_2 = float(request.form.get('fee_miscellaneous_fee_2', 0) or 0)
+                if request.form.get('fee_miscellaneous_fee_3'):
+                    fee_record.miscellaneous_fee_3 = float(request.form.get('fee_miscellaneous_fee_3', 0) or 0)
+                if request.form.get('fee_total_fee'):
+                    fee_record.total_fee = float(request.form.get('fee_total_fee', 0) or 0)
+
             db.session.commit()
-            flash('Student updated successfully!', 'success')
+            flash('Student and fee details updated successfully!', 'success')
             return redirect(url_for('students'))
         except Exception as e:
             db.session.rollback()

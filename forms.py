@@ -97,6 +97,45 @@ class PaymentForm(FlaskForm):
     payment_mode = SelectField('Payment Mode', choices=[('Cash', 'Cash'), ('Online', 'Online'), ('Cheque', 'Cheque'), ('DD', 'DD')])
     submit = SubmitField('Process Payment')
 
+class FeeManagementForm(FlaskForm):
+    # Basic fee fields
+    course_tuition_fee = DecimalField('Course Tuition Fee', validators=[Optional()], default=0)
+    enrollment_fee = DecimalField('Enrollment Fee', validators=[Optional()], default=0)
+    eligibility_certificate_fee = DecimalField('Eligibility Certificate Fee', validators=[Optional()], default=0)
+    university_affiliation_fee = DecimalField('University Affiliation Fee', validators=[Optional()], default=0)
+    university_sports_fee = DecimalField('University Sports Fee', validators=[Optional()], default=0)
+    university_development_fee = DecimalField('University Development Fee', validators=[Optional()], default=0)
+    tc_cc_fee = DecimalField('TC/CC Fee', validators=[Optional()], default=0)
+    miscellaneous_fee_1 = DecimalField('Miscellaneous Fee 1', validators=[Optional()], default=0)
+    miscellaneous_fee_2 = DecimalField('Miscellaneous Fee 2', validators=[Optional()], default=0)
+    miscellaneous_fee_3 = DecimalField('Miscellaneous Fee 3', validators=[Optional()], default=0)
+    
+    # New fields requested by user
+    total_fees_paid = DecimalField('Total Fees Paid', validators=[Optional()], default=0)
+    meera_rebate_applied = BooleanField('Meera Rebate Applied')
+    meera_rebate_approved = BooleanField('Meera Rebate Approved')
+    meera_rebate_granted = BooleanField('Meera Rebate Granted')
+    meera_rebate_amount = DecimalField('Meera Rebate Amount', validators=[Optional()], default=0)
+    scholarship_applied = BooleanField('Government Scholarship Applied')
+    scholarship_approved = BooleanField('Government Scholarship Approved')
+    scholarship_granted = BooleanField('Government Scholarship Granted')
+    government_scholarship_amount = DecimalField('Government Scholarship Amount', validators=[Optional()], default=0)
+    total_amount_due = DecimalField('Total Amount Due', validators=[Optional()], default=0)
+    pending_dues_for_libraries = BooleanField('Pending Dues for Libraries')
+    pending_dues_for_hostel = BooleanField('Pending Dues for Hostel')
+    exam_admit_card_issued = BooleanField('Exam Admit Card Issued')
+    
+    # Installments
+    installment_1 = DecimalField('Installment 1', validators=[Optional()], default=0)
+    installment_2 = DecimalField('Installment 2', validators=[Optional()], default=0)
+    installment_3 = DecimalField('Installment 3', validators=[Optional()], default=0)
+    installment_4 = DecimalField('Installment 4', validators=[Optional()], default=0)
+    installment_5 = DecimalField('Installment 5', validators=[Optional()], default=0)
+    installment_6 = DecimalField('Installment 6', validators=[Optional()], default=0)
+    
+    payment_mode = SelectField('Payment Mode', choices=[('Cash', 'Cash'), ('Online', 'Online'), ('Cheque', 'Cheque'), ('DD', 'DD')])
+    submit = SubmitField('Save Fee Details')
+
 class ExamForm(FlaskForm):
     student_id = SelectField('Student', coerce=int, validators=[DataRequired()])
     course_id = SelectField('Course', coerce=int, validators=[DataRequired()])

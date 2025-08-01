@@ -304,6 +304,123 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- New Fee Management Fields -->
+                            <h6 class="text-primary mb-3 mt-4">Fee Management & Scholarships</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-secondary mb-3">Payment Information</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Total Fees Paid</label>
+                                        <input type="number" class="form-control" id="totalFeesPaid" step="0.01" value="0" data-fee="total_fees_paid">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Total Amount Due</label>
+                                        <input type="number" class="form-control" id="totalAmountDue" step="0.01" value="0" data-fee="total_amount_due" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-secondary mb-3">Meera Rebate</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="meeraRebateApplied" data-fee="meera_rebate_applied">
+                                                <label class="form-check-label" for="meeraRebateApplied">
+                                                    Applied
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="meeraRebateApproved" data-fee="meera_rebate_approved">
+                                                <label class="form-check-label" for="meeraRebateApproved">
+                                                    Approved
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="meeraRebateGranted" data-fee="meera_rebate_granted">
+                                                <label class="form-check-label" for="meeraRebateGranted">
+                                                    Granted
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Rebate Amount</label>
+                                            <input type="number" class="form-control" id="meeraRebateAmount" step="0.01" value="0" data-fee="meera_rebate_amount">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-secondary mb-3">Government Scholarship</h6>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="scholarshipApplied" data-fee="scholarship_applied">
+                                                <label class="form-check-label" for="scholarshipApplied">
+                                                    Applied
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="scholarshipApproved" data-fee="scholarship_approved">
+                                                <label class="form-check-label" for="scholarshipApproved">
+                                                    Approved
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="scholarshipGranted" data-fee="scholarship_granted">
+                                                <label class="form-check-label" for="scholarshipGranted">
+                                                    Granted
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Government Scholarship Amount</label>
+                                        <input type="number" class="form-control" id="governmentScholarshipAmount" step="0.01" value="0" data-fee="government_scholarship_amount">
+                                        <small class="text-muted">Note: Does not reduce total paid amount</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-secondary mb-3">Other Status</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="pendingDuesLibraries" data-fee="pending_dues_for_libraries">
+                                                <label class="form-check-label" for="pendingDuesLibraries">
+                                                    Pending Dues for Libraries
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="pendingDuesHostel" data-fee="pending_dues_for_hostel">
+                                                <label class="form-check-label" for="pendingDuesHostel">
+                                                    Pending Dues for Hostel
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="examAdmitCardIssued" data-fee="exam_admit_card_issued">
+                                            <label class="form-check-label" for="examAdmitCardIssued">
+                                                Exam Admit Card Issued
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -455,8 +572,28 @@ function calculateTotalFees() {
     
     const grandTotal = courseFees + additionalFees;
     
+    // Calculate amount due with Meera rebate affecting total due
+    const totalFeesPaid = parseFloat(document.getElementById('totalFeesPaid')?.value || 0);
+    const meeraRebateGranted = document.getElementById('meeraRebateGranted')?.checked || false;
+    const meeraRebateAmount = parseFloat(document.getElementById('meeraRebateAmount')?.value || 0);
+    
+    // Meera scholarship affects total due calculation
+    let adjustedGrandTotal = grandTotal;
+    if (meeraRebateGranted && meeraRebateAmount > 0) {
+        adjustedGrandTotal = grandTotal - meeraRebateAmount;
+    }
+    
+    const totalAmountDue = Math.max(0, adjustedGrandTotal - totalFeesPaid);
+    
+    // Update displays
     document.getElementById('totalAdditionalFees').textContent = `₹${additionalFees.toFixed(2)}`;
     document.getElementById('grandTotalFees').textContent = `₹${grandTotal.toFixed(2)}`;
+    
+    // Update the total amount due field
+    const totalAmountDueField = document.getElementById('totalAmountDue');
+    if (totalAmountDueField) {
+        totalAmountDueField.value = totalAmountDue.toFixed(2);
+    }
 }
 
 // Initialize on page load
@@ -481,10 +618,124 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('input', calculateTotalFees);
     });
     
+    // Set up new fee management field listeners
+    const feeManagementFields = [
+        'totalFeesPaid', 'meeraRebateGranted', 'meeraRebateAmount',
+        'scholarshipGranted', 'governmentScholarshipAmount'
+    ];
+    
+    feeManagementFields.forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) {
+            element.addEventListener('input', calculateTotalFees);
+            element.addEventListener('change', calculateTotalFees);
+        }
+    });
+    
     // Initialize if course is already selected
     if (courseSelect.value) {
         updateSubjects();
     }
+    
+    // Load existing fee data when editing a student
+    {% if student %}
+    // Fetch existing fee data for student {{ student.id }}
+    fetch(`/api/student-fee-details/{{ student.id }}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.fee_data) {
+                const feeData = data.fee_data;
+                
+                // Store fee data globally for calculations
+                window.courseFees = {
+                    course_tuition_fee: feeData.course_tuition_fee,
+                    misc_course_fees_1: feeData.enrollment_fee,
+                    misc_course_fees_2: feeData.eligibility_certificate_fee,
+                    misc_course_fees_3: feeData.university_affiliation_fee,
+                    misc_course_fees_4: feeData.university_sports_fee,
+                    misc_course_fees_5: feeData.university_development_fee,
+                    misc_course_fees_6: feeData.tc_cc_fee,
+                    total_course_fees: feeData.total_fee
+                };
+                
+                // Populate existing fee structure fields
+                if (document.getElementById('enrollmentFee')) {
+                    document.getElementById('enrollmentFee').value = feeData.enrollment_fee || 0;
+                }
+                if (document.getElementById('eligibilityCertificateFee')) {
+                    document.getElementById('eligibilityCertificateFee').value = feeData.eligibility_certificate_fee || 0;
+                }
+                if (document.getElementById('universityAffiliationFee')) {
+                    document.getElementById('universityAffiliationFee').value = feeData.university_affiliation_fee || 0;
+                }
+                if (document.getElementById('universitySportsFee')) {
+                    document.getElementById('universitySportsFee').value = feeData.university_sports_fee || 0;
+                }
+                if (document.getElementById('universityDevelopmentFee')) {
+                    document.getElementById('universityDevelopmentFee').value = feeData.university_development_fee || 0;
+                }
+                if (document.getElementById('tcCcFee')) {
+                    document.getElementById('tcCcFee').value = feeData.tc_cc_fee || 0;
+                }
+                if (document.getElementById('miscellaneousFee1')) {
+                    document.getElementById('miscellaneousFee1').value = feeData.miscellaneous_fee_1 || 0;
+                }
+                if (document.getElementById('miscellaneousFee2')) {
+                    document.getElementById('miscellaneousFee2').value = feeData.miscellaneous_fee_2 || 0;
+                }
+                if (document.getElementById('miscellaneousFee3')) {
+                    document.getElementById('miscellaneousFee3').value = feeData.miscellaneous_fee_3 || 0;
+                }
+                
+                // Populate existing fee management fields
+                if (document.getElementById('totalFeesPaid')) {
+                    document.getElementById('totalFeesPaid').value = feeData.total_fees_paid || 0;
+                }
+                if (document.getElementById('meeraRebateApplied')) {
+                    document.getElementById('meeraRebateApplied').checked = feeData.meera_rebate_applied || false;
+                }
+                if (document.getElementById('meeraRebateApproved')) {
+                    document.getElementById('meeraRebateApproved').checked = feeData.meera_rebate_approved || false;
+                }
+                if (document.getElementById('meeraRebateGranted')) {
+                    document.getElementById('meeraRebateGranted').checked = feeData.meera_rebate_granted || false;
+                }
+                if (document.getElementById('meeraRebateAmount')) {
+                    document.getElementById('meeraRebateAmount').value = feeData.meera_rebate_amount || 0;
+                }
+                if (document.getElementById('scholarshipApplied')) {
+                    document.getElementById('scholarshipApplied').checked = feeData.scholarship_applied || false;
+                }
+                if (document.getElementById('scholarshipApproved')) {
+                    document.getElementById('scholarshipApproved').checked = feeData.scholarship_approved || false;
+                }
+                if (document.getElementById('scholarshipGranted')) {
+                    document.getElementById('scholarshipGranted').checked = feeData.scholarship_granted || false;
+                }
+                if (document.getElementById('governmentScholarshipAmount')) {
+                    document.getElementById('governmentScholarshipAmount').value = feeData.government_scholarship_amount || 0;
+                }
+                if (document.getElementById('totalAmountDue')) {
+                    document.getElementById('totalAmountDue').value = feeData.total_amount_due || 0;
+                }
+                if (document.getElementById('pendingDuesLibraries')) {
+                    document.getElementById('pendingDuesLibraries').checked = feeData.pending_dues_for_libraries || false;
+                }
+                if (document.getElementById('pendingDuesHostel')) {
+                    document.getElementById('pendingDuesHostel').checked = feeData.pending_dues_for_hostel || false;
+                }
+                if (document.getElementById('examAdmitCardIssued')) {
+                    document.getElementById('examAdmitCardIssued').checked = feeData.exam_admit_card_issued || false;
+                }
+                
+                // Trigger calculation after loading data
+                calculateTotalFees();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading existing fee data:', error);
+        });
+    {% endif %}
     
     // Override form submission to include fee data
     const form = document.querySelector('form');
@@ -502,7 +753,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 miscellaneous_fee_1: document.getElementById('miscellaneousFee1').value || 0,
                 miscellaneous_fee_2: document.getElementById('miscellaneousFee2').value || 0,
                 miscellaneous_fee_3: document.getElementById('miscellaneousFee3').value || 0,
-                total_fee: parseFloat(document.getElementById('grandTotalFees').textContent.replace('₹', '')) || 0
+                total_fee: parseFloat(document.getElementById('grandTotalFees').textContent.replace('₹', '')) || 0,
+                
+                // New fee management fields
+                total_fees_paid: document.getElementById('totalFeesPaid').value || 0,
+                meera_rebate_applied: document.getElementById('meeraRebateApplied').checked || false,
+                meera_rebate_approved: document.getElementById('meeraRebateApproved').checked || false,
+                meera_rebate_granted: document.getElementById('meeraRebateGranted').checked || false,
+                meera_rebate_amount: document.getElementById('meeraRebateAmount').value || 0,
+                scholarship_applied: document.getElementById('scholarshipApplied').checked || false,
+                scholarship_approved: document.getElementById('scholarshipApproved').checked || false,
+                scholarship_granted: document.getElementById('scholarshipGranted').checked || false,
+                government_scholarship_amount: document.getElementById('governmentScholarshipAmount').value || 0,
+                total_amount_due: document.getElementById('totalAmountDue').value || 0,
+                pending_dues_for_libraries: document.getElementById('pendingDuesLibraries').checked || false,
+                pending_dues_for_hostel: document.getElementById('pendingDuesHostel').checked || false,
+                exam_admit_card_issued: document.getElementById('examAdmitCardIssued').checked || false
             };
             
             // Add hidden inputs for each fee field
