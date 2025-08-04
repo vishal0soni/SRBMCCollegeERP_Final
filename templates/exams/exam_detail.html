@@ -157,16 +157,6 @@
                                 <th>Total</th>
                                 <th class="text-center">{{ exam.total_max_marks }}</th>
                                 <th class="text-center">{{ exam.total_obtained_marks }}</th>
-                                <th class="text-center">
-                                    <span class="badge bg-info">{{ "%.1f"|format(exam.percentage) }}%</span>
-                                </th>
-                                <th class="text-center">
-                                    {% if exam.overall_status == 'Pass' %}
-                                        <span class="badge bg-success">Pass</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Fail</span>
-                                    {% endif %}
-                                </th>
                             </tr>
                         </tfoot>
                     </table>
