@@ -101,8 +101,6 @@ def admin_users():
     page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '')
     role_filter = request.args.get('role', '')
-    sort_by = request.args.get('sort', 'first_name')
-    sort_order = request.args.get('order', 'asc')
 
     query = UserProfile.query.join(UserRole)
 
@@ -119,17 +117,8 @@ def admin_users():
     if role_filter:
         query = query.filter(UserProfile.role_id == role_filter)
 
-    # Sorting
-    if hasattr(UserProfile, sort_by):
-        if sort_order == 'desc':
-            query = query.order_by(getattr(UserProfile, sort_by).desc())
-        else:
-            query = query.order_by(getattr(UserProfile, sort_by))
-    elif sort_by == 'role_name':
-        if sort_order == 'desc':
-            query = query.order_by(UserRole.role_name.desc())
-        else:
-            query = query.order_by(UserRole.role_name)
+    # Default ordering by first name
+    query = query.order_by(UserProfile.first_name)
 
     users = query.paginate(page=page, per_page=20, error_out=False)
     roles = UserRole.query.all()
