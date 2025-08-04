@@ -72,7 +72,7 @@
                         <h4 class="text-primary mt-3">FEE RECEIPT</h4>
                     </div>
                 </div>
-                
+
                 <!-- Invoice Details -->
                 <div class="row mb-4">
                     <div class="col-md-6">
@@ -108,7 +108,7 @@
                         </table>
                     </div>
                 </div>
-                
+
                 <!-- Student Details -->
                 <div class="row mb-4">
                     <div class="col-12">
@@ -145,7 +145,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Fee Breakdown -->
                 <div class="row mb-4">
                     <div class="col-12">
@@ -188,7 +188,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Payment Summary -->
                 <div class="row mb-4">
                     <div class="col-12">
@@ -237,7 +237,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Amount in Words -->
                 <div class="row mb-4">
                     <div class="col-12">
@@ -248,7 +248,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Footer -->
                 <div class="row">
                     <div class="col-md-6">
@@ -264,7 +264,7 @@
                         SRBMC, Raniwara</p>
                     </div>
                 </div>
-                
+
                 <div class="row mt-4">
                     <div class="col-12 text-center">
                         <small class="text-muted">
@@ -331,19 +331,19 @@ function printDuplicate() {
         alert('Please print the original invoice first.');
         return;
     }
-    
+
     // Mark as duplicate on print
     const invoiceContent = document.getElementById('invoice-content');
     const header = invoiceContent.querySelector('h4');
     header.innerHTML = 'FEE RECEIPT <span class="text-danger">(DUPLICATE COPY)</span>';
-    
+
     window.print();
-    
+
     // Revert after print
     setTimeout(() => {
         header.innerHTML = 'FEE RECEIPT';
     }, 1000);
-    
+
     document.getElementById('duplicatePrinted').checked = true;
 }
 
