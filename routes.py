@@ -10,7 +10,7 @@ import pandas as pd
 from app import app, db
 from models import *
 from forms import *
-from utils import generate_student_id, generate_invoice_number, calculate_grade, can_edit_module, send_email, generate_pdf_invoice, generate_pdf_report_card, generate_pdf_student_report
+from utils import generate_student_id, generate_invoice_number, calculate_grade, can_edit_module, send_email, generate_pdf_invoice, generate_pdf_report_card, generate_pdf_student_report, generate_pdf_fee_statement, generate_pdf_fee_statement_print
 from bulk_operations import (
     get_students_export_data, get_courses_export_data, get_course_details_export_data,
     get_exams_export_data, get_fees_export_data, get_invoices_export_data, get_users_export_data,
@@ -1591,6 +1591,25 @@ def student_fee_statement_pdf(student_id):
     response = make_response(pdf_data)
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = f'attachment; filename=fee_statement_{student.student_unique_id}.pdf'
+
+    return response
+
+@app.route('/student/<int:student_id>/fee-statement/print')
+@login_required
+def student_fee_statement_print(student_id):
+    if not can_edit_module(current_user, 'fees'):
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+
+    student = Student.query.get_or_404(student_id)
+    fee_record = CollegeFees.query.filter_by(student_id=student_id).first()
+    
+    # Generate PDF without payment history for printing
+    pdf_data = generate_pdf_fee_statement_print(student, fee_record)
+
+    response = make_response(pdf_data)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'inline; filename=fee_statement_print_{student.student_unique_id}.pdf'
 
     return response
 

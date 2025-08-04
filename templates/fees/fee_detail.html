@@ -46,9 +46,9 @@
         <div class="card shadow">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="m-0 font-weight-bold text-primary">Payment History</h6>
-                <a href="{{ url_for('student_fee_statement_pdf', student_id=student.id) }}" class="btn btn-sm btn-info" target="_blank">
-                    <i class="fas fa-file-pdf"></i> Fee Statement PDF
-                </a>
+                <button onclick="printFeeStatement({{ student.id }})" class="btn btn-sm btn-info">
+                    <i class="fas fa-print"></i> Print Fee Statement
+                </button>
             </div>
             <div class="card-body">
                 {% if invoices %}
@@ -142,6 +142,9 @@
 
 {% block scripts %}
 <script>
-// Fee detail page JavaScript - PDF actions only
+function printFeeStatement(studentId) {
+    // Generate and print fee statement without payment history
+    window.open(`/student/${studentId}/fee-statement/print`, '_blank');
+}
 </script>
 {% endblock %}
