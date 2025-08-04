@@ -1365,7 +1365,8 @@ def invoices():
 
     page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '')
-    date_from = request.args.get('date_from', '')    date_to = request.args.get('date_to', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
 
     query = db.session.query(Invoice, Student).join(Student)
 
