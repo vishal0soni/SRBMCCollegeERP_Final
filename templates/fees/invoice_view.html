@@ -33,7 +33,7 @@
     </div>
 </div>
 
-<!-- Invoice Details Card -->
+<!-- Single Page Invoice Details -->
 <div class="row">
     <div class="col-12">
         <div class="card shadow" id="invoice-content">
@@ -43,27 +43,34 @@
                 <h5 class="mt-2 mb-0">FEE RECEIPT</h5>
             </div>
             <div class="card-body">
+                <!-- Invoice & Student Details in Single Row -->
                 <div class="row mb-4">
                     <div class="col-md-6">
-                        <table class="table table-borderless">
+                        <h6 class="text-primary mb-3">Invoice Information</h6>
+                        <table class="table table-borderless table-sm">
                             <tr>
-                                <td><strong>Invoice Number:</strong></td>
+                                <td width="40%"><strong>Invoice Number:</strong></td>
                                 <td>{{ invoice.invoice_number }}</td>
                             </tr>
                             <tr>
-                                <td><strong>Date:</strong></td>
+                                <td><strong>Date & Time:</strong></td>
                                 <td>{{ invoice.date_time.strftime('%d/%m/%Y %H:%M') }}</td>
                             </tr>
                             <tr>
                                 <td><strong>Installment:</strong></td>
-                                <td>{{ invoice.installment_number }}</td>
+                                <td><span class="badge bg-info">Installment {{ invoice.installment_number }}</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Amount Paid:</strong></td>
+                                <td><strong class="text-success">₹{{ "%.2f"|format(invoice.invoice_amount) }}</strong></td>
                             </tr>
                         </table>
                     </div>
                     <div class="col-md-6">
-                        <table class="table table-borderless">
+                        <h6 class="text-primary mb-3">Student Information</h6>
+                        <table class="table table-borderless table-sm">
                             <tr>
-                                <td><strong>Student ID:</strong></td>
+                                <td width="40%"><strong>Student ID:</strong></td>
                                 <td>{{ student.student_unique_id }}</td>
                             </tr>
                             <tr>
@@ -71,79 +78,256 @@
                                 <td>{{ student.first_name }} {{ student.last_name }}</td>
                             </tr>
                             <tr>
+                                <td><strong>Father Name:</strong></td>
+                                <td>{{ student.father_name or 'N/A' }}</td>
+                            </tr>
+                            <tr>
                                 <td><strong>Course:</strong></td>
-                                <td>{{ student.current_course }}</td>
+                                <td>{{ student.current_course or 'N/A' }}</td>
                             </tr>
                             <tr>
                                 <td><strong>Phone:</strong></td>
                                 <td>{{ student.phone or 'N/A' }}</td>
                             </tr>
+                            <tr>
+                                <td><strong>Email:</strong></td>
+                                <td>{{ student.email or 'N/A' }}</td>
+                            </tr>
                         </table>
                     </div>
                 </div>
 
+                <!-- Payment Details -->
                 <div class="row mb-4">
                     <div class="col-12">
-                        <h6 class="text-primary">Payment Details</h6>
-                        <table class="table table-bordered">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Description</th>
-                                    <th class="text-end">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Installment {{ invoice.installment_number }} Payment</td>
-                                    <td class="text-end">₹{{ "%.2f"|format(invoice.invoice_amount) }}</td>
-                                </tr>
-                                <tr class="table-success">
-                                    <th>Total Amount Paid</th>
-                                    <th class="text-end">₹{{ "%.2f"|format(invoice.invoice_amount) }}</th>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <h6 class="text-primary mb-3">Payment Details</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Description</th>
+                                        <th class="text-end">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Installment {{ invoice.installment_number }} Payment for {{ student.current_course or 'Course' }}</td>
+                                        <td class="text-end">₹{{ "%.2f"|format(invoice.invoice_amount) }}</td>
+                                    </tr>
+                                    <tr class="table-success">
+                                        <th>Total Amount Paid</th>
+                                        <th class="text-end">₹{{ "%.2f"|format(invoice.invoice_amount) }}</th>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
                 {% if fee_record %}
+                <!-- Fee Summary -->
                 <div class="row mb-4">
                     <div class="col-12">
-                        <h6 class="text-primary">Fee Summary</h6>
+                        <h6 class="text-primary mb-3">Fee Summary</h6>
                         <div class="row">
-                            <div class="col-md-4">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h6>Total Fee</h6>
-                                        <h4 class="text-info">₹{{ "%.2f"|format(fee_record.total_fee or 0) }}</h4>
+                            <div class="col-md-3">
+                                <div class="card bg-light border-info">
+                                    <div class="card-body text-center py-3">
+                                        <h6 class="card-title mb-1">Total Fee</h6>
+                                        <h4 class="text-info mb-0">₹{{ "%.2f"|format(fee_record.total_fee or 0) }}</h4>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h6>Total Paid</h6>
-                                        <h4 class="text-success">₹{{ "%.2f"|format((fee_record.installment_1 or 0) + (fee_record.installment_2 or 0) + (fee_record.installment_3 or 0) + (fee_record.installment_4 or 0) + (fee_record.installment_5 or 0) + (fee_record.installment_6 or 0)) }}</h4>
+                            <div class="col-md-3">
+                                <div class="card bg-light border-success">
+                                    <div class="card-body text-center py-3">
+                                        <h6 class="card-title mb-1">Total Paid</h6>
+                                        <h4 class="text-success mb-0">₹{{ "%.2f"|format((fee_record.installment_1 or 0) + (fee_record.installment_2 or 0) + (fee_record.installment_3 or 0) + (fee_record.installment_4 or 0) + (fee_record.installment_5 or 0) + (fee_record.installment_6 or 0)) }}</h4>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h6>Balance Due</h6>
-                                        <h4 class="text-danger">₹{{ "%.2f"|format((fee_record.total_fee or 0) - ((fee_record.installment_1 or 0) + (fee_record.installment_2 or 0) + (fee_record.installment_3 or 0) + (fee_record.installment_4 or 0) + (fee_record.installment_5 or 0) + (fee_record.installment_6 or 0))) }}</h4>
+                            <div class="col-md-3">
+                                <div class="card bg-light border-danger">
+                                    <div class="card-body text-center py-3">
+                                        <h6 class="card-title mb-1">Balance Due</h6>
+                                        <h4 class="text-danger mb-0">₹{{ "%.2f"|format((fee_record.total_fee or 0) - ((fee_record.installment_1 or 0) + (fee_record.installment_2 or 0) + (fee_record.installment_3 or 0) + (fee_record.installment_4 or 0) + (fee_record.installment_5 or 0) + (fee_record.installment_6 or 0))) }}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-light border-warning">
+                                    <div class="card-body text-center py-3">
+                                        <h6 class="card-title mb-1">Current Payment</h6>
+                                        <h4 class="text-warning mb-0">₹{{ "%.2f"|format(invoice.invoice_amount) }}</h4>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Fee Structure Details -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="text-primary mb-3">Fee Structure</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fee Type</th>
+                                        <th class="text-end">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if fee_record.course_tuition_fee %}
+                                    <tr>
+                                        <td>Course Tuition Fee</td>
+                                        <td class="text-end">₹{{ "%.2f"|format(fee_record.course_tuition_fee) }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if fee_record.enrollment_fee %}
+                                    <tr>
+                                        <td>Enrollment Fee</td>
+                                        <td class="text-end">₹{{ "%.2f"|format(fee_record.enrollment_fee) }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if fee_record.eligibility_certificate_fee %}
+                                    <tr>
+                                        <td>Eligibility Certificate Fee</td>
+                                        <td class="text-end">₹{{ "%.2f"|format(fee_record.eligibility_certificate_fee) }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if fee_record.university_affiliation_fee %}
+                                    <tr>
+                                        <td>University Affiliation Fee</td>
+                                        <td class="text-end">₹{{ "%.2f"|format(fee_record.university_affiliation_fee) }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if fee_record.university_sports_fee %}
+                                    <tr>
+                                        <td>University Sports Fee</td>
+                                        <td class="text-end">₹{{ "%.2f"|format(fee_record.university_sports_fee) }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if fee_record.university_development_fee %}
+                                    <tr>
+                                        <td>University Development Fee</td>
+                                        <td class="text-end">₹{{ "%.2f"|format(fee_record.university_development_fee) }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if fee_record.tc_cc_fee %}
+                                    <tr>
+                                        <td>TC/CC Fee</td>
+                                        <td class="text-end">₹{{ "%.2f"|format(fee_record.tc_cc_fee) }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if fee_record.miscellaneous_fee_1 %}
+                                    <tr>
+                                        <td>Miscellaneous Fee 1</td>
+                                        <td class="text-end">₹{{ "%.2f"|format(fee_record.miscellaneous_fee_1) }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if fee_record.miscellaneous_fee_2 %}
+                                    <tr>
+                                        <td>Miscellaneous Fee 2</td>
+                                        <td class="text-end">₹{{ "%.2f"|format(fee_record.miscellaneous_fee_2) }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if fee_record.miscellaneous_fee_3 %}
+                                    <tr>
+                                        <td>Miscellaneous Fee 3</td>
+                                        <td class="text-end">₹{{ "%.2f"|format(fee_record.miscellaneous_fee_3) }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment History -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="text-primary mb-3">Installment Payment History</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Installment</th>
+                                        <th>Invoice Number</th>
+                                        <th class="text-end">Amount Paid</th>
+                                        <th class="text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for i in range(1, 7) %}
+                                    {% set installment_amount = fee_record['installment_' + i|string] or 0 %}
+                                    {% set invoice_number = fee_record['invoice' + i|string + '_number'] or '' %}
+                                    <tr>
+                                        <td>Installment {{ i }}</td>
+                                        <td>{{ invoice_number if invoice_number else '-' }}</td>
+                                        <td class="text-end">
+                                            {% if installment_amount > 0 %}
+                                                ₹{{ "%.2f"|format(installment_amount) }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if installment_amount > 0 %}
+                                                <span class="badge bg-success">Paid</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
                 {% endif %}
 
+                <!-- Student Address -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="text-primary mb-3">Student Address</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm">
+                                    <tr>
+                                        <td width="30%"><strong>Street:</strong></td>
+                                        <td>{{ student.street or 'N/A' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Area/Village:</strong></td>
+                                        <td>{{ student.area_village or 'N/A' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm">
+                                    <tr>
+                                        <td width="30%"><strong>City/Tehsil:</strong></td>
+                                        <td>{{ student.city_tehsil or 'N/A' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>State:</strong></td>
+                                        <td>{{ student.state or 'N/A' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
                 <div class="row">
-                    <div class="col-12 text-center">
-                        <p class="text-muted mb-1">Thank you for your payment!</p>
-                        <p class="text-muted small">This is a computer-generated receipt.</p>
+                    <div class="col-12 text-center border-top pt-3">
+                        <p class="text-muted mb-1"><strong>Thank you for your payment!</strong></p>
+                        <p class="text-muted small mb-0">This is a computer-generated receipt. For any questions, please contact the college office.</p>
+                        <p class="text-muted small">Generated on: {{ moment().format('DD/MM/YYYY HH:mm') if moment else invoice.date_time.strftime('%d/%m/%Y %H:%M') }}</p>
                     </div>
                 </div>
             </div>
@@ -210,12 +394,72 @@ style.textContent = `
             background: white !important;
             color: black !important;
             border: 1px solid black !important;
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
         }
-        body { font-size: 12px; }
-        h1, h2, h3 { font-size: 18px; }
-        h4 { font-size: 16px; }
-        h5 { font-size: 14px; }
-        h6 { font-size: 12px; }
+        .bg-primary {
+            background-color: #007bff !important;
+            color: white !important;
+        }
+        .text-primary {
+            color: #007bff !important;
+        }
+        .text-success {
+            color: #28a745 !important;
+        }
+        .text-danger {
+            color: #dc3545 !important;
+        }
+        .text-warning {
+            color: #ffc107 !important;
+        }
+        .text-info {
+            color: #17a2b8 !important;
+        }
+        .badge {
+            color: white !important;
+            padding: 2px 6px !important;
+            border-radius: 3px !important;
+        }
+        .bg-success {
+            background-color: #28a745 !important;
+        }
+        .bg-info {
+            background-color: #17a2b8 !important;
+        }
+        .bg-secondary {
+            background-color: #6c757d !important;
+        }
+        body { 
+            font-size: 11px; 
+            line-height: 1.3;
+        }
+        h1, h2, h3, h4 { 
+            font-size: 16px; 
+            margin-bottom: 8px;
+        }
+        h5 { 
+            font-size: 14px; 
+        }
+        h6 { 
+            font-size: 12px; 
+            margin-bottom: 6px;
+        }
+        .table {
+            font-size: 10px;
+        }
+        .table th, .table td {
+            padding: 4px 6px !important;
+        }
+        .card-body {
+            padding: 15px !important;
+        }
+        .mb-4 {
+            margin-bottom: 15px !important;
+        }
+        .mb-3 {
+            margin-bottom: 10px !important;
+        }
     }
 `;
 document.head.appendChild(style);
