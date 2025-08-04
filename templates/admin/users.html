@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block title %}User Management - SRBMC ERP{% endblock %}
@@ -97,7 +96,9 @@
     <div class="col-12">
         <div class="card shadow">
             <div class="card-header">
-                <h6 class="m-0 font-weight-bold text-primary">All Users ({{ users.total }} records)</h6>
+                <h6 class="m-0 font-weight-bold text-primary">
+                    All Users ({{ users.total }} records)
+                </h6>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -149,7 +150,7 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <!-- Pagination -->
                 {% if users.pages > 1 %}
                 <nav aria-label="User pagination">
@@ -159,7 +160,7 @@
                                 <a class="page-link" href="{{ url_for('admin_users', page=users.prev_num, search=request.args.get('search', ''), role=request.args.get('role', '')) }}">Previous</a>
                             </li>
                         {% endif %}
-                        
+
                         {% for page_num in users.iter_pages() %}
                             {% if page_num %}
                                 {% if page_num != users.page %}
@@ -177,7 +178,7 @@
                                 </li>
                             {% endif %}
                         {% endfor %}
-                        
+
                         {% if users.has_next %}
                             <li class="page-item">
                                 <a class="page-link" href="{{ url_for('admin_users', page=users.next_num, search=request.args.get('search', ''), role=request.args.get('role', '')) }}">Next</a>

@@ -1,4 +1,3 @@
-
 import csv
 import json
 import io
@@ -14,34 +13,34 @@ def export_to_csv(data, headers, filename):
     """Export data to CSV format"""
     output = io.StringIO()
     writer = csv.writer(output)
-    
+
     # Write headers
     writer.writerow(headers)
-    
+
     # Write data
     for row in data:
         writer.writerow(row)
-    
+
     output.seek(0)
     response = make_response(output.getvalue())
     response.headers['Content-Disposition'] = f'attachment; filename={filename}'
     response.headers['Content-Type'] = 'text/csv'
-    
+
     return response
 
 def export_to_excel(data, headers, filename):
     """Export data to Excel format"""
     df = pd.DataFrame(data, columns=headers)
-    
+
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Data')
-    
+
     output.seek(0)
     response = make_response(output.getvalue())
     response.headers['Content-Disposition'] = f'attachment; filename={filename}'
     response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    
+
     return response
 
 def export_to_json(data, headers, filename):
@@ -49,12 +48,12 @@ def export_to_json(data, headers, filename):
     json_data = []
     for row in data:
         json_data.append(dict(zip(headers, row)))
-    
+
     output = json.dumps(json_data, indent=2, default=str)
     response = make_response(output)
     response.headers['Content-Disposition'] = f'attachment; filename={filename}'
     response.headers['Content-Type'] = 'application/json'
-    
+
     return response
 
 def get_students_export_data():
@@ -67,7 +66,7 @@ def get_students_export_data():
         'Aadhaar Number', 'APAAR ID', 'School Name', 'Scholarship Status', 
         'Meera Rebate Status', 'Dropout Status', 'Admission Date'
     ]
-    
+
     data = []
     for student in students:
         data.append([
@@ -98,14 +97,14 @@ def get_students_export_data():
             student.dropout_status or 'Active',
             student.admission_date.strftime('%Y-%m-%d') if student.admission_date else ''
         ])
-    
+
     return data, headers
 
 def get_courses_export_data():
     """Get courses data for export"""
     courses = Course.query.all()
     headers = ['Course ID', 'Short Name', 'Full Name', 'Category', 'Duration (Years)']
-    
+
     data = []
     for course in courses:
         data.append([
@@ -115,7 +114,7 @@ def get_courses_export_data():
             course.course_category or '',
             course.duration or ''
         ])
-    
+
     return data, headers
 
 def get_course_details_export_data():
@@ -126,7 +125,7 @@ def get_course_details_export_data():
         'Course Tuition Fee', 'Course Type', 'Misc Fee 1', 'Misc Fee 2', 
         'Misc Fee 3', 'Misc Fee 4', 'Misc Fee 5', 'Misc Fee 6', 'Total Course Fees'
     ]
-    
+
     data = []
     for detail in course_details:
         data.append([
@@ -144,7 +143,7 @@ def get_course_details_export_data():
             float(detail.misc_course_fees_6) if detail.misc_course_fees_6 else 0,
             float(detail.total_course_fees) if detail.total_course_fees else 0
         ])
-    
+
     return data, headers
 
 def get_fees_export_data():
@@ -155,7 +154,7 @@ def get_fees_export_data():
         'Installment 1', 'Installment 2', 'Installment 3', 'Installment 4', 
         'Installment 5', 'Installment 6', 'Payment Status'
     ]
-    
+
     data = []
     for fee, student in fees:
         paid_amount = sum([
@@ -168,9 +167,9 @@ def get_fees_export_data():
         ])
         total_fee = float(fee.total_fee or 0)
         due_amount = total_fee - paid_amount
-        
+
         payment_status = 'Paid' if due_amount <= 0 else ('Partial' if paid_amount > 0 else 'Pending')
-        
+
         data.append([
             student.student_unique_id,
             f"{student.first_name} {student.last_name}",
@@ -186,7 +185,7 @@ def get_fees_export_data():
             float(fee.installment_6 or 0),
             payment_status
         ])
-    
+
     return data, headers
 
 def get_invoices_export_data():
@@ -196,7 +195,7 @@ def get_invoices_export_data():
         'Invoice Number', 'Student ID', 'Student Name', 'Course', 'Invoice Date',
         'Amount', 'Payment Mode', 'Status', 'Academic Year'
     ]
-    
+
     data = []
     for fee, student in fees:
         # Create invoice records for each installment
@@ -208,7 +207,7 @@ def get_invoices_export_data():
             (fee.installment_5, fee.invoice5_number, 'Installment 5'),
             (fee.installment_6, fee.invoice6_number, 'Installment 6')
         ]
-        
+
         for amount, invoice_num, installment_type in installments:
             if amount and amount > 0:
                 data.append([
@@ -222,7 +221,7 @@ def get_invoices_export_data():
                     'Paid',
                     '2024-25'  # Default academic year
                 ])
-    
+
     return data, headers
 
 def get_exams_export_data():
@@ -235,7 +234,7 @@ def get_exams_export_data():
         'Subject 3', 'Subject 3 Max', 'Subject 3 Obtained',
         'Total Max Marks', 'Total Obtained', 'Percentage', 'Grade', 'Status'
     ]
-    
+
     data = []
     for exam, student in exams:
         data.append([
@@ -260,7 +259,7 @@ def get_exams_export_data():
             exam.grade or '',
             exam.overall_status or ''
         ])
-    
+
     return data, headers
 
 def get_users_export_data():
@@ -270,7 +269,7 @@ def get_users_export_data():
         'User ID', 'Username', 'First Name', 'Last Name', 'Email', 'Phone', 
         'Gender', 'Role', 'Status', 'Created Date'
     ]
-    
+
     data = []
     for user in users:
         data.append([
@@ -285,7 +284,7 @@ def get_users_export_data():
             user.status,
             user.created_at.strftime('%Y-%m-%d') if user.created_at else ''
         ])
-    
+
     return data, headers
 
 def process_import_file(file, data_type):
@@ -293,17 +292,17 @@ def process_import_file(file, data_type):
     try:
         filename = secure_filename(file.filename)
         file_ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
-        
+
         if file_ext == 'csv':
             df = pd.read_csv(file)
         elif file_ext in ['xlsx', 'xls']:
             df = pd.read_excel(file)
         else:
             return False, "Unsupported file format. Please use CSV or Excel files."
-        
+
         # Convert DataFrame to records
         records = df.to_dict('records')
-        
+
         if data_type == 'students':
             return import_students_data(records)
         elif data_type == 'courses':
@@ -316,7 +315,7 @@ def process_import_file(file, data_type):
             return import_invoices_data(records)
         else:
             return False, "Invalid data type specified."
-            
+
     except Exception as e:
         return False, f"Error processing file: {str(e)}"
 
@@ -325,18 +324,18 @@ def import_students_data(records):
     try:
         imported_count = 0
         errors = []
-        
+
         for i, record in enumerate(records, 1):
             try:
                 # Check if student already exists
                 existing_student = Student.query.filter_by(
                     student_unique_id=record.get('Student ID', '')
                 ).first()
-                
+
                 if existing_student:
                     errors.append(f"Row {i}: Student with ID {record.get('Student ID')} already exists")
                     continue
-                
+
                 # Create new student
                 student = Student(
                     student_unique_id=record.get('Student ID', ''),
@@ -366,21 +365,21 @@ def import_students_data(records):
                     dropout_status=record.get('Dropout Status', 'Active'),
                     admission_date=datetime.strptime(record.get('Admission Date', ''), '%Y-%m-%d').date() if record.get('Admission Date') else date.today()
                 )
-                
+
                 db.session.add(student)
                 imported_count += 1
-                
+
             except Exception as e:
                 errors.append(f"Row {i}: {str(e)}")
-        
+
         db.session.commit()
-        
+
         message = f"Successfully imported {imported_count} students."
         if errors:
             message += f" {len(errors)} errors occurred."
-        
+
         return True, message
-        
+
     except Exception as e:
         db.session.rollback()
         return False, f"Import failed: {str(e)}"
@@ -390,18 +389,18 @@ def import_courses_data(records):
     try:
         imported_count = 0
         errors = []
-        
+
         for i, record in enumerate(records, 1):
             try:
                 # Check if course already exists
                 existing_course = Course.query.filter_by(
                     course_short_name=record.get('Short Name', '')
                 ).first()
-                
+
                 if existing_course:
                     errors.append(f"Row {i}: Course with short name {record.get('Short Name')} already exists")
                     continue
-                
+
                 # Create new course
                 course = Course(
                     course_short_name=record.get('Short Name', ''),
@@ -409,21 +408,21 @@ def import_courses_data(records):
                     course_category=record.get('Category', ''),
                     duration=int(record.get('Duration (Years)', 3)) if record.get('Duration (Years)') else 3
                 )
-                
+
                 db.session.add(course)
                 imported_count += 1
-                
+
             except Exception as e:
                 errors.append(f"Row {i}: {str(e)}")
-        
+
         db.session.commit()
-        
+
         message = f"Successfully imported {imported_count} courses."
         if errors:
             message += f" {len(errors)} errors occurred."
-        
+
         return True, message
-        
+
     except Exception as e:
         db.session.rollback()
         return False, f"Import failed: {str(e)}"
@@ -433,7 +432,7 @@ def import_course_details_data(records):
     try:
         imported_count = 0
         errors = []
-        
+
         for i, record in enumerate(records, 1):
             try:
                 # Create new course detail
@@ -451,21 +450,21 @@ def import_course_details_data(records):
                     misc_course_fees_6=float(record.get('Misc Fee 6', 0)) if record.get('Misc Fee 6') else 0,
                     total_course_fees=float(record.get('Total Course Fees', 0)) if record.get('Total Course Fees') else 0
                 )
-                
+
                 db.session.add(course_detail)
                 imported_count += 1
-                
+
             except Exception as e:
                 errors.append(f"Row {i}: {str(e)}")
-        
+
         db.session.commit()
-        
+
         message = f"Successfully imported {imported_count} course details."
         if errors:
             message += f" {len(errors)} errors occurred."
-        
+
         return True, message
-        
+
     except Exception as e:
         db.session.rollback()
         return False, f"Import failed: {str(e)}"
@@ -475,20 +474,20 @@ def import_users_data(records):
     try:
         imported_count = 0
         errors = []
-        
+
         from werkzeug.security import generate_password_hash
-        
+
         for i, record in enumerate(records, 1):
             try:
                 # Check if user already exists
                 existing_user = UserProfile.query.filter_by(
                     username=record.get('Username', '')
                 ).first()
-                
+
                 if existing_user:
                     errors.append(f"Row {i}: User with username {record.get('Username')} already exists")
                     continue
-                
+
                 # Create new user
                 user = UserProfile(
                     role_id=1,  # Default role
@@ -501,21 +500,21 @@ def import_users_data(records):
                     password_hash=generate_password_hash('password123'),  # Default password
                     status=record.get('Status', 'Active')
                 )
-                
+
                 db.session.add(user)
                 imported_count += 1
-                
+
             except Exception as e:
                 errors.append(f"Row {i}: {str(e)}")
-        
+
         db.session.commit()
-        
+
         message = f"Successfully imported {imported_count} users."
         if errors:
             message += f" {len(errors)} errors occurred."
-        
+
         return True, message
-        
+
     except Exception as e:
         db.session.rollback()
         return False, f"Import failed: {str(e)}"
@@ -525,39 +524,39 @@ def import_invoices_data(records):
     try:
         imported_count = 0
         errors = []
-        
+
         for i, record in enumerate(records, 1):
             try:
                 # Find student by ID
                 student = Student.query.filter_by(
                     student_unique_id=record.get('Student ID', '')
                 ).first()
-                
+
                 if not student:
                     errors.append(f"Row {i}: Student with ID {record.get('Student ID')} not found")
                     continue
-                
+
                 # Find course by name
                 course = Course.query.filter_by(
                     course_full_name=record.get('Course', '')
                 ).first()
-                
+
                 if not course:
                     errors.append(f"Row {i}: Course {record.get('Course')} not found")
                     continue
-                
+
                 # Check if invoice already exists
                 existing_invoice = Invoice.query.filter_by(
                     invoice_number=record.get('Invoice Number', '')
                 ).first()
-                
+
                 if existing_invoice:
                     errors.append(f"Row {i}: Invoice with number {record.get('Invoice Number')} already exists")
                     continue
-                
+
                 # Parse date
                 invoice_date = datetime.strptime(record.get('Invoice Date', ''), '%Y-%m-%d') if record.get('Invoice Date') else datetime.now()
-                
+
                 # Create new invoice
                 invoice = Invoice(
                     student_id=student.id,
@@ -568,21 +567,208 @@ def import_invoices_data(records):
                     original_invoice_printed=record.get('Status', 'Not Printed') == 'Printed',
                     installment_number=int(record.get('Installment Number', 1)) if record.get('Installment Number') else 1
                 )
-                
+
                 db.session.add(invoice)
                 imported_count += 1
-                
+
             except Exception as e:
                 errors.append(f"Row {i}: {str(e)}")
-        
+
         db.session.commit()
-        
+
         message = f"Successfully imported {imported_count} invoices."
         if errors:
             message += f" {len(errors)} errors occurred."
-        
+
         return True, message
-        
+
     except Exception as e:
         db.session.rollback()
         return False, f"Import failed: {str(e)}"
+
+def get_export_data(data_type):
+    """Get data for export based on data type"""
+    if data_type == 'students':
+        return get_students_export_data()
+    elif data_type == 'courses':
+        return get_courses_export_data()
+    elif data_type == 'course_details':
+        return get_course_details_export_data()
+    elif data_type == 'fees':
+        return get_fees_export_data()
+    elif data_type == 'exams':
+        return get_exams_export_data()
+    elif data_type == 'invoices':
+        return get_invoices_export_data()
+    elif data_type == 'users':
+        return get_users_export_data()
+    elif data_type == 'subjects':
+        return get_subjects_export_data()
+    else:
+        raise ValueError(f"Unsupported data type: {data_type}")
+
+def import_data(data_type, records):
+    """Import data based on data type"""
+    if data_type == 'students':
+        return import_students_data(records)
+    elif data_type == 'courses':
+        return import_courses_data(records)
+    elif data_type == 'course_details':
+        return import_course_details_data(records)
+    elif data_type == 'fees':
+        return import_fees_data(records)
+    elif data_type == 'exams':
+        return import_exams_data(records)
+    elif data_type == 'invoices':
+        return import_invoices_data(records)
+    elif data_type == 'users':
+        return import_users_data(records)
+    elif data_type == 'subjects':
+        return import_subjects_data(records)
+    else:
+        raise ValueError(f"Unsupported data type: {data_type}")
+
+def import_fees_data(records):
+    """Placeholder for fees import"""
+    return False, "Fees import functionality not yet implemented."
+
+def import_exams_data(records):
+    """Placeholder for exams import"""
+    return False, "Exams import functionality not yet implemented."
+
+def export_users_data():
+    """Export users data"""
+    from models import UserProfile, Role
+
+    users = db.session.query(UserProfile).join(UserProfile.role).all()
+
+    data = []
+    for user in users:
+        data.append([
+            user.id,
+            user.username,
+            user.first_name,
+            user.last_name,
+            user.email,
+            user.phone or '',
+            user.gender or '',
+            user.role.role_name if user.role else '',
+            user.status,
+            user.created_at.strftime('%Y-%m-%d') if user.created_at else ''
+        ])
+
+    headers = [
+        'User ID', 'Username', 'First Name', 'Last Name', 'Email', 'Phone',
+        'Gender', 'Role', 'Status', 'Created Date'
+    ]
+
+    return data, headers
+
+def import_users_data(records):
+    """Import users data from records"""
+    from models import UserProfile, Role
+    from werkzeug.security import generate_password_hash
+
+    try:
+        imported_count = 0
+        errors = []
+
+        for i, record in enumerate(records, 1):
+            try:
+                # Check if user already exists
+                existing_user = UserProfile.query.filter_by(
+                    username=record.get('Username', '')
+                ).first()
+
+                if existing_user:
+                    errors.append(f"Row {i}: User with username {record.get('Username')} already exists")
+                    continue
+
+                # Create new user
+                user = UserProfile(
+                    role_id=1,  # Default role
+                    username=record.get('Username', ''),
+                    first_name=record.get('First Name', ''),
+                    last_name=record.get('Last Name', ''),
+                    email=record.get('Email', ''),
+                    phone=record.get('Phone', ''),
+                    gender=record.get('Gender', ''),
+                    password_hash=generate_password_hash('password123'),  # Default password
+                    status=record.get('Status', 'Active')
+                )
+
+                db.session.add(user)
+                db.session.commit()
+                imported_count += 1
+
+            except Exception as e:
+                errors.append(f"Row {i}: {str(e)}")
+                continue
+
+        return True, f"Successfully imported {imported_count} users. {len(errors)} errors occurred." if errors else f"Successfully imported {imported_count} users.", errors
+
+    except Exception as e:
+        db.session.rollback()
+        return False, f"Import failed: {str(e)}", []
+
+
+def get_subjects_export_data():
+    """Export subjects data"""
+    subjects = Subject.query.all()
+
+    data = []
+    for subject in subjects:
+        data.append([
+            subject.subject_code,
+            subject.subject_name,
+            subject.subject_type,
+            subject.credits,
+            subject.description or '',
+            subject.created_at.strftime('%Y-%m-%d %H:%M:%S') if subject.created_at else ''
+        ])
+    headers = [
+        'Subject Code', 'Subject Name', 'Subject Type', 'Credits',
+        'Description', 'Created At'
+    ]
+
+    return data, headers
+
+def import_subjects_data(records):
+    """Import subjects data from records"""
+    try:
+        imported_count = 0
+        errors = []
+
+        for i, record in enumerate(records, 1):
+            try:
+                # Check if subject already exists
+                existing_subject = Subject.query.filter_by(
+                    subject_code=record.get('Subject Code', '')
+                ).first()
+
+                if existing_subject:
+                    errors.append(f"Row {i}: Subject with code {record.get('Subject Code')} already exists")
+                    continue
+
+                # Create new subject
+                subject = Subject(
+                    subject_code=record.get('Subject Code', ''),
+                    subject_name=record.get('Subject Name', ''),
+                    subject_type=record.get('Subject Type', 'Core'),
+                    credits=int(record.get('Credits', 0)) if record.get('Credits') else 0,
+                    description=record.get('Description', '')
+                )
+
+                db.session.add(subject)
+                db.session.commit()
+                imported_count += 1
+
+            except Exception as e:
+                errors.append(f"Row {i}: {str(e)}")
+                continue
+
+        return True, f"Successfully imported {imported_count} subjects. {len(errors)} errors occurred." if errors else f"Successfully imported {imported_count} subjects.", errors
+
+    except Exception as e:
+        db.session.rollback()
+        return False, f"Import failed: {str(e)}", []
