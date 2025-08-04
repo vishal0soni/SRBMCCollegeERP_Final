@@ -772,3 +772,103 @@ def import_subjects_data(records):
     except Exception as e:
         db.session.rollback()
         return False, f"Import failed: {str(e)}", []
+
+def export_to_json(data, headers, filename):
+    """Export data to JSON format"""
+    # Convert data to list of dictionaries
+    json_data = []
+    for row in data:
+        row_dict = {}
+        for i, header in enumerate(headers):
+            if i < len(row):
+                row_dict[header] = row[i]
+            else:
+                row_dict[header] = None
+        json_data.append(row_dict)
+
+    json_string = json.dumps(json_data, indent=2, default=str)
+
+    response = make_response(json_string)
+    response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+    response.headers['Content-Type'] = 'application/json'
+
+    return response
+
+def process_import_file(file, data_type):
+    """Process import file for bulk data import"""
+    try:
+        filename = secure_filename(file.filename)
+
+        if filename.endswith('.csv'):
+            # Read CSV file
+            stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+            csv_input = csv.reader(stream)
+            headers = next(csv_input)
+            data = list(csv_input)
+        elif filename.endswith(('.xlsx', '.xls')):
+            # Read Excel file
+            df = pd.read_excel(file)
+            headers = df.columns.tolist()
+            data = df.values.tolist()
+        else:
+            return False, "Unsupported file format. Please use CSV or Excel files."
+
+        # Process data based on type
+        if data_type == 'subjects':
+            return import_subjects_data(data, headers)
+        elif data_type == 'students':
+            return import_students_data(data, headers)
+        elif data_type == 'courses':
+            return import_courses_data(data, headers)
+        else:
+            return False, f"Import not implemented for {data_type}"
+
+    except Exception as e:
+        return False, f"Error processing file: {str(e)}"
+
+def import_subjects_data(data, headers):
+    """Import subjects data from CSV/Excel"""
+    try:
+        imported_count = 0
+        for row in data:
+            if len(row) < 3:  # Skip incomplete rows
+                continue
+
+            subject_name = row[1] if len(row) > 1 else ''
+            subject_type = row[2] if len(row) > 2 else 'Compulsory'
+            course_short_name = row[3] if len(row) > 3 else ''
+
+            if not subject_name or not course_short_name:
+                continue
+
+            # Check if subject already exists
+            existing = Subject.query.filter_by(
+                subject_name=subject_name, 
+                course_short_name=course_short_name
+            ).first()
+
+            if not existing:
+                subject = Subject(
+                    subject_name=subject_name,
+                    subject_type=subject_type,
+                    course_short_name=course_short_name
+                                )
+                db.session.add(subject)
+                imported_count += 1
+
+        db.session.commit()
+        return True, f"Successfully imported {imported_count} subjects"
+
+    except Exception as e:
+        db.session.rollback()
+        return False, f"Error importing subjects: {str(e)}"
+
+def import_students_data(data, headers):
+    """Import students data from CSV/Excel"""
+    # Implementation placeholder
+    return False, "Student import not yet implemented"
+
+def import_courses_data(data, headers):
+    """Import courses data from CSV/Excel"""
+    # Implementation placeholder
+    return False, "Course import not yet implemented"

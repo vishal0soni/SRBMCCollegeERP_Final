@@ -14,7 +14,7 @@ from utils import generate_student_id, generate_invoice_number, calculate_grade,
 from bulk_operations import (
     get_students_export_data, get_courses_export_data, get_course_details_export_data,
     get_exams_export_data, get_fees_export_data, get_invoices_export_data, get_users_export_data,
-    export_to_csv, export_to_excel, export_to_json
+    get_subjects_export_data, export_to_csv, export_to_excel, export_to_json, process_import_file
 )
 
 @app.route('/')
@@ -1688,6 +1688,9 @@ def bulk_export(data_type, format):
         elif data_type == 'users':
             data, headers = get_users_export_data()
             filename = f'users_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
+        elif data_type == 'subjects':
+            data, headers = get_subjects_export_data()
+            filename = f'subjects_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
         else:
             flash('Invalid data type for export.', 'error')
             return redirect(url_for('dashboard'))
