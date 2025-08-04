@@ -182,13 +182,20 @@
 
 {% block scripts %}
 <script>
-// Load dashboard charts
+// Load dashboard charts with dynamic data
 document.addEventListener('DOMContentLoaded', function() {
-    // Student distribution by course
+    // Student distribution by course chart
     fetch('/api/student-stats')
         .then(response => response.json())
         .then(data => {
             const ctx = document.getElementById('courseChart').getContext('2d');
+            
+            // Handle empty data case
+            if (data.courses.length === 0) {
+                data.courses = ['No Data'];
+                data.counts = [1];
+            }
+            
             new Chart(ctx, {
                 type: 'doughnut',
                 data: {
@@ -201,8 +208,55 @@ document.addEventListener('DOMContentLoaded', function() {
                             '#36b9cc',
                             '#f6c23e',
                             '#e74a3b',
-                            '#858796'
-                        ]
+                            '#858796',
+                            '#5a5c69',
+                            '#2c5282',
+                            '#1a365d',
+                            '#3182ce'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error loading course distribution data:', error);
+            // Show placeholder chart on error
+            const ctx = document.getElementById('courseChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['No Data Available'],
+                    datasets: [{
+                        data: [1],
+                        backgroundColor: ['#e3e6f0']
                     }]
                 },
                 options: {
@@ -216,7 +270,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-    // Monthly fee collections
+    // Monthly fee collections chart
     fetch('/api/fee-stats')
         .then(response => response.json())
         .then(data => {
@@ -227,25 +281,93 @@ document.addEventListener('DOMContentLoaded', function() {
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: data.months.map(m => monthNames[m-1]),
+                    labels: monthNames,
                     datasets: [{
                         label: 'Fee Collections (₹)',
                         data: data.amounts,
-                        borderColor: '#4e73df',
-                        backgroundColor: 'rgba(78, 115, 223, 0.1)',
-                        tension: 0.4
+                        borderColor: '#1cc88a',
+                        backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#1cc88a',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Collections: ₹' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#e3e6f0'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value.toLocaleString();
+                                },
+                                color: '#5a5c69',
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: '#e3e6f0'
+                            },
+                            ticks: {
+                                color: '#5a5c69',
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error loading fee collections data:', error);
+            // Show placeholder chart on error
+            const ctx = document.getElementById('feeChart').getContext('2d');
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: monthNames,
+                    datasets: [{
+                        label: 'No Data Available',
+                        data: Array(12).fill(0),
+                        borderColor: '#e3e6f0',
+                        backgroundColor: 'rgba(227, 230, 240, 0.1)'
                     }]
                 },
                 options: {
                     responsive: true,
                     scales: {
                         y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '₹' + value.toLocaleString();
-                                }
-                            }
+                            beginAtZero: true
                         }
                     }
                 }

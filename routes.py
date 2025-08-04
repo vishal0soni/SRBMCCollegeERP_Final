@@ -1132,14 +1132,25 @@ def api_student_stats():
 @app.route('/api/fee-stats')
 @login_required
 def api_fee_stats():
+    # Get monthly fee collections from invoices for current year
+    current_year = datetime.now().year
     monthly_collections = db.session.query(
         func.extract('month', Invoice.date_time),
         func.sum(Invoice.invoice_amount)
-    ).group_by(func.extract('month', Invoice.date_time)).all()
+    ).filter(
+        func.extract('year', Invoice.date_time) == current_year
+    ).group_by(func.extract('month', Invoice.date_time)).order_by(func.extract('month', Invoice.date_time)).all()
+
+    # Initialize all 12 months with 0
+    months_data = {i: 0 for i in range(1, 13)}
+    
+    # Fill in actual data
+    for month, amount in monthly_collections:
+        months_data[int(month)] = float(amount) if amount else 0
 
     return jsonify({
-        'months': [int(month) for month, amount in monthly_collections],
-        'amounts': [float(amount) for month, amount in monthly_collections]
+        'months': list(months_data.keys()),
+        'amounts': list(months_data.values())
     })
 
 @app.route('/api/search-students')
