@@ -1,0 +1,215 @@
+
+{% extends "base.html" %}
+
+{% block title %}Invoice Details - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="fas fa-file-invoice"></i> Invoice Details
+            </h1>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('invoices') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Invoices
+                </a>
+                <a href="{{ url_for('invoice_pdf', invoice_id=invoice.id) }}" class="btn btn-primary" target="_blank">
+                    <i class="fas fa-file-pdf"></i> Download PDF
+                </a>
+                {% if current_user.role.access_type == 'Edit' and not invoice.original_invoice_printed %}
+                <button class="btn btn-success" onclick="markPrinted({{ invoice.id }})">
+                    <i class="fas fa-print"></i> Mark as Printed
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Invoice Details Card -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow" id="invoice-content">
+            <div class="card-header text-center bg-primary text-white">
+                <h4 class="mb-0">SHRI RAGHUNATH BISHNOI MEMORIAL COLLEGE</h4>
+                <p class="mb-0">Raniwara, Jalore, Rajasthan</p>
+                <h5 class="mt-2 mb-0">FEE RECEIPT</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Invoice Number:</strong></td>
+                                <td>{{ invoice.invoice_number }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Date:</strong></td>
+                                <td>{{ invoice.date_time.strftime('%d/%m/%Y %H:%M') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Installment:</strong></td>
+                                <td>{{ invoice.installment_number }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td>
+                                    {% if invoice.original_invoice_printed %}
+                                        <span class="badge bg-success">Printed</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Not Printed</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Student ID:</strong></td>
+                                <td>{{ student.student_unique_id }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Student Name:</strong></td>
+                                <td>{{ student.first_name }} {{ student.last_name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Course:</strong></td>
+                                <td>{{ student.current_course }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Phone:</strong></td>
+                                <td>{{ student.phone or 'N/A' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="text-primary">Payment Details</h6>
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Description</th>
+                                    <th class="text-end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Installment {{ invoice.installment_number }} Payment</td>
+                                    <td class="text-end">₹{{ "%.2f"|format(invoice.invoice_amount) }}</td>
+                                </tr>
+                                <tr class="table-success">
+                                    <th>Total Amount Paid</th>
+                                    <th class="text-end">₹{{ "%.2f"|format(invoice.invoice_amount) }}</th>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {% if fee_record %}
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="text-primary">Fee Summary</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6>Total Fee</h6>
+                                        <h4 class="text-info">₹{{ "%.2f"|format(fee_record.total_fee or 0) }}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6>Total Paid</h6>
+                                        <h4 class="text-success">₹{{ "%.2f"|format((fee_record.installment_1 or 0) + (fee_record.installment_2 or 0) + (fee_record.installment_3 or 0) + (fee_record.installment_4 or 0) + (fee_record.installment_5 or 0) + (fee_record.installment_6 or 0)) }}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6>Balance Due</h6>
+                                        <h4 class="text-danger">₹{{ "%.2f"|format((fee_record.total_fee or 0) - ((fee_record.installment_1 or 0) + (fee_record.installment_2 or 0) + (fee_record.installment_3 or 0) + (fee_record.installment_4 or 0) + (fee_record.installment_5 or 0) + (fee_record.installment_6 or 0))) }}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <p class="text-muted mb-1">Thank you for your payment!</p>
+                        <p class="text-muted small">This is a computer-generated receipt.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function markPrinted(invoiceId) {
+    if (confirm('Mark this invoice as printed? This action cannot be undone.')) {
+        fetch(`/invoice/${invoiceId}/mark-printed`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Invoice marked as printed successfully!');
+                location.reload();
+            } else {
+                alert('Error updating invoice status: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating invoice status');
+        });
+    }
+}
+
+// Print functionality
+function printInvoice() {
+    window.print();
+}
+
+// Print styles
+const style = document.createElement('style');
+style.textContent = `
+    @media print {
+        .btn, .card-header.bg-primary, nav, .d-flex.justify-content-between {
+            display: none !important;
+        }
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .card-header {
+            background: white !important;
+            color: black !important;
+            border: 1px solid black !important;
+        }
+        body { font-size: 12px; }
+        h3 { font-size: 18px; }
+        h4 { font-size: 16px; }
+        h5 { font-size: 14px; }
+        h6 { font-size: 12px; }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

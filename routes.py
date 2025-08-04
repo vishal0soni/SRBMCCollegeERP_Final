@@ -1674,6 +1674,19 @@ def edit_profile():
 
     return render_template('profile_edit.html', form=form, title='Edit Profile')
 
+@app.route('/invoice/<int:invoice_id>/view')
+@login_required
+def view_invoice(invoice_id):
+    if not can_edit_module(current_user, 'fees'):
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+
+    invoice = Invoice.query.get_or_404(invoice_id)
+    student = Student.query.get_or_404(invoice.student_id)
+    fee_record = CollegeFees.query.filter_by(student_id=student.id).first()
+
+    return render_template('fees/invoice_view.html', invoice=invoice, student=student, fee_record=fee_record)
+
 @app.route('/invoice/<int:invoice_id>/mark-printed', methods=['POST'])
 @login_required
 def mark_invoice_printed(invoice_id):

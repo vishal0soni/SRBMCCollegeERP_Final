@@ -152,12 +152,18 @@
                                             <i class="fas fa-file-pdf"></i> PDF
                                         </a>
                                         <button class="btn btn-outline-info" onclick="viewInvoice({{ invoice.id }})">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="fas fa-eye"></i> View
                                         </button>
                                         {% if current_user.role.access_type == 'Edit' %}
-                                        <button class="btn btn-outline-success" onclick="markPrinted({{ invoice.id }})">
-                                            <i class="fas fa-print"></i>
-                                        </button>
+                                            {% if not invoice.original_invoice_printed %}
+                                            <button class="btn btn-outline-success" onclick="markPrinted({{ invoice.id }})" title="Mark as Printed">
+                                                <i class="fas fa-print"></i> Print
+                                            </button>
+                                            {% else %}
+                                            <button class="btn btn-outline-secondary" disabled title="Already Printed">
+                                                <i class="fas fa-print"></i> Printed
+                                            </button>
+                                            {% endif %}
                                         {% endif %}
                                     </div>
                                 </td>
@@ -212,12 +218,12 @@
 {% block scripts %}
 <script>
 function viewInvoice(invoiceId) {
-    // Open invoice details modal or redirect to detail page
-    window.open(`/invoice/${invoiceId}/pdf`, '_blank');
+    // Redirect to invoice view page
+    window.location.href = `/invoice/${invoiceId}/view`;
 }
 
 function markPrinted(invoiceId) {
-    if (confirm('Mark this invoice as printed?')) {
+    if (confirm('Mark this invoice as printed? This action cannot be undone.')) {
         fetch(`/invoice/${invoiceId}/mark-printed`, {
             method: 'POST',
             headers: {
@@ -227,10 +233,15 @@ function markPrinted(invoiceId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                alert('Invoice marked as printed successfully!');
                 location.reload();
             } else {
-                alert('Error updating invoice status');
+                alert('Error updating invoice status: ' + (data.error || 'Unknown error'));
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating invoice status');
         });
     }
 }
