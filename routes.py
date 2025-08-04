@@ -1661,7 +1661,7 @@ def internal_error(error):
 @login_required
 def bulk_export(data_type, format):
     """Bulk export data in various formats"""
-    if not can_edit_module(current_user, data_type if data_type != 'course_details' else 'courses'):
+    if not can_edit_module(current_user, data_type if data_type not in ['course_details', 'invoices'] else ('courses' if data_type == 'course_details' else 'fees')):
         flash('You do not have permission to export this data.', 'error')
         return redirect(url_for('dashboard'))
 
@@ -1678,6 +1678,7 @@ def bulk_export(data_type, format):
             filename = f'course_details_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
         elif data_type == 'fees':
             data, headers = get_fees_export_data()
+            filename = f'fees_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
         elif data_type == 'invoices':
             data, headers = get_invoices_export_data()
             filename = f'invoices_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
@@ -1711,7 +1712,7 @@ def bulk_export(data_type, format):
 @login_required
 def bulk_import(data_type):
     """Bulk import data from uploaded files"""
-    if not can_edit_module(current_user, data_type if data_type != 'course_details' else 'courses'):
+    if not can_edit_module(current_user, data_type if data_type not in ['course_details', 'invoices'] else ('courses' if data_type == 'course_details' else 'fees')):
         flash('You do not have permission to import this data.', 'error')
         return redirect(url_for('dashboard'))
 
@@ -1786,6 +1787,15 @@ def download_template(data_type):
             sample_data = [
                 ['', 'teacher1', 'Teacher', 'Name', 'teacher@example.com', '9876543210',
                  'Male', 'Teacher', 'Active', '2024-01-01']
+            ]
+        elif data_type == 'invoices':
+            headers = [
+                'Invoice Number', 'Student ID', 'Student Name', 'Course', 'Invoice Date',
+                'Amount', 'Payment Mode', 'Status', 'Academic Year', 'Installment Number'
+            ]
+            sample_data = [
+                ['INV-2024-001', 'BA-24-001', 'Student Name', 'Bachelor of Arts First Year', '2024-01-15',
+                 '5000', 'Cash', 'Paid', '2024-25', '1']
             ]
         else:
             flash('Invalid template type.', 'error')

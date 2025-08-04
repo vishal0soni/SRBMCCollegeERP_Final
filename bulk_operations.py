@@ -312,6 +312,8 @@ def process_import_file(file, data_type):
             return import_course_details_data(records)
         elif data_type == 'users':
             return import_users_data(records)
+        elif data_type == 'invoices':
+            return import_invoices_data(records)
         else:
             return False, "Invalid data type specified."
             
@@ -509,6 +511,73 @@ def import_users_data(records):
         db.session.commit()
         
         message = f"Successfully imported {imported_count} users."
+        if errors:
+            message += f" {len(errors)} errors occurred."
+        
+        return True, message
+        
+    except Exception as e:
+        db.session.rollback()
+        return False, f"Import failed: {str(e)}"
+
+def import_invoices_data(records):
+    """Import invoices data from records"""
+    try:
+        imported_count = 0
+        errors = []
+        
+        for i, record in enumerate(records, 1):
+            try:
+                # Find student by ID
+                student = Student.query.filter_by(
+                    student_unique_id=record.get('Student ID', '')
+                ).first()
+                
+                if not student:
+                    errors.append(f"Row {i}: Student with ID {record.get('Student ID')} not found")
+                    continue
+                
+                # Find course by name
+                course = Course.query.filter_by(
+                    course_full_name=record.get('Course', '')
+                ).first()
+                
+                if not course:
+                    errors.append(f"Row {i}: Course {record.get('Course')} not found")
+                    continue
+                
+                # Check if invoice already exists
+                existing_invoice = Invoice.query.filter_by(
+                    invoice_number=record.get('Invoice Number', '')
+                ).first()
+                
+                if existing_invoice:
+                    errors.append(f"Row {i}: Invoice with number {record.get('Invoice Number')} already exists")
+                    continue
+                
+                # Parse date
+                invoice_date = datetime.strptime(record.get('Invoice Date', ''), '%Y-%m-%d') if record.get('Invoice Date') else datetime.now()
+                
+                # Create new invoice
+                invoice = Invoice(
+                    student_id=student.id,
+                    course_id=course.course_id,
+                    invoice_number=record.get('Invoice Number', ''),
+                    date_time=invoice_date,
+                    invoice_amount=float(record.get('Amount', 0)) if record.get('Amount') else 0,
+                    original_invoice_printed=record.get('Status', 'Not Printed') == 'Printed',
+                    installment_number=int(record.get('Installment Number', 1)) if record.get('Installment Number') else 1
+                )
+                
+                db.session.add(invoice)
+                imported_count += 1
+                
+            except Exception as e:
+                errors.append(f"Row {i}: {str(e)}")
+        
+        db.session.commit()
+        
+        message = f"Successfully imported {imported_count} invoices."
         if errors:
             message += f" {len(errors)} errors occurred."
         
