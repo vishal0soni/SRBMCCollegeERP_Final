@@ -98,6 +98,7 @@ class Student(db.Model):
     state = db.Column(db.String(100))
     phone = db.Column(db.String(20))
     aadhaar_card_number = db.Column(db.String(20))
+    apaar_id = db.Column(db.String(20))
     school_name = db.Column(db.String(200))
     scholarship_status = db.Column(db.String(20), default='Applied')  # Applied, Approved, Rejected
     rebate_meera_scholarship_status = db.Column(db.String(20), default='Applied')

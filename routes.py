@@ -316,6 +316,7 @@ def add_student():
             state=form.state.data,
             phone=form.phone.data,
             aadhaar_card_number=form.aadhaar_card_number.data,
+            apaar_id=form.apaar_id.data,
             school_name=form.school_name.data,
             scholarship_status=form.scholarship_status.data,
             rebate_meera_scholarship_status=form.rebate_meera_scholarship_status.data,

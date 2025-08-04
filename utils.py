@@ -449,6 +449,7 @@ State: {student.state or 'N/A'}
 
 Other Information:
 Aadhaar Number: {student.aadhaar_card_number or 'N/A'}
+APAAR ID: {student.apaar_id or 'N/A'}
 Government Scholarship: {student.scholarship_status or 'N/A'}
 Meera Scholarship: {student.rebate_meera_scholarship_status or 'N/A'}
 
