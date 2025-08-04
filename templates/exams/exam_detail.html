@@ -127,8 +127,6 @@
                                 <th>Subject</th>
                                 <th class="text-center">Max Marks</th>
                                 <th class="text-center">Obtained Marks</th>
-                                <th class="text-center">Percentage</th>
-                                <th class="text-center">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -137,14 +135,6 @@
                                 <td>{{ exam.subject1_name }}</td>
                                 <td class="text-center">{{ exam.subject1_max_marks }}</td>
                                 <td class="text-center">{{ exam.subject1_obtained_marks }}</td>
-                                <td class="text-center">{{ "%.1f"|format((exam.subject1_obtained_marks / exam.subject1_max_marks * 100) if exam.subject1_max_marks > 0 else 0) }}%</td>
-                                <td class="text-center">
-                                    {% if (exam.subject1_obtained_marks / exam.subject1_max_marks * 100) >= 40 %}
-                                        <span class="badge bg-success">Pass</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Fail</span>
-                                    {% endif %}
-                                </td>
                             </tr>
                             {% endif %}
                             {% if exam.subject2_name %}
@@ -152,14 +142,6 @@
                                 <td>{{ exam.subject2_name }}</td>
                                 <td class="text-center">{{ exam.subject2_max_marks }}</td>
                                 <td class="text-center">{{ exam.subject2_obtained_marks }}</td>
-                                <td class="text-center">{{ "%.1f"|format((exam.subject2_obtained_marks / exam.subject2_max_marks * 100) if exam.subject2_max_marks > 0 else 0) }}%</td>
-                                <td class="text-center">
-                                    {% if (exam.subject2_obtained_marks / exam.subject2_max_marks * 100) >= 40 %}
-                                        <span class="badge bg-success">Pass</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Fail</span>
-                                    {% endif %}
-                                </td>
                             </tr>
                             {% endif %}
                             {% if exam.subject3_name %}
@@ -167,14 +149,6 @@
                                 <td>{{ exam.subject3_name }}</td>
                                 <td class="text-center">{{ exam.subject3_max_marks }}</td>
                                 <td class="text-center">{{ exam.subject3_obtained_marks }}</td>
-                                <td class="text-center">{{ "%.1f"|format((exam.subject3_obtained_marks / exam.subject3_max_marks * 100) if exam.subject3_max_marks > 0 else 0) }}%</td>
-                                <td class="text-center">
-                                    {% if (exam.subject3_obtained_marks / exam.subject3_max_marks * 100) >= 40 %}
-                                        <span class="badge bg-success">Pass</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Fail</span>
-                                    {% endif %}
-                                </td>
                             </tr>
                             {% endif %}
                         </tbody>
@@ -183,7 +157,9 @@
                                 <th>Total</th>
                                 <th class="text-center">{{ exam.total_max_marks }}</th>
                                 <th class="text-center">{{ exam.total_obtained_marks }}</th>
-                                <th class="text-center">{{ "%.1f"|format(exam.percentage) }}%</th>
+                                <th class="text-center">
+                                    <span class="badge bg-info">{{ "%.1f"|format(exam.percentage) }}%</span>
+                                </th>
                                 <th class="text-center">
                                     {% if exam.overall_status == 'Pass' %}
                                         <span class="badge bg-success">Pass</span>
