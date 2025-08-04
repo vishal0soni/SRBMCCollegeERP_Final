@@ -46,9 +46,9 @@
         <div class="card shadow">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="m-0 font-weight-bold text-primary">Payment History</h6>
-                <button type="button" class="btn btn-sm btn-info" onclick="printPaymentReport()">
-                    <i class="fas fa-print"></i> Print Report
-                </button>
+                <a href="{{ url_for('student_fee_statement_pdf', student_id=student.id) }}" class="btn btn-sm btn-info" target="_blank">
+                    <i class="fas fa-file-pdf"></i> Fee Statement PDF
+                </a>
             </div>
             <div class="card-body">
                 {% if invoices %}
@@ -71,8 +71,8 @@
                                 <td>₹{{ "%.2f"|format(invoice.invoice_amount) }}</td>
                                 <td>{{ invoice.installment_number }}</td>
                                 <td>
-                                    <a href="{{ url_for('invoice_pdf', invoice_id=invoice.id) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-print"></i> Print
+                                    <a href="{{ url_for('invoice_pdf', invoice_id=invoice.id) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                        <i class="fas fa-file-pdf"></i> PDF
                                     </a>
                                 </td>
                             </tr>
@@ -142,31 +142,6 @@
 
 {% block scripts %}
 <script>
-function printPaymentReport() {
-    window.print();
-}
-
-// Print styles for better fee detail report
-const style = document.createElement('style');
-style.textContent = `
-    @media print {
-        .btn, .btn-group, nav, .breadcrumb {
-            display: none !important;
-        }
-        .card {
-            border: none !important;
-            box-shadow: none !important;
-        }
-        body { font-size: 12px; }
-        h1, h3 { font-size: 18px; }
-        h6 { font-size: 14px; }
-        .card-header {
-            background: none !important;
-            border: none !important;
-            font-weight: bold;
-        }
-    }
-`;
-document.head.appendChild(style);
+// Fee detail page JavaScript - PDF actions only
 </script>
 {% endblock %}

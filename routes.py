@@ -1575,6 +1575,37 @@ def invoice_pdf(invoice_id):
 
     return response
 
+@app.route('/student/<int:student_id>/fee-statement/pdf')
+@login_required
+def student_fee_statement_pdf(student_id):
+    if not can_edit_module(current_user, 'fees'):
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+
+    student = Student.query.get_or_404(student_id)
+    fee_record = CollegeFees.query.filter_by(student_id=student_id).first()
+    invoices = Invoice.query.filter_by(student_id=student_id).order_by(Invoice.date_time.desc()).all()
+    
+    pdf_data = generate_pdf_fee_statement(student, fee_record, invoices)
+
+    response = make_response(pdf_data)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=fee_statement_{student.student_unique_id}.pdf'
+
+    return response
+
+@app.route('/api/student-latest-invoice/<int:student_id>')
+@login_required
+def api_student_latest_invoice(student_id):
+    try:
+        latest_invoice = Invoice.query.filter_by(student_id=student_id).order_by(Invoice.date_time.desc()).first()
+        if latest_invoice:
+            return jsonify({'success': True, 'invoice_id': latest_invoice.id})
+        else:
+            return jsonify({'success': False, 'message': 'No invoice found'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/report-card/<int:exam_id>/pdf')
 @login_required
 def report_card_pdf(exam_id):
@@ -1623,6 +1654,22 @@ def edit_profile():
             flash(f'Error updating profile: {str(e)}', 'error')
 
     return render_template('profile_edit.html', form=form, title='Edit Profile')
+
+@app.route('/invoice/<int:invoice_id>/mark-printed', methods=['POST'])
+@login_required
+def mark_invoice_printed(invoice_id):
+    if not can_edit_module(current_user, 'fees') or current_user.role.access_type != 'Edit':
+        return jsonify({'error': 'Permission denied'}), 403
+
+    invoice = Invoice.query.get_or_404(invoice_id)
+    
+    try:
+        invoice.original_invoice_printed = True
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/change-password', methods=['GET', 'POST'])
 @login_required

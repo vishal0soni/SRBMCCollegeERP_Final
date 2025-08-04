@@ -294,9 +294,9 @@
                                             <i class="fas fa-plus"></i> Pay
                                         </a>
                                         {% endif %}
-                                        <button class="btn btn-outline-secondary" onclick="generateFeeStatement({{ student.id }})">
-                                            <i class="fas fa-print"></i>
-                                        </button>
+                                        <a href="{{ url_for('student_fee_statement_pdf', student_id=student.id) }}" class="btn btn-outline-secondary" target="_blank">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
@@ -381,7 +381,7 @@ function viewFeeDetails(feeId) {
 
 function generateFeeStatement(studentId) {
     // Generate fee statement PDF
-    window.open('/fee-statement/' + studentId + '/pdf', '_blank');
+    window.open(`/student/${studentId}/fee-statement/pdf`, '_blank');
 }
 
 

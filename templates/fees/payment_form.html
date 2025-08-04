@@ -174,7 +174,7 @@
                             <i class="fas fa-arrow-left"></i> Back to Fee Management
                         </a>
                         <div>
-                            {{ form.submit(class="btn btn-primary") }}
+                            {{ form.submit(class="btn btn-primary", onclick="return handlePaymentSubmission()") }}
                         </div>
                     </div>
                 </form>
@@ -433,5 +433,52 @@ document.addEventListener('click', function(e) {
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
 });
+
+function handlePaymentSubmission() {
+    const studentId = document.getElementById('{{ form.student_id.id }}').value;
+    const amount = document.getElementById('{{ form.amount.id }}').value;
+    
+    if (!studentId || !amount) {
+        alert('Please select a student and enter payment amount');
+        return false;
+    }
+    
+    // Set a flag to show receipt option after form submission
+    sessionStorage.setItem('showReceiptOption', 'true');
+    sessionStorage.setItem('paymentStudentId', studentId);
+    
+    return true;
+}
+
+// Check if we should show receipt option after page reload
+document.addEventListener('DOMContentLoaded', function() {
+    if (sessionStorage.getItem('showReceiptOption') === 'true') {
+        const studentId = sessionStorage.getItem('paymentStudentId');
+        if (studentId) {
+            showReceiptModal(studentId);
+        }
+        sessionStorage.removeItem('showReceiptOption');
+        sessionStorage.removeItem('paymentStudentId');
+    }
+});
+
+function showReceiptModal(studentId) {
+    if (confirm('Payment processed successfully! Would you like to print the receipt now?')) {
+        // Get the latest invoice for this student
+        fetch(`/api/student-latest-invoice/${studentId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.invoice_id) {
+                    window.open(`/invoice/${data.invoice_id}/pdf`, '_blank');
+                } else {
+                    alert('Receipt not available at this time');
+                }
+            })
+            .catch(error => {
+                console.error('Error getting receipt:', error);
+                alert('Error loading receipt');
+            });
+    }
+}
 </script>
 {% endblock %}
