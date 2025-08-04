@@ -17,10 +17,16 @@
                 <a href="{{ url_for('invoice_pdf', invoice_id=invoice.id) }}" class="btn btn-primary" target="_blank">
                     <i class="fas fa-file-pdf"></i> Download PDF
                 </a>
-                {% if current_user.role.access_type == 'Edit' and not invoice.original_invoice_printed %}
-                <button class="btn btn-success" onclick="markPrinted({{ invoice.id }})">
-                    <i class="fas fa-print"></i> Mark as Printed
-                </button>
+                {% if current_user.role.access_type == 'Edit' %}
+                    {% if not invoice.original_invoice_printed %}
+                    <button class="btn btn-success" onclick="printInvoice({{ invoice.id }})" id="print-btn-{{ invoice.id }}">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                    {% else %}
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-print"></i> Printed
+                    </button>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -51,16 +57,6 @@
                             <tr>
                                 <td><strong>Installment:</strong></td>
                                 <td>{{ invoice.installment_number }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Status:</strong></td>
-                                <td>
-                                    {% if invoice.original_invoice_printed %}
-                                        <span class="badge bg-success">Printed</span>
-                                    {% else %}
-                                        <span class="badge bg-warning">Not Printed</span>
-                                    {% endif %}
-                                </td>
                             </tr>
                         </table>
                     </div>
@@ -158,40 +154,52 @@
 
 {% block scripts %}
 <script>
-function markPrinted(invoiceId) {
-    if (confirm('Mark this invoice as printed? This action cannot be undone.')) {
-        fetch(`/invoice/${invoiceId}/mark-printed`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Invoice marked as printed successfully!');
-                location.reload();
-            } else {
-                alert('Error updating invoice status: ' + (data.error || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error updating invoice status');
-        });
-    }
+function printInvoice(invoiceId) {
+    // Print the current page
+    window.print();
+    
+    // Listen for after print event
+    window.onafterprint = function() {
+        // Mark invoice as printed
+        markPrinted(invoiceId);
+        window.onafterprint = null; // Remove the event listener
+    };
 }
 
-// Print functionality
-function printInvoice() {
-    window.print();
+function markPrinted(invoiceId) {
+    fetch(`/invoice/${invoiceId}/mark-printed`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update button to disabled state
+            const printBtn = document.getElementById(`print-btn-${invoiceId}`);
+            if (printBtn) {
+                printBtn.className = 'btn btn-secondary';
+                printBtn.disabled = true;
+                printBtn.innerHTML = '<i class="fas fa-print"></i> Printed';
+                printBtn.onclick = null;
+            }
+            alert('Invoice marked as printed successfully!');
+        } else {
+            alert('Error updating invoice status: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating invoice status');
+    });
 }
 
 // Print styles
 const style = document.createElement('style');
 style.textContent = `
     @media print {
-        .btn, .card-header.bg-primary, nav, .d-flex.justify-content-between {
+        .btn, .card-header.bg-primary, nav, .d-flex.justify-content-between, .d-flex.gap-2 {
             display: none !important;
         }
         .card {
@@ -204,7 +212,7 @@ style.textContent = `
             border: 1px solid black !important;
         }
         body { font-size: 12px; }
-        h3 { font-size: 18px; }
+        h1, h2, h3 { font-size: 18px; }
         h4 { font-size: 16px; }
         h5 { font-size: 14px; }
         h6 { font-size: 12px; }
