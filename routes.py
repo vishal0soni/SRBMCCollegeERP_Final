@@ -12,10 +12,9 @@ from models import *
 from forms import *
 from utils import generate_student_id, generate_invoice_number, calculate_grade, can_edit_module, send_email, generate_pdf_invoice, generate_pdf_report_card, generate_pdf_student_report
 from bulk_operations import (
-    export_to_csv, export_to_excel, export_to_json,
     get_students_export_data, get_courses_export_data, get_course_details_export_data,
-    get_fees_export_data, get_exams_export_data, get_users_export_data,
-    process_import_file
+    get_exams_export_data, get_fees_export_data, get_invoices_export_data, get_users_export_data,
+    export_to_csv, export_to_excel, export_to_json
 )
 
 @app.route('/')
@@ -53,7 +52,7 @@ def dashboard():
     # Get dashboard statistics
     total_students = Student.query.count()
     active_students = Student.query.filter_by(dropout_status='Active').count()
-    
+
     # Calculate total collected fees from all installments
     total_collected_fees = db.session.query(
         func.sum(
@@ -65,7 +64,7 @@ def dashboard():
             (CollegeFees.installment_6 or 0)
         )
     ).scalar() or 0
-    
+
     # Calculate pending fees (total fees - collected fees)
     pending_fees = db.session.query(
         func.sum(
@@ -78,10 +77,10 @@ def dashboard():
              (CollegeFees.installment_6 or 0))
         )
     ).scalar() or 0
-    
+
     # Ensure pending fees is not negative
     pending_fees = max(0, pending_fees)
-    
+
     stats = {
         'total_students': total_students,
         'active_students': active_students,
@@ -1139,7 +1138,7 @@ def api_fee_stats():
 
     # Initialize all 12 months with 0
     months_data = {i: 0 for i in range(1, 13)}
-    
+
     # Fill in actual data
     for month, amount in monthly_collections:
         months_data[int(month)] = float(amount) if amount else 0
@@ -1153,10 +1152,10 @@ def api_fee_stats():
 @login_required
 def api_search_students():
     query = request.args.get('q', '').strip()
-    
+
     if len(query) < 2:
         return jsonify({'success': False, 'students': []})
-    
+
     try:
         # Search students by name or ID
         search_filter = or_(
@@ -1165,9 +1164,9 @@ def api_search_students():
             Student.student_unique_id.ilike(f'%{query}%'),
             func.concat(Student.first_name, ' ', Student.last_name).ilike(f'%{query}%')
         )
-        
+
         students = Student.query.filter(search_filter).limit(10).all()
-        
+
         students_data = []
         for student in students:
             students_data.append({
@@ -1177,7 +1176,7 @@ def api_search_students():
                 'last_name': student.last_name,
                 'current_course': student.current_course or 'No Course Assigned'
             })
-        
+
         return jsonify({'success': True, 'students': students_data})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e), 'students': []})
@@ -1188,7 +1187,7 @@ def api_student_fee_details(student_id):
     try:
         student = Student.query.get_or_404(student_id)
         fee_record = CollegeFees.query.filter_by(student_id=student_id).first()
-        
+
         if not fee_record:
             return jsonify({
                 'success': True,
@@ -1200,7 +1199,7 @@ def api_student_fee_details(student_id):
                 },
                 'payment_history': []
             })
-        
+
         # Calculate paid amount and next installment
         installments = [
             fee_record.installment_1 or 0,
@@ -1210,10 +1209,10 @@ def api_student_fee_details(student_id):
             fee_record.installment_5 or 0,
             fee_record.installment_6 or 0
         ]
-        
+
         paid_amount = sum(installments)
         next_installment = 1
-        
+
         # Find next available installment
         for i, amount in enumerate(installments):
             if amount == 0:
@@ -1221,10 +1220,10 @@ def api_student_fee_details(student_id):
                 break
         else:
             next_installment = 7  # All installments paid
-        
+
         total_fee = fee_record.total_fee or 0
         due_amount = total_fee - paid_amount
-        
+
         # Get payment history
         invoices = Invoice.query.filter_by(student_id=student_id).order_by(Invoice.date_time.desc()).limit(5).all()
         payment_history = []
@@ -1235,7 +1234,7 @@ def api_student_fee_details(student_id):
                 'date': invoice.date_time.strftime('%Y-%m-%d'),
                 'installment_number': invoice.installment_number
             })
-        
+
         return jsonify({
             'success': True,
             'fee_data': {
@@ -1366,7 +1365,7 @@ def invoices():
 
     page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '')
-    date_from = request.args.get('date_from', '')
+    date_from = request.args.get('date_from', ''):
     date_to = request.args.get('date_to', '')
 
     query = db.session.query(Invoice, Student).join(Student)
@@ -1450,7 +1449,7 @@ def edit_student(student_id):
                 fee_record.pending_dues_for_libraries = request.form.get('fee_pending_dues_for_libraries') == 'true'
                 fee_record.pending_dues_for_hostel = request.form.get('fee_pending_dues_for_hostel') == 'true'
                 fee_record.exam_admit_card_issued = request.form.get('fee_exam_admit_card_issued') == 'true'
-                
+
                 # Update other fee fields if provided
                 if request.form.get('fee_course_tuition_fee'):
                     fee_record.course_tuition_fee = float(request.form.get('fee_course_tuition_fee', 0) or 0)
@@ -1665,7 +1664,7 @@ def bulk_export(data_type, format):
     if not can_edit_module(current_user, data_type if data_type != 'course_details' else 'courses'):
         flash('You do not have permission to export this data.', 'error')
         return redirect(url_for('dashboard'))
-    
+
     try:
         # Get data based on type
         if data_type == 'students':
@@ -1679,7 +1678,9 @@ def bulk_export(data_type, format):
             filename = f'course_details_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
         elif data_type == 'fees':
             data, headers = get_fees_export_data()
-            filename = f'fees_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
+        elif data_type == 'invoices':
+            data, headers = get_invoices_export_data()
+            filename = f'invoices_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
         elif data_type == 'exams':
             data, headers = get_exams_export_data()
             filename = f'exams_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
@@ -1689,7 +1690,7 @@ def bulk_export(data_type, format):
         else:
             flash('Invalid data type for export.', 'error')
             return redirect(url_for('dashboard'))
-        
+
         # Export in requested format
         if format == 'csv':
             return export_to_csv(data, headers, f'{filename}.csv')
@@ -1700,7 +1701,7 @@ def bulk_export(data_type, format):
         else:
             flash('Invalid export format.', 'error')
             return redirect(url_for('dashboard'))
-            
+
     except Exception as e:
         flash(f'Export failed: {str(e)}', 'error')
         return redirect(url_for('dashboard'))
@@ -1713,32 +1714,32 @@ def bulk_import(data_type):
     if not can_edit_module(current_user, data_type if data_type != 'course_details' else 'courses'):
         flash('You do not have permission to import this data.', 'error')
         return redirect(url_for('dashboard'))
-    
+
     if current_user.role.access_type != 'Edit':
         flash('You need edit permissions to import data.', 'error')
         return redirect(url_for('dashboard'))
-    
+
     try:
         if 'import_file' not in request.files:
             flash('No file selected for import.', 'error')
             return redirect(request.referrer or url_for('dashboard'))
-        
+
         file = request.files['import_file']
         if file.filename == '':
             flash('No file selected for import.', 'error')
             return redirect(request.referrer or url_for('dashboard'))
-        
+
         # Process the import
         success, message = process_import_file(file, data_type)
-        
+
         if success:
             flash(message, 'success')
         else:
             flash(message, 'error')
-            
+
     except Exception as e:
         flash(f'Import failed: {str(e)}', 'error')
-    
+
     return redirect(request.referrer or url_for('dashboard'))
 
 # Template download routes
@@ -1759,7 +1760,8 @@ def download_template(data_type):
                 ['STU-24-001', 'EXT001', 'John', 'Doe', 'Father Name', 'Mother Name',
                  'Male', 'General', 'john@example.com', 'BA First Year', 'English', 'Hindi', 'History',
                  '85.5', 'Main Street', 'Village Name', 'City Name', 'State Name', '9876543210',
-                 '123456789012', 'APAAR001', 'School Name', 'Applied', 'Applied', 'Active', '2024-01-15']
+                 '123456789012', 'APAAR ID', 'School Name', 'Scholarship Status', 
+                'Meera Rebate Status', 'Active', '2024-01-15']
             ]
         elif data_type == 'courses':
             headers = ['Course ID', 'Short Name', 'Full Name', 'Category', 'Duration (Years)']
@@ -1788,9 +1790,9 @@ def download_template(data_type):
         else:
             flash('Invalid template type.', 'error')
             return redirect(url_for('dashboard'))
-        
+
         return export_to_csv(sample_data, headers, f'{data_type}_template.csv')
-        
+
     except Exception as e:
         flash(f'Template download failed: {str(e)}', 'error')
         return redirect(url_for('dashboard'))

@@ -189,6 +189,42 @@ def get_fees_export_data():
     
     return data, headers
 
+def get_invoices_export_data():
+    """Get invoices data for export"""
+    fees = db.session.query(CollegeFees, Student).join(Student).all()
+    headers = [
+        'Invoice Number', 'Student ID', 'Student Name', 'Course', 'Invoice Date',
+        'Amount', 'Payment Mode', 'Status', 'Academic Year'
+    ]
+    
+    data = []
+    for fee, student in fees:
+        # Create invoice records for each installment
+        installments = [
+            (fee.installment_1, fee.invoice1_number, 'Installment 1'),
+            (fee.installment_2, fee.invoice2_number, 'Installment 2'),
+            (fee.installment_3, fee.invoice3_number, 'Installment 3'),
+            (fee.installment_4, fee.invoice4_number, 'Installment 4'),
+            (fee.installment_5, fee.invoice5_number, 'Installment 5'),
+            (fee.installment_6, fee.invoice6_number, 'Installment 6')
+        ]
+        
+        for amount, invoice_num, installment_type in installments:
+            if amount and amount > 0:
+                data.append([
+                    invoice_num or f"INV-{student.student_unique_id}-{installment_type.replace(' ', '').lower()}",
+                    student.student_unique_id,
+                    f"{student.first_name} {student.last_name}",
+                    student.current_course or '',
+                    fee.created_at.strftime('%Y-%m-%d') if fee.created_at else '',
+                    float(amount),
+                    'Cash',  # Default payment mode
+                    'Paid',
+                    '2024-25'  # Default academic year
+                ])
+    
+    return data, headers
+
 def get_exams_export_data():
     """Get exams data for export"""
     exams = db.session.query(Exam, Student).join(Student).all()

@@ -14,9 +14,6 @@
                 <a href="{{ url_for('payment') }}" class="btn btn-primary me-2">
                     <i class="fas fa-plus"></i> Process Payment
                 </a>
-                <a href="#" class="btn btn-success">
-                    <i class="fas fa-download"></i> Export
-                </a>
             </div>
             {% endif %}
         </div>
@@ -163,7 +160,7 @@
                     <h6 class="m-0 font-weight-bold text-primary">
                         Student Fee Records ({{ fees.total }} records)
                     </h6>
-                    <div class="btn-group">
+                    <div class="btn-group me-2">
                         <button type="button" class="btn btn-sm btn-success dropdown-toggle" data-bs-toggle="dropdown">
                             <i class="fas fa-download"></i> Export
                         </button>
@@ -177,6 +174,27 @@
                             <li><a class="dropdown-item" href="{{ url_for('bulk_export', data_type='fees', format='json') }}">
                                 <i class="fas fa-file-code"></i> Export JSON
                             </a></li>
+                        </ul>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-info dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-upload"></i> Import
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('download_template', data_type='fees') }}">
+                                <i class="fas fa-download"></i> Download Template
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="POST" action="{{ url_for('bulk_import', data_type='fees') }}" enctype="multipart/form-data" class="px-3 py-2">
+                                    <div class="mb-2">
+                                        <input type="file" name="import_file" class="form-control form-control-sm" accept=".csv,.xlsx,.xls" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                                        <i class="fas fa-upload"></i> Upload File
+                                    </button>
+                                </form>
+                            </li>
                         </ul>
                     </div>
                 </div>
