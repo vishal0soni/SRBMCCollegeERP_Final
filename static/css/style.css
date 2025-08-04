@@ -549,28 +549,28 @@ body {
         padding: 1.5rem 1rem;
         text-align: center;
     }
-    
+
     .college-title {
         font-size: 1.5rem;
     }
-    
+
     .college-logo {
         width: 80px;
         height: 80px;
     }
-    
+
     .stats-value {
         font-size: 2rem;
     }
-    
+
     .kpi-value {
         font-size: 2rem;
     }
-    
+
     .chart-container {
         height: 300px;
     }
-    
+
     .table-responsive {
         font-size: 0.875rem;
     }
@@ -580,15 +580,15 @@ body {
     .college-title {
         font-size: 1.25rem;
     }
-    
+
     .stats-card {
         margin-bottom: 1rem;
     }
-    
+
     .btn-group {
         flex-direction: column;
     }
-    
+
     .btn-group .btn {
         margin-bottom: 0.5rem;
         border-radius: 0.35rem !important;
@@ -601,37 +601,37 @@ body {
         background: white !important;
         font-size: 12px;
     }
-    
+
     .navbar, .btn, .d-print-none {
         display: none !important;
     }
-    
+
     .card {
         border: 1px solid #000 !important;
         box-shadow: none !important;
         page-break-inside: avoid;
     }
-    
+
     .college-header {
         background: white !important;
         color: black !important;
         border: 2px solid #000;
     }
-    
+
     .table {
         font-size: 11px;
     }
-    
+
     .badge {
         border: 1px solid #000;
         background: white !important;
         color: black !important;
     }
-    
+
     .text-primary, .text-success, .text-danger, .text-warning, .text-info {
         color: black !important;
     }
-    
+
     .bg-primary, .bg-success, .bg-danger, .bg-warning, .bg-info {
         background: white !important;
         color: black !important;
@@ -730,4 +730,48 @@ body {
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+}
+
+/* Bulk Operations Styling */
+.dropdown-menu form {
+    min-width: 250px;
+}
+
+.dropdown-menu .form-control-sm {
+    font-size: 0.875rem;
+}
+
+.btn-group .dropdown-toggle::after {
+    margin-left: 0.5rem;
+}
+
+/* Import form styling */
+.dropdown-menu form .btn {
+    transition: all 0.2s ease;
+}
+
+.dropdown-menu form .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* File input styling */
+.form-control[type="file"] {
+    padding: 0.25rem 0.5rem;
+}
+
+.form-control[type="file"]:focus {
+    border-color: var(--college-primary);
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* Export button hover effects */
+.btn-success.dropdown-toggle:hover {
+    background-color: #1cc88a;
+    border-color: #1cc88a;
+}
+
+.btn-info.dropdown-toggle:hover {
+    background-color: #36b9cc;
+    border-color: #36b9cc;
 }

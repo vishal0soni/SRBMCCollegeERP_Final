@@ -11,6 +11,12 @@ from app import app, db
 from models import *
 from forms import *
 from utils import generate_student_id, generate_invoice_number, calculate_grade, can_edit_module, send_email, generate_pdf_invoice, generate_pdf_report_card, generate_pdf_student_report
+from bulk_operations import (
+    export_to_csv, export_to_excel, export_to_json,
+    get_students_export_data, get_courses_export_data, get_course_details_export_data,
+    get_fees_export_data, get_exams_export_data, get_users_export_data,
+    process_import_file
+)
 
 @app.route('/')
 def index():
@@ -1650,3 +1656,141 @@ def not_found_error(error):
 def internal_error(error):
     db.session.rollback()
     return render_template('errors/500.html'), 500
+
+# Bulk Export Routes
+@app.route('/export/<data_type>/<format>')
+@login_required
+def bulk_export(data_type, format):
+    """Bulk export data in various formats"""
+    if not can_edit_module(current_user, data_type if data_type != 'course_details' else 'courses'):
+        flash('You do not have permission to export this data.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    try:
+        # Get data based on type
+        if data_type == 'students':
+            data, headers = get_students_export_data()
+            filename = f'students_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
+        elif data_type == 'courses':
+            data, headers = get_courses_export_data()
+            filename = f'courses_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
+        elif data_type == 'course_details':
+            data, headers = get_course_details_export_data()
+            filename = f'course_details_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
+        elif data_type == 'fees':
+            data, headers = get_fees_export_data()
+            filename = f'fees_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
+        elif data_type == 'exams':
+            data, headers = get_exams_export_data()
+            filename = f'exams_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
+        elif data_type == 'users':
+            data, headers = get_users_export_data()
+            filename = f'users_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
+        else:
+            flash('Invalid data type for export.', 'error')
+            return redirect(url_for('dashboard'))
+        
+        # Export in requested format
+        if format == 'csv':
+            return export_to_csv(data, headers, f'{filename}.csv')
+        elif format == 'excel':
+            return export_to_excel(data, headers, f'{filename}.xlsx')
+        elif format == 'json':
+            return export_to_json(data, headers, f'{filename}.json')
+        else:
+            flash('Invalid export format.', 'error')
+            return redirect(url_for('dashboard'))
+            
+    except Exception as e:
+        flash(f'Export failed: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
+
+# Bulk Import Routes
+@app.route('/import/<data_type>', methods=['POST'])
+@login_required
+def bulk_import(data_type):
+    """Bulk import data from uploaded files"""
+    if not can_edit_module(current_user, data_type if data_type != 'course_details' else 'courses'):
+        flash('You do not have permission to import this data.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    if current_user.role.access_type != 'Edit':
+        flash('You need edit permissions to import data.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    try:
+        if 'import_file' not in request.files:
+            flash('No file selected for import.', 'error')
+            return redirect(request.referrer or url_for('dashboard'))
+        
+        file = request.files['import_file']
+        if file.filename == '':
+            flash('No file selected for import.', 'error')
+            return redirect(request.referrer or url_for('dashboard'))
+        
+        # Process the import
+        success, message = process_import_file(file, data_type)
+        
+        if success:
+            flash(message, 'success')
+        else:
+            flash(message, 'error')
+            
+    except Exception as e:
+        flash(f'Import failed: {str(e)}', 'error')
+    
+    return redirect(request.referrer or url_for('dashboard'))
+
+# Template download routes
+@app.route('/download-template/<data_type>')
+@login_required
+def download_template(data_type):
+    """Download template files for bulk import"""
+    try:
+        if data_type == 'students':
+            headers = [
+                'Student ID', 'External ID', 'First Name', 'Last Name', 'Father Name', 'Mother Name',
+                'Gender', 'Category', 'Email', 'Current Course', 'Subject 1', 'Subject 2', 'Subject 3',
+                'Percentage', 'Street', 'Area/Village', 'City/Tehsil', 'State', 'Phone', 
+                'Aadhaar Number', 'APAAR ID', 'School Name', 'Scholarship Status', 
+                'Meera Rebate Status', 'Dropout Status', 'Admission Date'
+            ]
+            sample_data = [
+                ['STU-24-001', 'EXT001', 'John', 'Doe', 'Father Name', 'Mother Name',
+                 'Male', 'General', 'john@example.com', 'BA First Year', 'English', 'Hindi', 'History',
+                 '85.5', 'Main Street', 'Village Name', 'City Name', 'State Name', '9876543210',
+                 '123456789012', 'APAAR001', 'School Name', 'Applied', 'Applied', 'Active', '2024-01-15']
+            ]
+        elif data_type == 'courses':
+            headers = ['Course ID', 'Short Name', 'Full Name', 'Category', 'Duration (Years)']
+            sample_data = [
+                ['', 'BA', 'Bachelor of Arts', 'Undergraduate', '3']
+            ]
+        elif data_type == 'course_details':
+            headers = [
+                'ID', 'Course Full Name', 'Course Short Name', 'Year/Semester', 
+                'Course Tuition Fee', 'Course Type', 'Misc Fee 1', 'Misc Fee 2', 
+                'Misc Fee 3', 'Misc Fee 4', 'Misc Fee 5', 'Misc Fee 6', 'Total Course Fees'
+            ]
+            sample_data = [
+                ['', 'Bachelor of Arts First Year', 'BA', 'First Year', '15000', 'Regular',
+                 '1000', '500', '0', '0', '0', '0', '16500']
+            ]
+        elif data_type == 'users':
+            headers = [
+                'User ID', 'Username', 'First Name', 'Last Name', 'Email', 'Phone', 
+                'Gender', 'Role', 'Status', 'Created Date'
+            ]
+            sample_data = [
+                ['', 'teacher1', 'Teacher', 'Name', 'teacher@example.com', '9876543210',
+                 'Male', 'Teacher', 'Active', '2024-01-01']
+            ]
+        else:
+            flash('Invalid template type.', 'error')
+            return redirect(url_for('dashboard'))
+        
+        return export_to_csv(sample_data, headers, f'{data_type}_template.csv')
+        
+    except Exception as e:
+        flash(f'Template download failed: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
