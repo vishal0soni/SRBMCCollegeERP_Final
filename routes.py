@@ -45,17 +45,45 @@ def logout():
 @login_required
 def dashboard():
     # Get dashboard statistics
+    total_students = Student.query.count()
+    active_students = Student.query.filter_by(dropout_status='Active').count()
+    
+    # Calculate total collected fees from all installments
+    total_collected_fees = db.session.query(
+        func.sum(
+            (CollegeFees.installment_1 or 0) + 
+            (CollegeFees.installment_2 or 0) + 
+            (CollegeFees.installment_3 or 0) + 
+            (CollegeFees.installment_4 or 0) + 
+            (CollegeFees.installment_5 or 0) + 
+            (CollegeFees.installment_6 or 0)
+        )
+    ).scalar() or 0
+    
+    # Calculate pending fees (total fees - collected fees)
+    pending_fees = db.session.query(
+        func.sum(
+            (CollegeFees.total_fee or 0) - 
+            ((CollegeFees.installment_1 or 0) + 
+             (CollegeFees.installment_2 or 0) + 
+             (CollegeFees.installment_3 or 0) + 
+             (CollegeFees.installment_4 or 0) + 
+             (CollegeFees.installment_5 or 0) + 
+             (CollegeFees.installment_6 or 0))
+        )
+    ).scalar() or 0
+    
+    # Ensure pending fees is not negative
+    pending_fees = max(0, pending_fees)
+    
     stats = {
-        'total_students': Student.query.count(),
-        'active_students': Student.query.filter_by(dropout_status='Active').count(),
-        'total_courses': Course.query.count(),
-        'pending_fees': db.session.query(func.sum(CollegeFees.total_fee - 
-                                                  (CollegeFees.installment_1 + CollegeFees.installment_2 + 
-                                                   CollegeFees.installment_3 + CollegeFees.installment_4 + 
-                                                   CollegeFees.installment_5 + CollegeFees.installment_6))).scalar() or 0
+        'total_students': total_students,
+        'active_students': active_students,
+        'total_collected_fees': total_collected_fees,
+        'pending_fees': pending_fees
     }
 
-    # Recent activities
+    # Recent activities - get dynamic data
     recent_students = Student.query.order_by(Student.created_at.desc()).limit(5).all()
     recent_payments = Invoice.query.order_by(Invoice.date_time.desc()).limit(5).all()
 
