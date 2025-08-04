@@ -156,7 +156,7 @@
                                         </button>
                                         {% if current_user.role.access_type == 'Edit' %}
                                             {% if not invoice.original_invoice_printed %}
-                                            <button class="btn btn-outline-success" onclick="markPrinted({{ invoice.id }})" title="Mark as Printed">
+                                            <button class="btn btn-outline-success" onclick="printInvoice({{ invoice.id }})" title="Print Invoice" id="print-btn-{{ invoice.id }}">
                                                 <i class="fas fa-print"></i> Print
                                             </button>
                                             {% else %}
@@ -222,28 +222,98 @@ function viewInvoice(invoiceId) {
     window.location.href = `/invoice/${invoiceId}/view`;
 }
 
-function markPrinted(invoiceId) {
-    if (confirm('Mark this invoice as printed? This action cannot be undone.')) {
-        fetch(`/invoice/${invoiceId}/mark-printed`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Invoice marked as printed successfully!');
-                location.reload();
-            } else {
-                alert('Error updating invoice status: ' + (data.error || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error updating invoice status');
-        });
+function printInvoice(invoiceId) {
+    // Open invoice in new window for printing
+    const printWindow = window.open(`/invoice/${invoiceId}/view`, '_blank', 'width=800,height=600');
+    
+    if (printWindow) {
+        printWindow.onload = function() {
+            // Add print styles to the new window
+            const printStyles = `
+                <style>
+                    @media print {
+                        .btn, .card-header.bg-primary, nav, .d-flex.justify-content-between, .d-flex.gap-2 {
+                            display: none !important;
+                        }
+                        .card {
+                            border: none !important;
+                            box-shadow: none !important;
+                        }
+                        .card-header {
+                            background: white !important;
+                            color: black !important;
+                            border: 1px solid black !important;
+                        }
+                        body { font-size: 12px; }
+                        h1, h2, h3 { font-size: 18px; }
+                        h4 { font-size: 16px; }
+                        h5 { font-size: 14px; }
+                        h6 { font-size: 12px; }
+                    }
+                </style>
+            `;
+            printWindow.document.head.insertAdjacentHTML('beforeend', printStyles);
+            
+            // Wait a bit then trigger print
+            setTimeout(() => {
+                printWindow.print();
+                
+                // Listen for print completion
+                printWindow.onafterprint = function() {
+                    // Mark invoice as printed
+                    markPrinted(invoiceId);
+                    printWindow.close();
+                };
+                
+                // Also handle window close (user might cancel print)
+                printWindow.onbeforeunload = function() {
+                    // Small delay to check if print was successful
+                    setTimeout(() => {
+                        if (printWindow.closed) {
+                            // Window closed - assume print was successful or cancelled
+                            // You might want to ask user if they printed successfully
+                            const printed = confirm('Did you successfully print the invoice?');
+                            if (printed) {
+                                markPrinted(invoiceId);
+                            }
+                        }
+                    }, 100);
+                };
+            }, 1000);
+        };
+    } else {
+        alert('Please allow pop-ups for this site to print invoices.');
     }
+}
+
+function markPrinted(invoiceId) {
+    fetch(`/invoice/${invoiceId}/mark-printed`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update button to disabled state
+            const printBtn = document.getElementById(`print-btn-${invoiceId}`);
+            if (printBtn) {
+                printBtn.className = 'btn btn-outline-secondary';
+                printBtn.disabled = true;
+                printBtn.title = 'Already Printed';
+                printBtn.innerHTML = '<i class="fas fa-print"></i> Printed';
+                printBtn.onclick = null;
+            }
+            alert('Invoice marked as printed successfully!');
+        } else {
+            alert('Error updating invoice status: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating invoice status');
+    });
 }
 
 function printInvoiceReport() {
