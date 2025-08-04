@@ -719,16 +719,12 @@ def get_subjects_export_data():
     data = []
     for subject in subjects:
         data.append([
-            subject.subject_code,
+            subject.course_short_name,
             subject.subject_name,
             subject.subject_type,
-            subject.credits,
-            subject.description or '',
-            subject.created_at.strftime('%Y-%m-%d %H:%M:%S') if subject.created_at else ''
         ])
     headers = [
-        'Subject Code', 'Subject Name', 'Subject Type', 'Credits',
-        'Description', 'Created At'
+        'Course Short Name', 'Subject Name', 'Subject Type',
     ]
 
     return data, headers
@@ -741,37 +737,48 @@ def import_subjects_data(records):
 
         for i, record in enumerate(records, 1):
             try:
+                course_short_name = record.get('Course Short Name', '')
+                subject_name = record.get('Subject Name', '')
+                subject_type = record.get('Subject Type', 'Core')
+
+                if not course_short_name or not subject_name:
+                    errors.append(f"Row {i}: Course Short Name and Subject Name are required.")
+                    continue
+
                 # Check if subject already exists
                 existing_subject = Subject.query.filter_by(
-                    subject_code=record.get('Subject Code', '')
+                    course_short_name=course_short_name,
+                    subject_name=subject_name
                 ).first()
 
                 if existing_subject:
-                    errors.append(f"Row {i}: Subject with code {record.get('Subject Code')} already exists")
+                    errors.append(f"Row {i}: Subject with name {subject_name} already exists for course {course_short_name}.")
                     continue
 
                 # Create new subject
                 subject = Subject(
-                    subject_code=record.get('Subject Code', ''),
-                    subject_name=record.get('Subject Name', ''),
-                    subject_type=record.get('Subject Type', 'Core'),
-                    credits=int(record.get('Credits', 0)) if record.get('Credits') else 0,
-                    description=record.get('Description', '')
+                    course_short_name=course_short_name,
+                    subject_name=subject_name,
+                    subject_type=subject_type,
                 )
 
                 db.session.add(subject)
-                db.session.commit()
                 imported_count += 1
 
             except Exception as e:
                 errors.append(f"Row {i}: {str(e)}")
-                continue
 
-        return True, f"Successfully imported {imported_count} subjects. {len(errors)} errors occurred." if errors else f"Successfully imported {imported_count} subjects.", errors
+        db.session.commit()
+
+        message = f"Successfully imported {imported_count} subjects."
+        if errors:
+            message += f" {len(errors)} errors occurred."
+
+        return True, message
 
     except Exception as e:
         db.session.rollback()
-        return False, f"Import failed: {str(e)}", []
+        return False, f"Import failed: {str(e)}"
 
 def export_to_json(data, headers, filename):
     """Export data to JSON format"""
@@ -830,13 +837,14 @@ def import_subjects_data(data, headers):
     """Import subjects data from CSV/Excel"""
     try:
         imported_count = 0
+        errors = []
         for row in data:
             if len(row) < 3:  # Skip incomplete rows
                 continue
 
             subject_name = row[1] if len(row) > 1 else ''
             subject_type = row[2] if len(row) > 2 else 'Compulsory'
-            course_short_name = row[3] if len(row) > 3 else ''
+            course_short_name = row[0] if len(row) > 0 else ''
 
             if not subject_name or not course_short_name:
                 continue
