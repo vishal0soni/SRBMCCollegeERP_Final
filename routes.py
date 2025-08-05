@@ -1114,32 +1114,14 @@ def api_get_course_fees(course_name):
 @app.route('/api/student-stats')
 @login_required
 def api_student_stats():
-    # Get filter parameters
-    course_filter = request.args.get('course', '')
-    gender_filter = request.args.get('gender', '')
-    status_filter = request.args.get('status', '')
-    category_filter = request.args.get('category', '')
-    
-    # Build query with filters
-    query = db.session.query(
+    course_counts = db.session.query(
         Student.current_course, 
         func.count(Student.id)
-    ).filter(Student.current_course != None)
-    
-    if course_filter:
-        query = query.filter(Student.current_course == course_filter)
-    if gender_filter:
-        query = query.filter(Student.gender == gender_filter)
-    if status_filter:
-        query = query.filter(Student.dropout_status == status_filter)
-    if category_filter:
-        query = query.filter(Student.category == category_filter)
-    
-    course_counts = query.group_by(Student.current_course).all()
+    ).group_by(Student.current_course).all()
 
     return jsonify({
-        'courses': [course for course, count in course_counts if course],
-        'counts': [count for course, count in course_counts if course]
+        'courses': [course for course, count in course_counts],
+        'counts': [count for course, count in course_counts]
     })
 
 @app.route('/api/fee-stats')
@@ -1165,27 +1147,6 @@ def api_fee_stats():
         'months': list(months_data.keys()),
         'amounts': list(months_data.values())
     })
-
-@app.route('/api/filter-options')
-@login_required
-def api_filter_options():
-    try:
-        # Get unique courses
-        courses = db.session.query(Student.current_course).distinct().filter(
-            Student.current_course != None
-        ).all()
-        courses_list = [course[0] for course in courses if course[0]]
-        
-        return jsonify({
-            'success': True,
-            'courses': courses_list
-        })
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e),
-            'courses': []
-        })
 
 @app.route('/api/search-students')
 @login_required
