@@ -77,7 +77,11 @@ class CourseDetailsForm(FlaskForm):
     course_short_name = SelectField('Course Short Name', coerce=str, validators=[DataRequired()])
     year_semester = StringField('Year/Semester', validators=[DataRequired(), Length(max=20)])
     course_tuition_fee = DecimalField('Course Tuition Fee', validators=[Optional()], default=0)
-    course_type = StringField('Course Type', validators=[Length(max=50)])
+    course_type = SelectField('Course Type', choices=[
+        ('', 'Select Course Type'),
+        ('Regular', 'Regular'),
+        ('Integrated', 'Integrated')
+    ], validators=[Optional()])
     misc_course_fees_1 = DecimalField('Misc Fee 1', validators=[Optional()], default=0)
     misc_course_fees_2 = DecimalField('Misc Fee 2', validators=[Optional()], default=0)
     misc_course_fees_3 = DecimalField('Misc Fee 3', validators=[Optional()], default=0)
