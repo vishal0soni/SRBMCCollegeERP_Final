@@ -12,6 +12,57 @@
     </div>
 </div>
 
+<!-- Global Filters -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-filter"></i> Dashboard Filters
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="courseFilter" class="form-label">Course Filter</label>
+                        <select class="form-select" id="courseFilter" onchange="applyFilters()">
+                            <option value="">All Courses</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="genderFilter" class="form-label">Gender Filter</label>
+                        <select class="form-select" id="genderFilter" onchange="applyFilters()">
+                            <option value="">All Genders</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="statusFilter" class="form-label">Status Filter</label>
+                        <select class="form-select" id="statusFilter" onchange="applyFilters()">
+                            <option value="">All Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="Graduated">Graduated</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="categoryFilter" class="form-label">Category Filter</label>
+                        <select class="form-select" id="categoryFilter" onchange="applyFilters()">
+                            <option value="">All Categories</option>
+                            <option value="General">General</option>
+                            <option value="OBC">OBC</option>
+                            <option value="SC">SC</option>
+                            <option value="ST">ST</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Statistics Cards -->
 <div class="row mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
@@ -20,7 +71,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Students</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total_students }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalStudentsCount">{{ stats.total_students }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
@@ -36,7 +87,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Active Students</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.active_students }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="activeStudentsCount">{{ stats.active_students }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-user-check fa-2x text-gray-300"></i>
@@ -52,7 +103,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Collected Fees</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₹{{ "%.2f"|format(stats.total_collected_fees) }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalFeesCount">₹{{ "%.2f"|format(stats.total_collected_fees) }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-coins fa-2x text-gray-300"></i>
@@ -68,7 +119,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Fees</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₹{{ "%.2f"|format(stats.pending_fees) }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="pendingFeesCount">₹{{ "%.2f"|format(stats.pending_fees) }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
@@ -81,28 +132,62 @@
 
 <!-- Charts Row -->
 <div class="row mb-4">
-    <div class="col-xl-6 col-lg-6">
+    <div class="col-xl-8 col-lg-8">
         <div class="card shadow mb-4">
-            <div class="card-header py-3">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
                 <h6 class="m-0 font-weight-bold text-primary">Student Distribution by Course</h6>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-chart-pie"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="toggleChartType('courseChart', 'doughnut')">Doughnut</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="toggleChartType('courseChart', 'pie')">Pie</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="toggleChartType('courseChart', 'bar')">Bar</a></li>
+                    </ul>
+                </div>
             </div>
             <div class="card-body">
-                <canvas id="courseChart"></canvas>
+                <div style="position: relative; height: 400px;">
+                    <canvas id="courseChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
     
-    <div class="col-xl-6 col-lg-6">
+    <div class="col-xl-4 col-lg-4">
         <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Quick Stats</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="small text-gray-500">Course with Most Students</div>
+                    <div class="font-weight-bold" id="topCourse">Loading...</div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-gray-500">Average Fee Collection per Student</div>
+                    <div class="font-weight-bold" id="avgFeePerStudent">Loading...</div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-gray-500">Fee Collection Rate</div>
+                    <div class="font-weight-bold" id="feeCollectionRate">Loading...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">Monthly Fee Collections</h6>
             </div>
             <div class="card-body">
-                <canvas id="feeChart"></canvas>
+                <div style="position: relative; height: 200px;">
+                    <canvas id="feeChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</div></div>
 
 <!-- Recent Activities -->
 <div class="row">
@@ -182,197 +267,233 @@
 
 {% block scripts %}
 <script>
-// Load dashboard charts with dynamic data
-document.addEventListener('DOMContentLoaded', function() {
-    // Student distribution by course chart
-    fetch('/api/student-stats')
-        .then(response => response.json())
-        .then(data => {
-            const ctx = document.getElementById('courseChart').getContext('2d');
-            
-            // Handle empty data case
-            if (data.courses.length === 0) {
-                data.courses = ['No Data'];
-                data.counts = [1];
-            }
-            
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: data.courses,
-                    datasets: [{
-                        data: data.counts,
-                        backgroundColor: [
-                            '#4e73df',
-                            '#1cc88a',
-                            '#36b9cc',
-                            '#f6c23e',
-                            '#e74a3b',
-                            '#858796',
-                            '#5a5c69',
-                            '#2c5282',
-                            '#1a365d',
-                            '#3182ce'
-                        ],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 15,
-                                usePointStyle: true,
-                                font: {
-                                    size: 12
-                                }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
-                                }
-                            }
-                        }
-                    },
-                    cutout: '60%'
-                }
-            });
-        })
-        .catch(error => {
-            console.error('Error loading course distribution data:', error);
-            // Show placeholder chart on error
-            const ctx = document.getElementById('courseChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['No Data Available'],
-                    datasets: [{
-                        data: [1],
-                        backgroundColor: ['#e3e6f0']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-        });
+// Global variables for charts and data
+let courseChart, feeChart;
+let originalData = {
+    students: [],
+    courses: [],
+    fees: []
+};
 
-    // Monthly fee collections chart
-    fetch('/api/fee-stats')
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    loadInitialData();
+    populateFilterOptions();
+});
+
+// Load initial data and create charts
+function loadInitialData() {
+    Promise.all([
+        fetch('/api/student-stats').then(r => r.json()),
+        fetch('/api/fee-stats').then(r => r.json()),
+        fetch('/api/dashboard-stats').then(r => r.json()).catch(() => ({}))
+    ]).then(([studentData, feeData, dashboardStats]) => {
+        originalData.students = studentData;
+        originalData.fees = feeData;
+        
+        createCourseChart(studentData);
+        createFeeChart(feeData);
+        updateQuickStats(studentData, feeData);
+    }).catch(error => {
+        console.error('Error loading dashboard data:', error);
+        createPlaceholderCharts();
+    });
+}
+
+// Create course distribution chart
+function createCourseChart(data) {
+    const ctx = document.getElementById('courseChart').getContext('2d');
+    
+    if (courseChart) {
+        courseChart.destroy();
+    }
+    
+    // Handle empty data
+    if (!data.courses || data.courses.length === 0) {
+        data = { courses: ['No Data'], counts: [1] };
+    }
+    
+    courseChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: data.courses,
+            datasets: [{
+                data: data.counts,
+                backgroundColor: [
+                    '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+                    '#858796', '#5a5c69', '#2c5282', '#1a365d', '#3182ce'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        font: { size: 11 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                            return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            },
+            cutout: '60%'
+        }
+    });
+}
+
+// Create fee chart
+function createFeeChart(data) {
+    const ctx = document.getElementById('feeChart').getContext('2d');
+    
+    if (feeChart) {
+        feeChart.destroy();
+    }
+    
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    feeChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: monthNames,
+            datasets: [{
+                label: 'Collections (₹)',
+                data: data.amounts || Array(12).fill(0),
+                borderColor: '#1cc88a',
+                backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 3,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return '₹' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + (value/1000) + 'K';
+                        },
+                        font: { size: 10 }
+                    }
+                },
+                x: {
+                    ticks: { font: { size: 10 } }
+                }
+            }
+        }
+    });
+}
+
+// Update quick stats
+function updateQuickStats(studentData, feeData) {
+    if (studentData.courses && studentData.courses.length > 0) {
+        const maxIndex = studentData.counts.indexOf(Math.max(...studentData.counts));
+        document.getElementById('topCourse').textContent = studentData.courses[maxIndex] || 'N/A';
+    }
+    
+    const totalStudents = studentData.counts ? studentData.counts.reduce((a, b) => a + b, 0) : 0;
+    const totalFees = feeData.amounts ? feeData.amounts.reduce((a, b) => a + b, 0) : 0;
+    const avgFee = totalStudents > 0 ? (totalFees / totalStudents) : 0;
+    
+    document.getElementById('avgFeePerStudent').textContent = '₹' + avgFee.toFixed(0);
+    
+    const totalPossibleFees = totalStudents * 50000; // Assuming average fee of 50K
+    const collectionRate = totalPossibleFees > 0 ? ((totalFees / totalPossibleFees) * 100) : 0;
+    document.getElementById('feeCollectionRate').textContent = collectionRate.toFixed(1) + '%';
+}
+
+// Populate filter options
+function populateFilterOptions() {
+    fetch('/api/filter-options')
         .then(response => response.json())
         .then(data => {
-            const ctx = document.getElementById('feeChart').getContext('2d');
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: monthNames,
-                    datasets: [{
-                        label: 'Fee Collections (₹)',
-                        data: data.amounts,
-                        borderColor: '#1cc88a',
-                        backgroundColor: 'rgba(28, 200, 138, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#1cc88a',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return 'Collections: ₹' + context.parsed.y.toLocaleString();
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: '#e3e6f0'
-                            },
-                            ticks: {
-                                callback: function(value) {
-                                    return '₹' + value.toLocaleString();
-                                },
-                                color: '#5a5c69',
-                                font: {
-                                    size: 11
-                                }
-                            }
-                        },
-                        x: {
-                            grid: {
-                                color: '#e3e6f0'
-                            },
-                            ticks: {
-                                color: '#5a5c69',
-                                font: {
-                                    size: 11
-                                }
-                            }
-                        }
-                    },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    }
-                }
-            });
+            const courseSelect = document.getElementById('courseFilter');
+            if (data.courses) {
+                data.courses.forEach(course => {
+                    const option = document.createElement('option');
+                    option.value = course;
+                    option.textContent = course;
+                    courseSelect.appendChild(option);
+                });
+            }
         })
-        .catch(error => {
-            console.error('Error loading fee collections data:', error);
-            // Show placeholder chart on error
-            const ctx = document.getElementById('feeChart').getContext('2d');
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: monthNames,
-                    datasets: [{
-                        label: 'No Data Available',
-                        data: Array(12).fill(0),
-                        borderColor: '#e3e6f0',
-                        backgroundColor: 'rgba(227, 230, 240, 0.1)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        });
-});
+        .catch(error => console.error('Error loading filter options:', error));
+}
+
+// Apply filters
+function applyFilters() {
+    const courseFilter = document.getElementById('courseFilter').value;
+    const genderFilter = document.getElementById('genderFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    
+    const params = new URLSearchParams();
+    if (courseFilter) params.append('course', courseFilter);
+    if (genderFilter) params.append('gender', genderFilter);
+    if (statusFilter) params.append('status', statusFilter);
+    if (categoryFilter) params.append('category', categoryFilter);
+    
+    // Fetch filtered data
+    fetch('/api/student-stats?' + params.toString())
+        .then(response => response.json())
+        .then(data => {
+            createCourseChart(data);
+            updateStatCards(data);
+        })
+        .catch(error => console.error('Error applying filters:', error));
+}
+
+// Update stat cards with filtered data
+function updateStatCards(data) {
+    const totalStudents = data.counts ? data.counts.reduce((a, b) => a + b, 0) : 0;
+    document.getElementById('totalStudentsCount').textContent = totalStudents;
+    
+    // You could add more specific filtered stats here
+}
+
+// Toggle chart type
+function toggleChartType(chartId, type) {
+    if (chartId === 'courseChart' && courseChart) {
+        courseChart.config.type = type;
+        courseChart.update();
+    }
+}
+
+// Create placeholder charts on error
+function createPlaceholderCharts() {
+    createCourseChart({ courses: ['No Data Available'], counts: [1] });
+    createFeeChart({ amounts: Array(12).fill(0) });
+    
+    document.getElementById('topCourse').textContent = 'N/A';
+    document.getElementById('avgFeePerStudent').textContent = '₹0';
+    document.getElementById('feeCollectionRate').textContent = '0%';
+}
 </script>
 {% endblock %}
