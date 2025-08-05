@@ -712,7 +712,11 @@ def view_course(course_id):
         return redirect(url_for('dashboard'))
 
     course = Course.query.get_or_404(course_id)
-    return render_template('courses/course_detail.html', course=course)
+    
+    # Get enrolled students count for this course
+    enrolled_students_count = Student.query.filter_by(current_course=course.course_full_name).count()
+    
+    return render_template('courses/course_detail.html', course=course, enrolled_students_count=enrolled_students_count)
 
 @app.route('/courses/edit/<int:course_id>', methods=['GET', 'POST'])
 @login_required
