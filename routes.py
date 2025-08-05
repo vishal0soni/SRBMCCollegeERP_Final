@@ -56,25 +56,25 @@ def dashboard():
     # Calculate total collected fees from all installments
     total_collected_fees = db.session.query(
         func.sum(
-            (CollegeFees.installment_1 or 0) + 
-            (CollegeFees.installment_2 or 0) + 
-            (CollegeFees.installment_3 or 0) + 
-            (CollegeFees.installment_4 or 0) + 
-            (CollegeFees.installment_5 or 0) + 
-            (CollegeFees.installment_6 or 0)
+            func.coalesce(CollegeFees.installment_1, 0) + 
+            func.coalesce(CollegeFees.installment_2, 0) + 
+            func.coalesce(CollegeFees.installment_3, 0) + 
+            func.coalesce(CollegeFees.installment_4, 0) + 
+            func.coalesce(CollegeFees.installment_5, 0) + 
+            func.coalesce(CollegeFees.installment_6, 0)
         )
     ).scalar() or 0
 
     # Calculate pending fees (total fees - collected fees)
     pending_fees = db.session.query(
         func.sum(
-            (CollegeFees.total_fee or 0) - 
-            ((CollegeFees.installment_1 or 0) + 
-             (CollegeFees.installment_2 or 0) + 
-             (CollegeFees.installment_3 or 0) + 
-             (CollegeFees.installment_4 or 0) + 
-             (CollegeFees.installment_5 or 0) + 
-             (CollegeFees.installment_6 or 0))
+            func.coalesce(CollegeFees.total_fee, 0) - 
+            (func.coalesce(CollegeFees.installment_1, 0) + 
+             func.coalesce(CollegeFees.installment_2, 0) + 
+             func.coalesce(CollegeFees.installment_3, 0) + 
+             func.coalesce(CollegeFees.installment_4, 0) + 
+             func.coalesce(CollegeFees.installment_5, 0) + 
+             func.coalesce(CollegeFees.installment_6, 0))
         )
     ).scalar() or 0
 
@@ -1176,29 +1176,49 @@ def api_student_stats():
         if gender_filter:
             query = query.filter(Student.gender == gender_filter)
         
-        # Get course distribution
+        # Get course distribution - filter out null/empty courses
         course_counts = query.with_entities(
             Student.current_course, 
             func.count(Student.id)
-        ).filter(Student.current_course.isnot(None)).group_by(Student.current_course).all()
+        ).filter(
+            and_(
+                Student.current_course.isnot(None),
+                Student.current_course != ''
+            )
+        ).group_by(Student.current_course).all()
 
         # Handle case where no data exists
         if not course_counts:
             return jsonify({
-                'courses': ['No Data Available'],
+                'courses': ['No Students Enrolled'],
+                'counts': [0]
+            })
+
+        # Filter out any invalid entries
+        valid_courses = []
+        valid_counts = []
+        
+        for course, count in course_counts:
+            if course and course.strip() and count > 0:
+                valid_courses.append(course.strip())
+                valid_counts.append(int(count))
+        
+        if not valid_courses:
+            return jsonify({
+                'courses': ['No Students Enrolled'],
                 'counts': [0]
             })
 
         return jsonify({
-            'courses': [course or 'Not Assigned' for course, count in course_counts],
-            'counts': [int(count) for course, count in course_counts]
+            'courses': valid_courses,
+            'counts': valid_counts
         })
     except Exception as e:
         print(f"Error in api_student_stats: {e}")
         return jsonify({
             'courses': ['Error Loading Data'],
             'counts': [0]
-        })
+        }, status=500)
 
 @app.route('/api/course-list')
 @login_required
@@ -1221,7 +1241,7 @@ def api_fee_stats():
         current_year = datetime.now().year
         monthly_collections = db.session.query(
             func.extract('month', Invoice.date_time),
-            func.sum(Invoice.invoice_amount)
+            func.sum(func.coalesce(Invoice.invoice_amount, 0))
         ).filter(
             func.extract('year', Invoice.date_time) == current_year
         ).group_by(func.extract('month', Invoice.date_time)).order_by(func.extract('month', Invoice.date_time)).all()
@@ -1231,7 +1251,7 @@ def api_fee_stats():
 
         # Fill in actual data
         for month, amount in monthly_collections:
-            if month and amount:
+            if month and amount is not None:
                 months_data[int(month)] = float(amount)
 
         return jsonify({
@@ -1244,7 +1264,7 @@ def api_fee_stats():
         return jsonify({
             'months': list(range(1, 13)),
             'amounts': [0] * 12
-        })
+        }, status=500)
 
 @app.route('/api/search-students')
 @login_required
