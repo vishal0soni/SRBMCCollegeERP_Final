@@ -464,8 +464,8 @@ def student_summary():
     meera_scholarship_approved = Student.query.filter_by(rebate_meera_scholarship_status='Approved').count()
     meera_scholarship_granted = Student.query.filter_by(rebate_meera_scholarship_status='Granted').count()
 
-    # Get total available courses from CourseDetails table (dynamic)
-    total_courses_available = CourseDetails.query.count()
+    # Get total available courses from Course table (shows actual courses)
+    total_courses_available = Course.query.count()
     
     # Get courses with enrolled students
     courses_with_students = db.session.query(Student.current_course).distinct().filter(Student.current_course != None).count()
