@@ -1114,39 +1114,90 @@ def api_get_course_fees(course_name):
 @app.route('/api/student-stats')
 @login_required
 def api_student_stats():
-    course_counts = db.session.query(
-        Student.current_course, 
-        func.count(Student.id)
-    ).group_by(Student.current_course).all()
+    try:
+        query = Student.query
+        
+        # Apply filters based on query parameters
+        course_filter = request.args.get('course', '')
+        status_filter = request.args.get('status', '')
+        gender_filter = request.args.get('gender', '')
+        
+        if course_filter:
+            query = query.filter(Student.current_course == course_filter)
+        if status_filter:
+            query = query.filter(Student.dropout_status == status_filter)
+        if gender_filter:
+            query = query.filter(Student.gender == gender_filter)
+        
+        # Get course distribution
+        course_counts = query.with_entities(
+            Student.current_course, 
+            func.count(Student.id)
+        ).filter(Student.current_course.isnot(None)).group_by(Student.current_course).all()
 
-    return jsonify({
-        'courses': [course for course, count in course_counts],
-        'counts': [count for course, count in course_counts]
-    })
+        # Handle case where no data exists
+        if not course_counts:
+            return jsonify({
+                'courses': ['No Data Available'],
+                'counts': [0]
+            })
+
+        return jsonify({
+            'courses': [course or 'Not Assigned' for course, count in course_counts],
+            'counts': [int(count) for course, count in course_counts]
+        })
+    except Exception as e:
+        print(f"Error in api_student_stats: {e}")
+        return jsonify({
+            'courses': ['Error Loading Data'],
+            'counts': [0]
+        })
+
+@app.route('/api/course-list')
+@login_required
+def api_course_list():
+    try:
+        courses = db.session.query(Student.current_course).distinct().filter(
+            Student.current_course.isnot(None)
+        ).all()
+        course_list = [course[0] for course in courses if course[0]]
+        return jsonify({'courses': sorted(course_list)})
+    except Exception as e:
+        print(f"Error in api_course_list: {e}")
+        return jsonify({'courses': []})
 
 @app.route('/api/fee-stats')
 @login_required
 def api_fee_stats():
-    # Get monthly fee collections from invoices for current year
-    current_year = datetime.now().year
-    monthly_collections = db.session.query(
-        func.extract('month', Invoice.date_time),
-        func.sum(Invoice.invoice_amount)
-    ).filter(
-        func.extract('year', Invoice.date_time) == current_year
-    ).group_by(func.extract('month', Invoice.date_time)).order_by(func.extract('month', Invoice.date_time)).all()
+    try:
+        # Get monthly fee collections from invoices for current year
+        current_year = datetime.now().year
+        monthly_collections = db.session.query(
+            func.extract('month', Invoice.date_time),
+            func.sum(Invoice.invoice_amount)
+        ).filter(
+            func.extract('year', Invoice.date_time) == current_year
+        ).group_by(func.extract('month', Invoice.date_time)).order_by(func.extract('month', Invoice.date_time)).all()
 
-    # Initialize all 12 months with 0
-    months_data = {i: 0 for i in range(1, 13)}
+        # Initialize all 12 months with 0
+        months_data = {i: 0 for i in range(1, 13)}
 
-    # Fill in actual data
-    for month, amount in monthly_collections:
-        months_data[int(month)] = float(amount) if amount else 0
+        # Fill in actual data
+        for month, amount in monthly_collections:
+            if month and amount:
+                months_data[int(month)] = float(amount)
 
-    return jsonify({
-        'months': list(months_data.keys()),
-        'amounts': list(months_data.values())
-    })
+        return jsonify({
+            'months': list(months_data.keys()),
+            'amounts': list(months_data.values())
+        })
+    except Exception as e:
+        print(f"Error in api_fee_stats: {e}")
+        # Return default data for current year
+        return jsonify({
+            'months': list(range(1, 13)),
+            'amounts': [0] * 12
+        })
 
 @app.route('/api/search-students')
 @login_required
