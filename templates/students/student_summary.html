@@ -34,15 +34,11 @@
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Male Students</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {% for gender, count in gender_counts %}
-                                {% if gender == 'Male' %}{{ count }}{% endif %}
-                            {% endfor %}
-                        </div>
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Gov. Scholarship Applied</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ gov_scholarship_counts.applied }}</div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-male fa-2x text-gray-300"></i>
+                        <i class="fas fa-file-alt fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -54,15 +50,11 @@
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Female Students</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {% for gender, count in gender_counts %}
-                                {% if gender == 'Female' %}{{ count }}{% endif %}
-                            {% endfor %}
-                        </div>
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Meera Rebate Applied</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ meera_scholarship_counts.applied }}</div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-female fa-2x text-gray-300"></i>
+                        <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -75,7 +67,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Courses Available</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ course_counts|length }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_courses_available }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-book-open fa-2x text-gray-300"></i>
@@ -102,16 +94,27 @@
     <div class="col-xl-6 col-lg-6">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Gender Distribution</h6>
+                <h6 class="m-0 font-weight-bold text-primary">Government Scholarship Status</h6>
             </div>
             <div class="card-body">
-                <canvas id="genderDistributionChart"></canvas>
+                <canvas id="govScholarshipChart"></canvas>
             </div>
         </div>
     </div>
 </div>
 
 <div class="row mb-4">
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Meera Rebate Scholarship Status</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="meeraScholarshipChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
     <div class="col-xl-6 col-lg-6">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
@@ -227,15 +230,36 @@ new Chart(courseCtx, {
     }
 });
 
-// Gender Distribution Chart
-const genderCtx = document.getElementById('genderDistributionChart').getContext('2d');
-new Chart(genderCtx, {
-    type: 'pie',
+// Government Scholarship Chart
+const govScholarshipCtx = document.getElementById('govScholarshipChart').getContext('2d');
+new Chart(govScholarshipCtx, {
+    type: 'doughnut',
     data: {
-        labels: [{% for gender, count in gender_counts %}'{{ gender }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        labels: ['Applied', 'Approved', 'Granted'],
         datasets: [{
-            data: [{% for gender, count in gender_counts %}{{ count }}{% if not loop.last %},{% endif %}{% endfor %}],
-            backgroundColor: ['#4e73df', '#e74a3b', '#36b9cc']
+            data: [{{ gov_scholarship_counts.applied }}, {{ gov_scholarship_counts.approved }}, {{ gov_scholarship_counts.granted }}],
+            backgroundColor: ['#f6c23e', '#1cc88a', '#4e73df']
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Meera Rebate Scholarship Chart
+const meeraScholarshipCtx = document.getElementById('meeraScholarshipChart').getContext('2d');
+new Chart(meeraScholarshipCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Applied', 'Approved', 'Granted'],
+        datasets: [{
+            data: [{{ meera_scholarship_counts.applied }}, {{ meera_scholarship_counts.approved }}, {{ meera_scholarship_counts.granted }}],
+            backgroundColor: ['#f6c23e', '#1cc88a', '#4e73df']
         }]
     },
     options: {

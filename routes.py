@@ -438,11 +438,6 @@ def student_summary():
         func.count(Student.id)
     ).filter(Student.current_course != None).group_by(Student.current_course).all()
 
-    gender_counts = db.session.query(
-        Student.gender, 
-        func.count(Student.id)
-    ).filter(Student.gender != None).group_by(Student.gender).all()
-
     category_counts = db.session.query(
         Student.category, 
         func.count(Student.id)
@@ -460,21 +455,45 @@ def student_summary():
         func.extract('month', Student.admission_date)
     ).all()
 
+    # Get scholarship status counts
+    gov_scholarship_applied = Student.query.filter_by(scholarship_status='Applied').count()
+    gov_scholarship_approved = Student.query.filter_by(scholarship_status='Approved').count()
+    gov_scholarship_granted = Student.query.filter_by(scholarship_status='Granted').count()
+
+    meera_scholarship_applied = Student.query.filter_by(rebate_meera_scholarship_status='Applied').count()
+    meera_scholarship_approved = Student.query.filter_by(rebate_meera_scholarship_status='Approved').count()
+    meera_scholarship_granted = Student.query.filter_by(rebate_meera_scholarship_status='Granted').count()
+
+    # Get total available courses from CourseDetails table
+    total_courses_available = CourseDetails.query.count()
+
     # Provide default empty data if no students exist
     if not course_counts:
         course_counts = []
-    if not gender_counts:
-        gender_counts = []
     if not category_counts:
         category_counts = []
     if not monthly_admissions:
         monthly_admissions = []
 
+    gov_scholarship_counts = {
+        'applied': gov_scholarship_applied,
+        'approved': gov_scholarship_approved,
+        'granted': gov_scholarship_granted
+    }
+
+    meera_scholarship_counts = {
+        'applied': meera_scholarship_applied,
+        'approved': meera_scholarship_approved,
+        'granted': meera_scholarship_granted
+    }
+
     return render_template('students/student_summary.html', 
                          course_counts=course_counts,
-                         gender_counts=gender_counts,
                          category_counts=category_counts,
-                         monthly_admissions=monthly_admissions)
+                         monthly_admissions=monthly_admissions,
+                         gov_scholarship_counts=gov_scholarship_counts,
+                         meera_scholarship_counts=meera_scholarship_counts,
+                         total_courses_available=total_courses_available)
 
 # CourseDetails Routes
 @app.route('/course-details')
