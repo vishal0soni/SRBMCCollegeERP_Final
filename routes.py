@@ -464,8 +464,11 @@ def student_summary():
     meera_scholarship_approved = Student.query.filter_by(rebate_meera_scholarship_status='Approved').count()
     meera_scholarship_granted = Student.query.filter_by(rebate_meera_scholarship_status='Granted').count()
 
-    # Get total available courses from CourseDetails table
+    # Get total available courses from CourseDetails table (dynamic)
     total_courses_available = CourseDetails.query.count()
+    
+    # Get courses with enrolled students
+    courses_with_students = db.session.query(Student.current_course).distinct().filter(Student.current_course != None).count()
 
     # Provide default empty data if no students exist
     if not course_counts:
@@ -493,7 +496,8 @@ def student_summary():
                          monthly_admissions=monthly_admissions,
                          gov_scholarship_counts=gov_scholarship_counts,
                          meera_scholarship_counts=meera_scholarship_counts,
-                         total_courses_available=total_courses_available)
+                         total_courses_available=total_courses_available,
+                         courses_with_students=courses_with_students)
 
 # CourseDetails Routes
 @app.route('/course-details')
