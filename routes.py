@@ -713,8 +713,29 @@ def view_course(course_id):
 
     course = Course.query.get_or_404(course_id)
     
-    # Get enrolled students count for this course
-    enrolled_students_count = Student.query.filter_by(current_course=course.course_full_name).count()
+    # Get enrolled students count for this course using multiple matching strategies
+    # First try exact match with course full name
+    exact_match_count = Student.query.filter_by(current_course=course.course_full_name).count()
+    
+    # Then try matching with course short name in the course string
+    short_name_match_count = Student.query.filter(
+        Student.current_course.like(f'%{course.course_short_name}%')
+    ).count()
+    
+    # Use the higher count (more inclusive matching)
+    enrolled_students_count = max(exact_match_count, short_name_match_count)
+    
+    # If still zero, try to find any students with course names containing key words
+    if enrolled_students_count == 0:
+        # Split course name and try matching individual words
+        course_words = course.course_full_name.split()
+        if len(course_words) > 1:
+            for word in course_words:
+                if len(word) > 3:  # Only use meaningful words
+                    word_match_count = Student.query.filter(
+                        Student.current_course.like(f'%{word}%')
+                    ).count()
+                    enrolled_students_count = max(enrolled_students_count, word_match_count)
     
     return render_template('courses/course_detail.html', course=course, enrolled_students_count=enrolled_students_count)
 
