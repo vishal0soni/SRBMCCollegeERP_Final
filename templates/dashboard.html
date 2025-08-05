@@ -341,7 +341,13 @@ function loadStudentDistributionChart() {
                                     labels.forEach((label, index) => {
                                         const value = chart.data.datasets[0].data[index];
                                         const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                        label.text = `${label.text}: ${value} (${percentage}%)`;
+                                        const courseName = chart.data.labels[index];
+                                        
+                                        // Truncate long course names for legend
+                                        const displayName = courseName.length > 20 ? 
+                                            courseName.substring(0, 17) + '...' : courseName;
+                                        
+                                        label.text = `${displayName}: ${value} students (${percentage}%)`;
                                     });
                                     
                                     return labels;
@@ -350,11 +356,42 @@ function loadStudentDistributionChart() {
                         },
                         tooltip: {
                             callbacks: {
+                                title: function(context) {
+                                    return `Course: ${context[0].label}`;
+                                },
                                 label: function(context) {
                                     const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                     const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
-                                    return `${context.label}: ${context.parsed} students (${percentage}%)`;
+                                    return [
+                                        `Students: ${context.parsed}`,
+                                        `Percentage: ${percentage}%`,
+                                        `Total Students: ${total}`
+                                    ];
+                                },
+                                afterLabel: function(context) {
+                                    const studentCount = context.parsed;
+                                    if (studentCount === 1) {
+                                        return '1 student enrolled';
+                                    } else if (studentCount === 0) {
+                                        return 'No students enrolled';
+                                    } else {
+                                        return `${studentCount} students enrolled`;
+                                    }
                                 }
+                            },
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#4e73df',
+                            borderWidth: 1,
+                            cornerRadius: 6,
+                            displayColors: true,
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 12
                             }
                         }
                     },
