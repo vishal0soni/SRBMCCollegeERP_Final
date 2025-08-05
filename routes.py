@@ -239,21 +239,28 @@ def students():
         return redirect(url_for('dashboard'))
 
     page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '')
     course_filter = request.args.get('course', '')
-    gender_filter = request.args.get('gender', '')
-    category_filter = request.args.get('category', '')
     status_filter = request.args.get('status', '')
     sort_by = request.args.get('sort', 'first_name')
     sort_order = request.args.get('order', 'asc')
 
     query = Student.query
 
+    # Search functionality
+    if search:
+        search_filter = or_(
+            Student.student_unique_id.ilike(f'%{search}%'),
+            Student.first_name.ilike(f'%{search}%'),
+            Student.last_name.ilike(f'%{search}%'),
+            Student.current_course.ilike(f'%{search}%'),
+            func.concat(Student.first_name, ' ', Student.last_name).ilike(f'%{search}%')
+        )
+        query = query.filter(search_filter)
+
+    # Filters
     if course_filter:
-        query = query.filter(Student.current_course.contains(course_filter))
-    if gender_filter:
-        query = query.filter_by(gender=gender_filter)
-    if category_filter:
-        query = query.filter_by(category=category_filter)
+        query = query.filter(Student.current_course == course_filter)
     if status_filter:
         query = query.filter_by(dropout_status=status_filter)
 
@@ -266,9 +273,17 @@ def students():
 
     students = query.paginate(page=page, per_page=20, error_out=False)
 
-    # Get filter options
-    courses = db.session.query(Student.current_course).distinct().filter(Student.current_course != None).all()
-    courses = [course[0] for course in courses]
+    # Get all courses for dropdown (from CourseDetails table to show all available courses)
+    course_details = CourseDetails.query.with_entities(CourseDetails.course_full_name).distinct().all()
+    courses = [course[0] for course in course_details if course[0]]
+    
+    # Also add currently assigned courses from students to ensure all are visible
+    student_courses = db.session.query(Student.current_course).distinct().filter(Student.current_course != None).all()
+    for course in student_courses:
+        if course[0] and course[0] not in courses:
+            courses.append(course[0])
+    
+    courses = sorted(courses)
 
     return render_template('students/students.html', students=students, courses=courses)
 
