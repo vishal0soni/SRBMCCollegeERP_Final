@@ -64,6 +64,9 @@
                     <div class="col-md-6 mb-3">
                         <strong>Aadhaar:</strong> {{ student.aadhaar_card_number or 'N/A' }}
                     </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>APAAR ID:</strong> {{ student.apaar_id or 'N/A' }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -227,6 +230,7 @@ function printStudentReport() {
                     <div class="info-item"><strong>Email:</strong> {{ student.email or 'N/A' }}</div>
                     <div class="info-item"><strong>Phone:</strong> {{ student.phone or 'N/A' }}</div>
                     <div class="info-item"><strong>Aadhaar:</strong> {{ student.aadhaar_card_number or 'N/A' }}</div>
+                    <div class="info-item"><strong>APAAR ID:</strong> {{ student.apaar_id or 'N/A' }}</div>
                 </div>
             </div>
 
