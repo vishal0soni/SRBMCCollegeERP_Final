@@ -381,7 +381,8 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label"><strong>Total Amount Paid till date</strong></label>
-                                        <input type="number" class="form-control" id="totalFeesPaid" step="0.01" value="0" data-fee="total_fees_paid" placeholder="0">
+                                        <input type="number" class="form-control" id="totalFeesPaid" step="0.01" value="0" data-fee="total_fees_paid" readonly placeholder="0" style="background-color: #f8f9fa;">
+                                        <small class="text-muted">Automatically calculated from installment payments</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -585,6 +586,7 @@ function calculateTotalFees() {
     const grandTotal = componentFees;
 
     // Calculate amount due with Meera rebate affecting total due
+    // Note: totalFeesPaid is now auto-calculated by database, so we use the displayed value
     const totalFeesPaid = parseFloat(document.getElementById('totalFeesPaid')?.value || 0);
     const meeraRebateGranted = document.getElementById('meeraRebateGranted')?.checked || false;
     const meeraRebateAmount = parseFloat(document.getElementById('meeraRebateAmount')?.value || 0);
@@ -630,9 +632,9 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('input', calculateTotalFees);
     });
 
-    // Set up new fee management field listeners
+    // Set up new fee management field listeners (excluding totalFeesPaid as it's auto-calculated)
     const feeManagementFields = [
-        'totalFeesPaid', 'meeraRebateGranted', 'meeraRebateAmount',
+        'meeraRebateGranted', 'meeraRebateAmount',
         'scholarshipGranted', 'governmentScholarshipAmount'
     ];
 
@@ -709,6 +711,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Populate existing fee management fields
                 if (document.getElementById('totalFeesPaid')) {
+                    // Use the database-calculated value directly
                     document.getElementById('totalFeesPaid').value = parseFloat(feeData.total_fees_paid || 0).toFixed(2);
                 }
                 if (document.getElementById('meeraRebateApplied')) {

@@ -276,13 +276,13 @@ def students():
     # Get all courses for dropdown (from CourseDetails table to show all available courses)
     course_details = CourseDetails.query.with_entities(CourseDetails.course_full_name).distinct().all()
     courses = [course[0] for course in course_details if course[0]]
-    
+
     # Also add currently assigned courses from students to ensure all are visible
     student_courses = db.session.query(Student.current_course).distinct().filter(Student.current_course != None).all()
     for course in student_courses:
         if course[0] and course[0] not in courses:
             courses.append(course[0])
-    
+
     courses = sorted(courses)
 
     return render_template('students/students.html', students=students, courses=courses)
@@ -372,7 +372,7 @@ def add_student():
                 miscellaneous_fee_1 = float(request.form.get('fee_miscellaneous_fee_1', 0) or 0)
                 miscellaneous_fee_2 = float(request.form.get('fee_miscellaneous_fee_2', 0) or 0)
                 miscellaneous_fee_3 = float(request.form.get('fee_miscellaneous_fee_3', 0) or 0)
-                
+
                 # Note: total_fee is automatically calculated by database formula
                 # No manual calculation needed as database handles:
                 # course_tuition_fee + enrollment_fee + university_affiliation_fee + 
@@ -422,7 +422,7 @@ def add_student():
                 )
                 db.session.add(fee_record)
                 db.session.flush()  # Flush to get the auto-calculated total_fee from database
-                
+
                 # Only update total_fees_paid from installments sum (total_fee is handled by database)
                 fee_record.update_total_fees_paid()
 
@@ -472,7 +472,7 @@ def student_summary():
 
     # Get total available courses from Course table (shows actual courses)
     total_courses_available = Course.query.count()
-    
+
     # Get courses with enrolled students
     courses_with_students = db.session.query(Student.current_course).distinct().filter(Student.current_course != None).count()
 
@@ -719,19 +719,19 @@ def view_course(course_id):
         return redirect(url_for('dashboard'))
 
     course = Course.query.get_or_404(course_id)
-    
+
     # Get enrolled students count for this course using multiple matching strategies
     # First try exact match with course full name
     exact_match_count = Student.query.filter_by(current_course=course.course_full_name).count()
-    
+
     # Then try matching with course short name in the course string
     short_name_match_count = Student.query.filter(
         Student.current_course.like(f'%{course.course_short_name}%')
     ).count()
-    
+
     # Use the higher count (more inclusive matching)
     enrolled_students_count = max(exact_match_count, short_name_match_count)
-    
+
     # If still zero, try to find any students with course names containing key words
     if enrolled_students_count == 0:
         # Split course name and try matching individual words
@@ -743,7 +743,7 @@ def view_course(course_id):
                         Student.current_course.like(f'%{word}%')
                     ).count()
                     enrolled_students_count = max(enrolled_students_count, word_match_count)
-    
+
     return render_template('courses/course_detail.html', course=course, enrolled_students_count=enrolled_students_count)
 
 @app.route('/courses/edit/<int:course_id>', methods=['GET', 'POST'])
@@ -924,7 +924,7 @@ def payment():
         # Update fee record
         setattr(fee_record, next_slot[1], amount)
         setattr(fee_record, next_slot[2], invoice_number)
-        
+
         # Update total_fees_paid using the formula
         fee_record.update_total_fees_paid()
 
@@ -1198,19 +1198,19 @@ def api_get_course_fees(course_name):
 def api_student_stats():
     try:
         query = Student.query
-        
+
         # Apply filters based on query parameters
         course_filter = request.args.get('course', '')
         status_filter = request.args.get('status', '')
         gender_filter = request.args.get('gender', '')
-        
+
         if course_filter:
             query = query.filter(Student.current_course == course_filter)
         if status_filter:
             query = query.filter(Student.dropout_status == status_filter)
         if gender_filter:
             query = query.filter(Student.gender == gender_filter)
-        
+
         # Get course distribution - filter out null/empty courses
         course_counts = query.with_entities(
             Student.current_course, 
@@ -1232,12 +1232,12 @@ def api_student_stats():
         # Filter out any invalid entries
         valid_courses = []
         valid_counts = []
-        
+
         for course, count in course_counts:
             if course and course.strip() and count > 0:
                 valid_courses.append(course.strip())
                 valid_counts.append(int(count))
-        
+
         if not valid_courses:
             return jsonify({
                 'courses': ['No Students Enrolled'],
@@ -1623,10 +1623,9 @@ def edit_student(student_id):
                     fee_record.miscellaneous_fee_2 = float(request.form.get('fee_miscellaneous_fee_2', 0) or 0)
                 if request.form.get('fee_miscellaneous_fee_3'):
                     fee_record.miscellaneous_fee_3 = float(request.form.get('fee_miscellaneous_fee_3', 0) or 0)
-                
-                # Database automatically calculates total_fee from component fees
-                # Only update total_fees_paid using the installments formula
-                fee_record.update_total_fees_paid()
+
+                # Database automatically calculates both total_fee and total_fees_paid
+                # No manual calculation needed as database formulas handle both
 
             db.session.commit()
             flash('Student and fee details updated successfully!', 'success')
@@ -1739,7 +1738,7 @@ def student_fee_statement_pdf(student_id):
     student = Student.query.get_or_404(student_id)
     fee_record = CollegeFees.query.filter_by(student_id=student_id).first()
     invoices = Invoice.query.filter_by(student_id=student_id).order_by(Invoice.date_time.desc()).all()
-    
+
     pdf_data = generate_pdf_fee_statement(student, fee_record, invoices)
 
     response = make_response(pdf_data)
@@ -1757,7 +1756,7 @@ def student_fee_statement_print(student_id):
 
     student = Student.query.get_or_404(student_id)
     fee_record = CollegeFees.query.filter_by(student_id=student_id).first()
-    
+
     # Generate PDF without payment history for printing
     pdf_data = generate_pdf_fee_statement_print(student, fee_record)
 
@@ -1848,7 +1847,7 @@ def mark_invoice_printed(invoice_id):
         return jsonify({'error': 'Permission denied'}), 403
 
     invoice = Invoice.query.get_or_404(invoice_id)
-    
+
     try:
         invoice.original_invoice_printed = True
         db.session.commit()
@@ -1994,7 +1993,7 @@ def download_template(data_type):
                 'Meera Rebate Status', 'Dropout Status', 'Admission Date'
             ]
             sample_data = [
-                ['STU-24-001', 'EXT001', 'John', 'Doe', 'Father Name', 'Mother Name',
+                ['', 'EXT001', 'John', 'Doe', 'Father Name', 'Mother Name',
                  'Male', 'General', 'john@example.com', 'BA First Year', 'English', 'Hindi', 'History',
                  '85.5', 'Main Street', 'Village Name', 'City Name', 'State Name', '9876543210',
                  '123456789012', 'APAAR ID', 'School Name', 'Scholarship Status', 

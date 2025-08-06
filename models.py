@@ -178,8 +178,11 @@ class CollegeFees(db.Model):
                     (self.miscellaneous_fee_3 or 0))
     
     def update_total_fees_paid(self):
-        """Update total_fees_paid field to match sum of installments"""
-        self.total_fees_paid = self.calculated_total_fees_paid
+        """Update total_fees_paid field - now handled by database formula"""
+        # The total_fees_paid is now calculated by the database formula:
+        # installment_1 + installment_2 + installment_3 + installment_4 + installment_5 + installment_6
+        # No need to manually calculate as the database handles this automatically
+        pass
     
     def update_total_fee(self):
         """Update total_fee field to match sum of component fees - now handled by database formula"""
