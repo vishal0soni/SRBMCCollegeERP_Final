@@ -154,7 +154,11 @@
 
                         <div class="col-md-6 mb-3">
                             {{ form.admission_date.label(class="form-label") }}
-                            {{ form.admission_date(class="form-control", value=today_date) }}
+                            {% if student %}
+                                {{ form.admission_date(class="form-control") }}
+                            {% else %}
+                                {{ form.admission_date(class="form-control", value=today_date) }}
+                            {% endif %}
                             {% if form.admission_date.errors %}
                                 <div class="text-danger">
                                     {% for error in form.admission_date.errors %}
