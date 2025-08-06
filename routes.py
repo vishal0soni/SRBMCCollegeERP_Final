@@ -1241,6 +1241,7 @@ def api_student_stats():
         # Handle case where no data exists
         if not course_counts:
             return jsonify({
+                'success': True,
                 'courses': ['No Students Enrolled'],
                 'counts': [0]
             })
@@ -1256,20 +1257,24 @@ def api_student_stats():
 
         if not valid_courses:
             return jsonify({
+                'success': True,
                 'courses': ['No Students Enrolled'],
                 'counts': [0]
             })
 
         return jsonify({
+            'success': True,
             'courses': valid_courses,
             'counts': valid_counts
         })
     except Exception as e:
-        print(f"Error in api_student_stats: {e}")
+        app.logger.error(f"Error in api_student_stats: {e}")
         return jsonify({
+            'success': False,
+            'error': str(e),
             'courses': ['Error Loading Data'],
             'counts': [0]
-        }, status=500)
+        }), 500
 
 @app.route('/api/course-list')
 @login_required
@@ -1354,7 +1359,13 @@ def api_search_students():
 @login_required
 def api_student_fee_details(student_id):
     try:
-        student = Student.query.get_or_404(student_id)
+        student = Student.query.get(student_id)
+        if not student:
+            return jsonify({
+                'success': False,
+                'error': 'Student not found'
+            }), 404
+
         fee_record = CollegeFees.query.filter_by(student_id=student_id).first()
 
         if not fee_record:
@@ -1446,7 +1457,8 @@ def api_student_fee_details(student_id):
             'payment_history': payment_history
         })
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+        app.logger.error(f"Error in api_student_fee_details: {str(e)}")
+        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
 # Subject Routes
 @app.route('/courses/<int:course_id>/subjects')

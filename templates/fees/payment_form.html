@@ -350,9 +350,8 @@ function selectStudent(student) {
     
     hideSearchResults();
     
-    // Trigger the change event to load student fee details
-    const studentIdField = document.getElementById('{{ form.student_id.id }}');
-    studentIdField.dispatchEvent(new Event('change', { bubbles: true }));
+    // Directly call loadStudentDetails to ensure it works
+    loadStudentDetails();
 }
 
 // Add event listeners for search functionality
@@ -401,8 +400,10 @@ function loadStudentDetails(student = null) {
         if (studentId && studentId !== '' && studentId !== '0') {
             console.log('Loading fee details for student ID:', studentId);
             
-            // Show loading state
-            document.getElementById('studentDetails').style.display = 'block';
+            // Show loading state and ensure details are visible
+            const detailsDiv = document.getElementById('studentDetails');
+            detailsDiv.style.display = 'block';
+            
             document.getElementById('studentId').textContent = 'Loading...';
             document.getElementById('studentName').textContent = 'Loading...';
             document.getElementById('studentCourse').textContent = 'Loading...';
@@ -449,7 +450,11 @@ function loadStudentDetails(student = null) {
                         document.getElementById('totalFees').textContent = '0.00';
                         document.getElementById('paidAmount').textContent = '0.00';
                         document.getElementById('dueAmount').textContent = '0.00';
-                        showNotification('Error loading student fee details: ' + (data.error || 'Unknown error'), 'error');
+                        if (window.SRBMCApp && window.SRBMCApp.showNotification) {
+                            window.SRBMCApp.showNotification('Error loading student fee details: ' + (data.error || 'Unknown error'), 'error');
+                        } else {
+                            alert('Error loading student fee details: ' + (data.error || 'Unknown error'));
+                        }
                     }
                 })
                 .catch(error => {
@@ -460,7 +465,11 @@ function loadStudentDetails(student = null) {
                     document.getElementById('totalFees').textContent = '0.00';
                     document.getElementById('paidAmount').textContent = '0.00';
                     document.getElementById('dueAmount').textContent = '0.00';
-                    showNotification('Error loading student details: ' + error.message, 'error');
+                    if (window.SRBMCApp && window.SRBMCApp.showNotification) {
+                        window.SRBMCApp.showNotification('Error loading student details: ' + error.message, 'error');
+                    } else {
+                        alert('Error loading student details: ' + error.message);
+                    }
                 });
         } else {
             console.log('No student ID provided, hiding details');
