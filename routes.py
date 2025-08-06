@@ -374,8 +374,7 @@ def add_student():
                 miscellaneous_fee_3 = float(request.form.get('fee_miscellaneous_fee_3', 0) or 0)
                 total_fee = float(request.form.get('fee_total_fee', course_detail.total_course_fees) or 0)
 
-                # Get new fee management fields from form
-                total_fees_paid = float(request.form.get('fee_total_fees_paid', 0) or 0)
+                # Get new fee management fields from form - don't use form value for total_fees_paid as it's calculated
                 meera_rebate_applied = request.form.get('fee_meera_rebate_applied') == 'true'
                 meera_rebate_approved = request.form.get('fee_meera_rebate_approved') == 'true'
                 meera_rebate_granted = request.form.get('fee_meera_rebate_granted') == 'true'
@@ -404,7 +403,6 @@ def add_student():
                     miscellaneous_fee_3=miscellaneous_fee_3,
                     total_fee=total_fee,
                     # New fee management fields
-                    total_fees_paid=total_fees_paid,
                     meera_rebate_applied=meera_rebate_applied,
                     meera_rebate_approved=meera_rebate_approved,
                     meera_rebate_granted=meera_rebate_granted,
@@ -419,6 +417,9 @@ def add_student():
                     exam_admit_card_issued=exam_admit_card_issued
                 )
                 db.session.add(fee_record)
+                
+                # Calculate total_fees_paid from installments sum
+                fee_record.update_total_fees_paid()
 
             db.session.commit()
             flash('Student added successfully with fee record!', 'success')
@@ -917,6 +918,9 @@ def payment():
         # Update fee record
         setattr(fee_record, next_slot[1], amount)
         setattr(fee_record, next_slot[2], invoice_number)
+        
+        # Update total_fees_paid using the formula
+        fee_record.update_total_fees_paid()
 
         try:
             db.session.add(invoice)
@@ -1353,7 +1357,7 @@ def api_student_fee_details(student_id):
             fee_record.installment_6 or 0
         ]
 
-        paid_amount = sum(installments)
+        paid_amount = fee_record.calculated_total_fees_paid
         next_installment = 1
 
         # Find next available installment
@@ -1386,7 +1390,7 @@ def api_student_fee_details(student_id):
                 'due_amount': float(due_amount),
                 'next_installment': next_installment,
                 # New fee management fields
-                'total_fees_paid': float(fee_record.total_fees_paid or 0),
+                'total_fees_paid': paid_amount,
                 'meera_rebate_applied': fee_record.meera_rebate_applied or False,
                 'meera_rebate_approved': fee_record.meera_rebate_approved or False,
                 'meera_rebate_granted': fee_record.meera_rebate_granted or False,
@@ -1579,7 +1583,6 @@ def edit_student(student_id):
             fee_record = CollegeFees.query.filter_by(student_id=student.id).first()
             if fee_record:
                 # Update existing fee record with new fee management fields
-                fee_record.total_fees_paid = float(request.form.get('fee_total_fees_paid', fee_record.total_fees_paid) or 0)
                 fee_record.meera_rebate_applied = request.form.get('fee_meera_rebate_applied') == 'true'
                 fee_record.meera_rebate_approved = request.form.get('fee_meera_rebate_approved') == 'true'
                 fee_record.meera_rebate_granted = request.form.get('fee_meera_rebate_granted') == 'true'
@@ -1616,6 +1619,9 @@ def edit_student(student_id):
                     fee_record.miscellaneous_fee_3 = float(request.form.get('fee_miscellaneous_fee_3', 0) or 0)
                 if request.form.get('fee_total_fee'):
                     fee_record.total_fee = float(request.form.get('fee_total_fee', 0) or 0)
+                
+                # Always update total_fees_paid using the formula
+                fee_record.update_total_fees_paid()
 
             db.session.commit()
             flash('Student and fee details updated successfully!', 'success')

@@ -157,14 +157,7 @@ def get_fees_export_data():
 
     data = []
     for fee, student in fees:
-        paid_amount = sum([
-            float(fee.installment_1 or 0),
-            float(fee.installment_2 or 0),
-            float(fee.installment_3 or 0),
-            float(fee.installment_4 or 0),
-            float(fee.installment_5 or 0),
-            float(fee.installment_6 or 0)
-        ])
+        paid_amount = fee.calculated_total_fees_paid
         total_fee = float(fee.total_fee or 0)
         due_amount = total_fee - paid_amount
 

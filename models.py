@@ -160,6 +160,17 @@ class CollegeFees(db.Model):
     exam_admit_card_issued = db.Column(db.Boolean, default=False)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    @property
+    def calculated_total_fees_paid(self):
+        """Calculate total fees paid from sum of all installments"""
+        return float((self.installment_1 or 0) + (self.installment_2 or 0) + 
+                    (self.installment_3 or 0) + (self.installment_4 or 0) + 
+                    (self.installment_5 or 0) + (self.installment_6 or 0))
+    
+    def update_total_fees_paid(self):
+        """Update total_fees_paid field to match sum of installments"""
+        self.total_fees_paid = self.calculated_total_fees_paid
 
 class Invoice(db.Model):
     __tablename__ = 'invoices'
