@@ -97,15 +97,25 @@
 
                     {% if current_user.role.role_name in ['Administrator', 'Exam Controller', 'Exam Assistant'] %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="examsDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-clipboard-list"></i> Exams
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseExams" aria-expanded="false" aria-controls="collapseExams">
+                            <i class="fas fa-fw fa-clipboard-list"></i>
+                            <span>Examinations</span>
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('exams') }}">All Exams</a></li>
-                            {% if current_user.role.access_type == 'Edit' %}
-                            <li><a class="dropdown-item" href="{{ url_for('add_exam') }}">Add Exam Results</a></li>
-                            {% endif %}
-                        </ul>
+                        <div id="collapseExams" class="collapse" data-parent="#accordionSidebar">
+                            <div class="bg-white py-2 collapse-inner rounded">
+                                <a class="collapse-item" href="{{ url_for('exam_summary') }}">
+                                    <i class="fas fa-chart-bar"></i> Exam Summary
+                                </a>
+                                <a class="collapse-item" href="{{ url_for('exams') }}">
+                                    <i class="fas fa-list"></i> All Exams
+                                </a>
+                                {% if current_user.role.access_type == 'Edit' %}
+                                <a class="collapse-item" href="{{ url_for('add_exam') }}">
+                                    <i class="fas fa-plus"></i> Add Exam
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
                     </li>
                     {% endif %}
 

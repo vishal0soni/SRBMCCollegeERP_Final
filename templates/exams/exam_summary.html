@@ -1,0 +1,424 @@
+
+{% extends "base.html" %}
+
+{% block title %}Exam Summary - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="fas fa-chart-bar"></i> Examination Summary & Analytics
+            </h1>
+            <div>
+                <a href="{{ url_for('exams') }}" class="btn btn-secondary">
+                    <i class="fas fa-list"></i> View All Exams
+                </a>
+                {% if current_user.role.access_type == 'Edit' %}
+                <a href="{{ url_for('add_exam') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Exam Results
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Exam Statistics -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Exams</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalExams">{{ total_exams or 0 }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Pass Rate</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="passRate">{{ "%.1f"|format(pass_rate or 0) }}%</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Average Score</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="averageScore">{{ "%.1f"|format(average_score or 0) }}%</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Failed Students</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="failedStudents">{{ failed_students or 0 }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Exam Analytics -->
+<div class="row mt-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Grade Distribution</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="gradeDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Subject-wise Performance</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="subjectPerformanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Course Performance Analysis -->
+<div class="row mb-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Course-wise Performance</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="coursePerformanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Semester Performance Trend</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="semesterTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Performers and Exam Schedule -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Top Performers</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Student</th>
+                                <th>Course</th>
+                                <th>Percentage</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topPerformersTable">
+                            {% if top_performers %}
+                                {% for performer in top_performers %}
+                                <tr>
+                                    <td>
+                                        {% if loop.index == 1 %}
+                                            <span class="badge bg-warning">1st</span>
+                                        {% elif loop.index == 2 %}
+                                            <span class="badge bg-secondary">2nd</span>
+                                        {% elif loop.index == 3 %}
+                                            <span class="badge bg-secondary">3rd</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark">{{ loop.index }}th</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ performer.student.first_name }} {{ performer.student.last_name }}</td>
+                                    <td>{{ performer.student.current_course }}</td>
+                                    <td>{{ "%.1f"|format(performer.percentage) }}%</td>
+                                    <td>
+                                        {% if performer.grade in ['A+', 'A'] %}
+                                            <span class="badge bg-success">{{ performer.grade }}</span>
+                                        {% elif performer.grade in ['B+', 'B'] %}
+                                            <span class="badge bg-info">{{ performer.grade }}</span>
+                                        {% elif performer.grade in ['C+', 'C'] %}
+                                            <span class="badge bg-warning">{{ performer.grade }}</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">{{ performer.grade }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No exam results available</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Upcoming Exam Schedule</h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% if upcoming_exams %}
+                        {% for exam in upcoming_exams %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ exam.exam_name }}</h6>
+                                <small>{{ exam.exam_date.strftime('%d %b %Y') if exam.exam_date else 'TBD' }}</small>
+                            </div>
+                            <p class="mb-1">{{ exam.student.current_course }} - Semester {{ exam.semester }}</p>
+                            <small class="text-muted">Total Marks: {{ exam.total_max_marks }}</small>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">BA Final Semester</h6>
+                            <small>15 Feb 2025</small>
+                        </div>
+                        <p class="mb-1">Final examination for BA students</p>
+                        <small class="text-muted">Duration: 3 hours each paper</small>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">BSC Mid-term</h6>
+                            <small>25 Feb 2025</small>
+                        </div>
+                        <p class="mb-1">Mid-semester examination for BSC</p>
+                        <small class="text-muted">Duration: 2 hours each paper</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Exam Activities -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Recent Exam Activities</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student</th>
+                                <th>Course</th>
+                                <th>Exam</th>
+                                <th>Date</th>
+                                <th>Result</th>
+                                <th>Grade</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if recent_exams %}
+                                {% for exam in recent_exams %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ exam.student.student_unique_id }}</strong><br>
+                                        <small>{{ exam.student.first_name }} {{ exam.student.last_name }}</small>
+                                    </td>
+                                    <td>{{ exam.student.current_course }}</td>
+                                    <td>{{ exam.exam_name }}</td>
+                                    <td>{{ exam.exam_date.strftime('%d/%m/%Y') if exam.exam_date else 'N/A' }}</td>
+                                    <td class="text-center">
+                                        {% if exam.overall_status == 'Pass' %}
+                                            <span class="badge bg-success">Pass</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Fail</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if exam.grade in ['A+', 'A'] %}
+                                            <span class="badge bg-success">{{ exam.grade }}</span>
+                                        {% elif exam.grade in ['B+', 'B'] %}
+                                            <span class="badge bg-info">{{ exam.grade }}</span>
+                                        {% elif exam.grade in ['C+', 'C'] %}
+                                            <span class="badge bg-warning">{{ exam.grade }}</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">{{ exam.grade }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('view_exam', exam_id=exam.id) }}" class="btn btn-outline-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('report_card_pdf', exam_id=exam.id) }}" class="btn btn-outline-primary" target="_blank">
+                                                <i class="fas fa-file-alt"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center">No recent exam activities</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Exam Summary Charts
+document.addEventListener('DOMContentLoaded', function() {
+    // Grade Distribution Chart
+    const gradeCtx = document.getElementById('gradeDistributionChart').getContext('2d');
+    new Chart(gradeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['A+', 'A', 'B+', 'B', 'C+', 'C', 'F'],
+            datasets: [{
+                data: {{ grade_distribution | safe }},
+                backgroundColor: [
+                    '#28a745', '#20c997', '#17a2b8', '#ffc107', 
+                    '#fd7e14', '#6f42c1', '#dc3545'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Subject Performance Chart
+    const subjectCtx = document.getElementById('subjectPerformanceChart').getContext('2d');
+    new Chart(subjectCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ subject_names | safe }},
+            datasets: [{
+                label: 'Average Score (%)',
+                data: {{ subject_averages | safe }},
+                backgroundColor: '#4e73df'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // Course Performance Chart
+    const courseCtx = document.getElementById('coursePerformanceChart').getContext('2d');
+    new Chart(courseCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ course_names | safe }},
+            datasets: [{
+                label: 'Average Performance (%)',
+                data: {{ course_averages | safe }},
+                backgroundColor: '#1cc88a'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // Semester Trend Chart
+    const semesterCtx = document.getElementById('semesterTrendChart').getContext('2d');
+    new Chart(semesterCtx, {
+        type: 'line',
+        data: {
+            labels: {{ semester_labels | safe }},
+            datasets: [{
+                label: 'Average Performance (%)',
+                data: {{ semester_averages | safe }},
+                borderColor: '#36b9cc',
+                backgroundColor: 'rgba(54, 185, 204, 0.1)',
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

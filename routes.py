@@ -880,10 +880,10 @@ def payment():
 
     # Get student_id from URL parameter if coming from "+Pay" button
     student_id = request.args.get('student_id', type=int)
-    
+
     form = PaymentForm()
     form.student_id.choices = [(s.id, f"{s.student_unique_id} - {s.first_name} {s.last_name}") for s in Student.query.all()]
-    
+
     # Pre-select student if coming from "+Pay" button
     if student_id and request.method == 'GET':
         form.student_id.data = student_id
@@ -956,13 +956,103 @@ def payment():
                          selected_student=selected_student, selected_fee_record=selected_fee_record)
 
 # Exam Routes
+@app.route('/exam-summary')
+@login_required
+def exam_summary():
+    # Get all exams for calculations
+    all_exams = Exam.query.join(Student).all()
+
+    # Calculate statistics
+    total_exams = len(all_exams)
+    passed_exams = [exam for exam in all_exams if exam.overall_status == 'Pass']
+    failed_exams = [exam for exam in all_exams if exam.overall_status == 'Fail']
+
+    pass_rate = (len(passed_exams) / total_exams * 100) if total_exams > 0 else 0
+    average_score = sum(exam.percentage for exam in all_exams) / total_exams if total_exams > 0 else 0
+    failed_students = len(failed_exams)
+
+    # Grade distribution
+    grades = {}
+    for exam in all_exams:
+        grade = exam.grade or 'F'
+        grades[grade] = grades.get(grade, 0) + 1
+
+    grade_distribution = [grades.get(grade, 0) for grade in ['A+', 'A', 'B+', 'B', 'C+', 'C', 'F']]
+
+    # Subject performance (calculate average for each subject across all exams)
+    subject_data = {}
+    for exam in all_exams:
+        subjects = [
+            (exam.subject1_name, exam.subject1_obtained_marks, exam.subject1_max_marks),
+            (exam.subject2_name, exam.subject2_obtained_marks, exam.subject2_max_marks),
+            (exam.subject3_name, exam.subject3_obtained_marks, exam.subject3_max_marks),
+            (exam.subject4_name, exam.subject4_obtained_marks, exam.subject4_max_marks),
+            (exam.subject5_name, exam.subject5_obtained_marks, exam.subject5_max_marks),
+            (exam.subject6_name, exam.subject6_obtained_marks, exam.subject6_max_marks),
+        ]
+
+        for name, obtained, max_marks in subjects:
+            if name and obtained is not None and max_marks and max_marks > 0:
+                percentage = (obtained / max_marks) * 100
+                if name not in subject_data:
+                    subject_data[name] = []
+                subject_data[name].append(percentage)
+
+    subject_names = list(subject_data.keys())
+    subject_averages = [sum(scores) / len(scores) if scores else 0 for scores in subject_data.values()]
+
+    # Course performance
+    course_data = {}
+    for exam in all_exams:
+        course = exam.student.current_course
+        if course:
+            if course not in course_data:
+                course_data[course] = []
+            course_data[course].append(exam.percentage)
+
+    course_names = list(course_data.keys())
+    course_averages = [sum(scores) / len(scores) if scores else 0 for scores in course_data.values()]
+
+    # Semester trend
+    semester_data = {}
+    for exam in all_exams:
+        semester = exam.semester
+        if semester:
+            if semester not in semester_data:
+                semester_data[semester] = []
+            semester_data[semester].append(exam.percentage)
+
+    semester_labels = sorted(semester_data.keys())
+    semester_averages = [sum(semester_data[sem]) / len(semester_data[sem]) if semester_data[sem] else 0 for sem in semester_labels]
+
+    # Top performers (top 10)
+    top_performers = sorted(all_exams, key=lambda x: x.percentage or 0, reverse=True)[:10]
+
+    # Recent exam activities (last 20)
+    recent_exams = Exam.query.join(Student).order_by(Exam.created_at.desc()).limit(20).all()
+
+    # Upcoming exams (placeholder - you might want to create a separate table for scheduled exams)
+    upcoming_exams = []
+
+    return render_template('exams/exam_summary.html',
+                         total_exams=total_exams,
+                         pass_rate=pass_rate,
+                         average_score=average_score,
+                         failed_students=failed_students,
+                         grade_distribution=grade_distribution,
+                         subject_names=subject_names,
+                         subject_averages=subject_averages,
+                         course_names=course_names,
+                         course_averages=course_averages,
+                         semester_labels=semester_labels,
+                         semester_averages=semester_averages,
+                         top_performers=top_performers,
+                         recent_exams=recent_exams,
+                         upcoming_exams=upcoming_exams)
+
 @app.route('/exams')
 @login_required
 def exams():
-    if not can_edit_module(current_user, 'exams'):
-        flash('You do not have permission to access this page.', 'error')
-        return redirect(url_for('dashboard'))
-
     page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '')
     course_filter = request.args.get('course', '')
@@ -1639,7 +1729,7 @@ def edit_student(student_id):
 
     # Get existing fee record for the student
     fee_record = CollegeFees.query.filter_by(student_id=student.id).first()
-    
+
     # Get course details for fee information
     course_detail = None
     if student.current_course:
