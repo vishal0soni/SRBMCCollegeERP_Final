@@ -1387,13 +1387,13 @@ def api_student_fee_details(student_id):
 
         # Find next available installment
         for i, amount in enumerate(installments):
-            if amount == 0:
+            if float(amount) == 0:
                 next_installment = i + 1
                 break
         else:
             next_installment = 7  # All installments paid
 
-        total_fee = fee_record.total_fee or 0
+        total_fee = float(fee_record.total_fee or 0)
         due_amount = total_fee - paid_amount
 
         # Get payment history
