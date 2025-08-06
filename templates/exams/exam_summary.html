@@ -11,14 +11,6 @@
                 <i class="fas fa-chart-bar"></i> Examination Summary & Analytics
             </h1>
             <div>
-                <a href="{{ url_for('exams') }}" class="btn btn-secondary">
-                    <i class="fas fa-list"></i> View All Exams
-                </a>
-                {% if current_user.role.access_type == 'Edit' %}
-                <a href="{{ url_for('add_exam') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add Exam Results
-                </a>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -245,80 +237,7 @@
     </div>
 </div>
 
-<!-- Recent Exam Activities -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card shadow">
-            <div class="card-header">
-                <h6 class="m-0 font-weight-bold text-primary">Recent Exam Activities</h6>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Student</th>
-                                <th>Course</th>
-                                <th>Exam</th>
-                                <th>Date</th>
-                                <th>Result</th>
-                                <th>Grade</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% if recent_exams %}
-                                {% for exam in recent_exams %}
-                                <tr>
-                                    <td>
-                                        <strong>{{ exam.student.student_unique_id }}</strong><br>
-                                        <small>{{ exam.student.first_name }} {{ exam.student.last_name }}</small>
-                                    </td>
-                                    <td>{{ exam.student.current_course }}</td>
-                                    <td>{{ exam.exam_name }}</td>
-                                    <td>{{ exam.exam_date.strftime('%d/%m/%Y') if exam.exam_date else 'N/A' }}</td>
-                                    <td class="text-center">
-                                        {% if exam.overall_status == 'Pass' %}
-                                            <span class="badge bg-success">Pass</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">Fail</span>
-                                        {% endif %}
-                                    </td>
-                                    <td class="text-center">
-                                        {% if exam.grade in ['A+', 'A'] %}
-                                            <span class="badge bg-success">{{ exam.grade }}</span>
-                                        {% elif exam.grade in ['B+', 'B'] %}
-                                            <span class="badge bg-info">{{ exam.grade }}</span>
-                                        {% elif exam.grade in ['C+', 'C'] %}
-                                            <span class="badge bg-warning">{{ exam.grade }}</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">{{ exam.grade }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="{{ url_for('view_exam', exam_id=exam.id) }}" class="btn btn-outline-info">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="{{ url_for('report_card_pdf', exam_id=exam.id) }}" class="btn btn-outline-primary" target="_blank">
-                                                <i class="fas fa-file-alt"></i>
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            {% else %}
-                            <tr>
-                                <td colspan="7" class="text-center">No recent exam activities</td>
-                            </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 {% endblock %}
 
 {% block scripts %}

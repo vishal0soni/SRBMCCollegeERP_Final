@@ -102,14 +102,14 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{{ url_for('exam_summary') }}">
-                                <i class="fas fa-chart-bar"></i> Exam Summary
+                                Exam Summary
                             </a></li>
                             <li><a class="dropdown-item" href="{{ url_for('exams') }}">
-                                <i class="fas fa-list"></i> All Exams
+                                All Exams
                             </a></li>
                             {% if current_user.role.access_type == 'Edit' %}
                             <li><a class="dropdown-item" href="{{ url_for('add_exam') }}">
-                                <i class="fas fa-plus"></i> Add Exam
+                                Add Exam
                             </a></li>
                             {% endif %}
                         </ul>

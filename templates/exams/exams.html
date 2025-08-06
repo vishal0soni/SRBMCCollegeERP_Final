@@ -11,9 +11,6 @@
             </h1>
             {% if current_user.role.access_type == 'Edit' %}
             <div>
-                <a href="{{ url_for('exam_summary') }}" class="btn btn-info me-2">
-                    <i class="fas fa-chart-bar"></i> Exam Summary
-                </a>
                 <a href="{{ url_for('add_exam') }}" class="btn btn-primary me-2">
                     <i class="fas fa-plus"></i> Add Exam Results
                 </a>
