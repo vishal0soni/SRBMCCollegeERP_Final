@@ -63,44 +63,66 @@
                     <!-- Student Selection -->
                     <div class="mb-4">
                         <h6 class="text-primary mb-3">Student Details</h6>
-                        <div class="row">
-                            <div class="col-md-8 mb-3 position-relative">
-                                <label for="studentSearch" class="form-label">Search Student</label>
-                                <input type="text" id="studentSearch" class="form-control" placeholder="Type student name or ID to search..." autocomplete="off">
-                                <div id="searchResults" class="dropdown-menu" style="display: none; width: 100%; max-height: 200px; overflow-y: auto;">
-                                </div>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                {{ form.student_id.label(class="form-label") }}
-                                {{ form.student_id(class="form-select", style="display: none;") }}
-                                <input type="text" id="selectedStudentDisplay" class="form-control" readonly placeholder="No student selected">
-                                {% if form.student_id.errors %}
-                                    <div class="text-danger">
-                                        {% for error in form.student_id.errors %}
-                                            <small>{{ error }}</small>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <!-- Student Details Display -->
-                        <div id="studentDetails" class="card bg-light" style="display: none;">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <p><strong>Student ID:</strong> <span id="studentId">-</span></p>
-                                        <p><strong>Name:</strong> <span id="studentName">-</span></p>
-                                        <p><strong>Course:</strong> <span id="studentCourse">-</span></p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <p><strong>Total Fees:</strong> ₹<span id="totalFees">0.00</span></p>
-                                        <p><strong>Paid Amount:</strong> ₹<span id="paidAmount">0.00</span></p>
-                                        <p><strong>Due Amount:</strong> ₹<span id="dueAmount">0.00</span></p>
+                        {% if selected_student %}
+                            {{ form.student_id(style="display: none;") }}
+                            <!-- Student Details Display -->
+                            <div id="studentDetails" class="card bg-light">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Student ID:</strong> <span id="studentId">{{ selected_student.student_unique_id }}</span></p>
+                                            <p><strong>Name:</strong> <span id="studentName">{{ selected_student.first_name }} {{ selected_student.last_name }}</span></p>
+                                            <p><strong>Course:</strong> <span id="studentCourse">{{ selected_student.current_course or 'N/A' }}</span></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            {% if selected_fee_record %}
+                                                {% set total_paid = selected_fee_record.calculated_total_fees_paid %}
+                                                {% set due_amount = (selected_fee_record.total_fee or 0) - total_paid %}
+                                                <p><strong>Total Fees:</strong> ₹<span id="totalFees">{{ "%.2f"|format(selected_fee_record.total_fee or 0) }}</span></p>
+                                                <p><strong>Paid Amount:</strong> ₹<span id="paidAmount">{{ "%.2f"|format(total_paid) }}</span></p>
+                                                <p><strong>Due Amount:</strong> ₹<span id="dueAmount">{{ "%.2f"|format(due_amount) }}</span></p>
+                                            {% else %}
+                                                <p><strong>Total Fees:</strong> ₹<span id="totalFees">0.00</span></p>
+                                                <p><strong>Paid Amount:</strong> ₹<span id="paidAmount">0.00</span></p>
+                                                <p><strong>Due Amount:</strong> ₹<span id="dueAmount">0.00</span></p>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        {% else %}
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    {{ form.student_id.label(class="form-label") }}
+                                    {{ form.student_id(class="form-select") }}
+                                    {% if form.student_id.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.student_id.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Student Details Display (initially hidden) -->
+                            <div id="studentDetails" class="card bg-light" style="display: none;">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Student ID:</strong> <span id="studentId">-</span></p>
+                                            <p><strong>Name:</strong> <span id="studentName">-</span></p>
+                                            <p><strong>Course:</strong> <span id="studentCourse">-</span></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Total Fees:</strong> ₹<span id="totalFees">0.00</span></p>
+                                            <p><strong>Paid Amount:</strong> ₹<span id="paidAmount">0.00</span></p>
+                                            <p><strong>Due Amount:</strong> ₹<span id="dueAmount">0.00</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
                     </div>
                     
                     <!-- Payment Details -->
@@ -225,7 +247,24 @@
             </div>
             <div class="card-body">
                 <div class="list-group list-group-flush">
-                    <div class="list-group-item text-muted">Select a student to view payment history</div>
+                    {% if selected_student %}
+                        {% set recent_invoices = selected_student.invoices[:5] %}
+                        {% if recent_invoices %}
+                            {% for invoice in recent_invoices %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">Installment {{ invoice.installment_number or 'N/A' }}</h6>
+                                        <small>{{ invoice.date_time.strftime('%Y-%m-%d') if invoice.date_time else 'N/A' }}</small>
+                                    </div>
+                                    <p class="mb-1">₹{{ "%.2f"|format(invoice.invoice_amount) }} - Invoice #{{ invoice.invoice_number }}</p>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="list-group-item text-muted">No payment history found</div>
+                        {% endif %}
+                    {% else %}
+                        <div class="list-group-item text-muted">Select a student to view payment history</div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -235,115 +274,107 @@
 
 {% block scripts %}
 <script>
-let searchTimeout;
 let studentsData = [];
 
+{% if not selected_student %}
+// Only enable search functionality if no student is pre-selected
 function searchStudents(query) {
-    if (query.length < 2) {
-        hideSearchResults();
-        return;
-    }
-    
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        fetch(`/api/search-students?q=${encodeURIComponent(query)}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    studentsData = data.students;
-                    displaySearchResults(data.students);
-                } else {
-                    hideSearchResults();
-                }
-            })
-            .catch(error => {
-                console.error('Error searching students:', error);
-                hideSearchResults();
-            });
-    }, 300);
+    // Function kept for backward compatibility but not used when student is pre-selected
 }
 
 function displaySearchResults(students) {
-    const resultsDiv = document.getElementById('searchResults');
-    
-    if (students.length === 0) {
-        hideSearchResults();
-        return;
-    }
-    
-    resultsDiv.innerHTML = '';
-    students.forEach(student => {
-        const item = document.createElement('a');
-        item.className = 'dropdown-item';
-        item.href = '#';
-        item.innerHTML = `
-            <div>
-                <strong>${student.student_unique_id}</strong> - ${student.first_name} ${student.last_name}
-                <br><small class="text-muted">${student.current_course}</small>
-            </div>
-        `;
-        item.onclick = (e) => {
-            e.preventDefault();
-            selectStudent(student);
-        };
-        resultsDiv.appendChild(item);
-    });
-    
-    resultsDiv.style.display = 'block';
+    // Function kept for backward compatibility but not used when student is pre-selected
 }
 
 function hideSearchResults() {
-    document.getElementById('searchResults').style.display = 'none';
+    // Function kept for backward compatibility but not used when student is pre-selected
 }
 
 function selectStudent(student) {
-    document.getElementById('studentSearch').value = `${student.student_unique_id} - ${student.first_name} ${student.last_name}`;
-    document.getElementById('selectedStudentDisplay').value = `${student.student_unique_id} - ${student.first_name} ${student.last_name}`;
-    document.getElementById('student_id').value = student.id;
-    hideSearchResults();
-    loadStudentDetails(student);
+    // Function kept for backward compatibility but not used when student is pre-selected
 }
+{% endif %}
 
 function loadStudentDetails(student = null) {
-    const studentId = document.getElementById('{{ form.student_id.id }}').value;
-    
-    if (studentId && student) {
-        // Fetch fee details for the student
-        fetch(`/api/student-fee-details/${studentId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const feeData = data.fee_data;
-                    window.studentFeeData = feeData; // Store for later use
-                    
-                    document.getElementById('studentDetails').style.display = 'block';
-                    document.getElementById('studentId').textContent = student.student_unique_id;
-                    document.getElementById('studentName').textContent = `${student.first_name} ${student.last_name}`;
-                    document.getElementById('studentCourse').textContent = student.current_course;
-                    document.getElementById('totalFees').textContent = parseFloat(feeData.total_fee || 0).toLocaleString();
-                    document.getElementById('paidAmount').textContent = parseFloat(feeData.paid_amount || 0).toLocaleString();
-                    document.getElementById('dueAmount').textContent = parseFloat(feeData.due_amount || 0).toLocaleString();
-                    
-                    // Update payment history
-                    updatePaymentHistory(data.payment_history || []);
-                    
-                    // Show additional details and payment summary
-                    document.getElementById('additionalDetails').style.display = 'block';
-                    updatePaymentSummary();
-                } else {
-                    alert('Error loading student fee details');
-                }
-            })
-            .catch(error => {
-                console.error('Error loading student details:', error);
-                alert('Error loading student details');
-            });
-    } else {
-        document.getElementById('studentDetails').style.display = 'none';
-        document.getElementById('additionalDetails').style.display = 'none';
-        document.getElementById('paymentSummary').style.display = 'none';
-    }
+    {% if selected_student %}
+        // Student is pre-selected, load their fee data
+        const studentId = {{ selected_student.id }};
+        window.studentFeeData = {
+            {% if selected_fee_record %}
+                total_fee: {{ selected_fee_record.total_fee or 0 }},
+                paid_amount: {{ selected_fee_record.calculated_total_fees_paid }},
+                due_amount: {{ (selected_fee_record.total_fee or 0) - selected_fee_record.calculated_total_fees_paid }},
+                next_installment: getNextInstallmentForStudent()
+            {% else %}
+                total_fee: 0,
+                paid_amount: 0,
+                due_amount: 0,
+                next_installment: 1
+            {% endif %}
+        };
+        
+        // Show additional details and payment summary
+        document.getElementById('additionalDetails').style.display = 'block';
+        updatePaymentSummary();
+    {% else %}
+        // Original functionality for manual student selection
+        const studentId = document.getElementById('{{ form.student_id.id }}').value;
+        
+        if (studentId) {
+            // Fetch fee details for the student
+            fetch(`/api/student-fee-details/${studentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const feeData = data.fee_data;
+                        window.studentFeeData = feeData; // Store for later use
+                        
+                        document.getElementById('studentDetails').style.display = 'block';
+                        document.getElementById('studentId').textContent = data.student_unique_id || '-';
+                        document.getElementById('studentName').textContent = data.student_name || '-';
+                        document.getElementById('studentCourse').textContent = data.student_course || '-';
+                        document.getElementById('totalFees').textContent = parseFloat(feeData.total_fee || 0).toLocaleString();
+                        document.getElementById('paidAmount').textContent = parseFloat(feeData.paid_amount || 0).toLocaleString();
+                        document.getElementById('dueAmount').textContent = parseFloat(feeData.due_amount || 0).toLocaleString();
+                        
+                        // Show additional details and payment summary
+                        document.getElementById('additionalDetails').style.display = 'block';
+                        updatePaymentSummary();
+                    } else {
+                        alert('Error loading student fee details');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading student details:', error);
+                    alert('Error loading student details');
+                });
+        } else {
+            document.getElementById('studentDetails').style.display = 'none';
+            document.getElementById('additionalDetails').style.display = 'none';
+            document.getElementById('paymentSummary').style.display = 'none';
+        }
+    {% endif %}
 }
+
+{% if selected_student and selected_fee_record %}
+function getNextInstallmentForStudent() {
+    const installments = [
+        {{ selected_fee_record.installment_1 or 0 }},
+        {{ selected_fee_record.installment_2 or 0 }},
+        {{ selected_fee_record.installment_3 or 0 }},
+        {{ selected_fee_record.installment_4 or 0 }},
+        {{ selected_fee_record.installment_5 or 0 }},
+        {{ selected_fee_record.installment_6 or 0 }}
+    ];
+    
+    for (let i = 0; i < installments.length; i++) {
+        if (installments[i] === 0) {
+            return i + 1;
+        }
+    }
+    return 7; // All installments paid
+}
+{% endif %}
 
 function updatePaymentHistory(paymentHistory) {
     const paymentHistoryContainer = document.querySelector('.card:nth-last-child(1) .list-group');
@@ -411,27 +442,27 @@ function getNextInstallmentNumber() {
 // Event listeners
 document.getElementById('{{ form.payment_mode.id }}').addEventListener('change', updatePaymentSummary);
 
-// Student search event listeners
-document.getElementById('studentSearch').addEventListener('input', function(e) {
-    searchStudents(e.target.value);
-});
-
-document.getElementById('studentSearch').addEventListener('focus', function(e) {
-    if (e.target.value.length >= 2) {
-        searchStudents(e.target.value);
+{% if not selected_student %}
+// Student selection event listener for manual selection
+document.getElementById('{{ form.student_id.id }}').addEventListener('change', function(e) {
+    if (e.target.value) {
+        loadStudentDetails();
+    } else {
+        document.getElementById('studentDetails').style.display = 'none';
+        document.getElementById('additionalDetails').style.display = 'none';
+        document.getElementById('paymentSummary').style.display = 'none';
     }
 });
+{% endif %}
 
-// Hide search results when clicking outside
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('#studentSearch') && !e.target.closest('#searchResults')) {
-        hideSearchResults();
-    }
-});
-
-// Initialize payment date
+// Initialize payment date and load student details if pre-selected
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+    
+    {% if selected_student %}
+        // Load details for pre-selected student
+        loadStudentDetails();
+    {% endif %}
 });
 
 function handlePaymentSubmission() {

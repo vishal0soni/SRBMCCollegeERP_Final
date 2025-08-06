@@ -878,8 +878,15 @@ def payment():
         flash('You do not have permission to access this page.', 'error')
         return redirect(url_for('dashboard'))
 
+    # Get student_id from URL parameter if coming from "+Pay" button
+    student_id = request.args.get('student_id', type=int)
+    
     form = PaymentForm()
     form.student_id.choices = [(s.id, f"{s.student_unique_id} - {s.first_name} {s.last_name}") for s in Student.query.all()]
+    
+    # Pre-select student if coming from "+Pay" button
+    if student_id and request.method == 'GET':
+        form.student_id.data = student_id
 
     if form.validate_on_submit():
         student = Student.query.get(form.student_id.data)
@@ -937,7 +944,16 @@ def payment():
             db.session.rollback()
             flash(f'Error processing payment: {str(e)}', 'error')
 
-    return render_template('fees/payment_form.html', form=form, title='Process Payment')
+    # Get selected student and fee data for display
+    selected_student = None
+    selected_fee_record = None
+    if student_id:
+        selected_student = Student.query.get(student_id)
+        if selected_student:
+            selected_fee_record = CollegeFees.query.filter_by(student_id=student_id).first()
+
+    return render_template('fees/payment_form.html', form=form, title='Process Payment', 
+                         selected_student=selected_student, selected_fee_record=selected_fee_record)
 
 # Exam Routes
 @app.route('/exams')
