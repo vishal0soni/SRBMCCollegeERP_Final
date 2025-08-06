@@ -1634,6 +1634,9 @@ def edit_student(student_id):
                                            (fee_record.miscellaneous_fee_1 or 0) + (fee_record.miscellaneous_fee_2 or 0) + 
                                            (fee_record.miscellaneous_fee_3 or 0))
                     fee_record.total_fee = total_course_fees + total_additional_fees
+                else:
+                    # Fallback calculation if course details not found
+                    fee_record.update_total_fee()
                 
                 # Always update total_fees_paid using the formula
                 fee_record.update_total_fees_paid()
