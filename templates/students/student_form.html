@@ -569,14 +569,16 @@ function clearFeeDisplays() {
 }
 
 function calculateTotalFees() {
-    const courseTuitionFee = parseFloat(document.getElementById('courseTuitionFeeInput').value || 0);
+    // Get the total course fees from the display (includes tuition + all misc fees)
+    const totalCourseFeesText = document.getElementById('totalCourseFees').textContent.replace('₹', '').replace(',', '');
+    const totalCourseFees = parseFloat(totalCourseFeesText || 0);
 
     let additionalFees = 0;
     document.querySelectorAll('.additional-fee-input').forEach(input => {
         additionalFees += parseFloat(input.value || 0);
     });
 
-    const grandTotal = courseTuitionFee + additionalFees;
+    const grandTotal = totalCourseFees + additionalFees;
 
     // Calculate amount due with Meera rebate affecting total due
     const totalFeesPaid = parseFloat(document.getElementById('totalFeesPaid')?.value || 0);
@@ -769,7 +771,7 @@ document.addEventListener('DOMContentLoaded', function() {
             miscellaneous_fee_1: document.getElementById('miscellaneousFee1').value || '0.00',
             miscellaneous_fee_2: document.getElementById('miscellaneousFee2').value || '0.00',
             miscellaneous_fee_3: document.getElementById('miscellaneousFee3').value || '0.00',
-            total_fee: parseFloat(document.getElementById('grandTotalFees').textContent.replace('₹', '')) || 0.00,
+            total_fee: parseFloat(document.getElementById('grandTotalFees').textContent.replace('₹', '').replace(',', '')) || 0.00,
 
             // New fee management fields
             total_fees_paid: document.getElementById('totalFeesPaid').value || '0.00',

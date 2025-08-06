@@ -362,7 +362,7 @@ def add_student():
 
             if course and course_detail:
                 # Get fee data from form (submitted via JavaScript)
-                course_tuition_fee = float(request.form.get('fee_course_tuition_fee', course_detail.total_course_fees) or 0)
+                course_tuition_fee = float(request.form.get('fee_course_tuition_fee', course_detail.course_tuition_fee) or 0)
                 enrollment_fee = float(request.form.get('fee_enrollment_fee', 0) or 0)
                 eligibility_certificate_fee = float(request.form.get('fee_eligibility_certificate_fee', 0) or 0)
                 university_affiliation_fee = float(request.form.get('fee_university_affiliation_fee', 0) or 0)
@@ -372,7 +372,13 @@ def add_student():
                 miscellaneous_fee_1 = float(request.form.get('fee_miscellaneous_fee_1', 0) or 0)
                 miscellaneous_fee_2 = float(request.form.get('fee_miscellaneous_fee_2', 0) or 0)
                 miscellaneous_fee_3 = float(request.form.get('fee_miscellaneous_fee_3', 0) or 0)
-                total_fee = float(request.form.get('fee_total_fee', course_detail.total_course_fees) or 0)
+                
+                # Calculate total fee using complete course fees (tuition + misc) + additional fees
+                total_course_fees = float(course_detail.total_course_fees or 0)
+                total_additional_fees = (enrollment_fee + eligibility_certificate_fee + university_affiliation_fee + 
+                                       university_sports_fee + university_development_fee + tc_cc_fee + 
+                                       miscellaneous_fee_1 + miscellaneous_fee_2 + miscellaneous_fee_3)
+                total_fee = total_course_fees + total_additional_fees
 
                 # Get new fee management fields from form - don't use form value for total_fees_paid as it's calculated
                 meera_rebate_applied = request.form.get('fee_meera_rebate_applied') == 'true'
@@ -1617,8 +1623,19 @@ def edit_student(student_id):
                     fee_record.miscellaneous_fee_2 = float(request.form.get('fee_miscellaneous_fee_2', 0) or 0)
                 if request.form.get('fee_miscellaneous_fee_3'):
                     fee_record.miscellaneous_fee_3 = float(request.form.get('fee_miscellaneous_fee_3', 0) or 0)
-                # Always update total_fee and total_fees_paid using the formulas
-                fee_record.update_total_fee()
+                
+                # Calculate total_fee properly: get course details to include complete course fees
+                course_detail = CourseDetails.query.filter_by(course_full_name=student.current_course).first()
+                if course_detail:
+                    total_course_fees = float(course_detail.total_course_fees or 0)
+                    total_additional_fees = ((fee_record.enrollment_fee or 0) + (fee_record.eligibility_certificate_fee or 0) + 
+                                           (fee_record.university_affiliation_fee or 0) + (fee_record.university_sports_fee or 0) + 
+                                           (fee_record.university_development_fee or 0) + (fee_record.tc_cc_fee or 0) + 
+                                           (fee_record.miscellaneous_fee_1 or 0) + (fee_record.miscellaneous_fee_2 or 0) + 
+                                           (fee_record.miscellaneous_fee_3 or 0))
+                    fee_record.total_fee = total_course_fees + total_additional_fees
+                
+                # Always update total_fees_paid using the formula
                 fee_record.update_total_fees_paid()
 
             db.session.commit()
