@@ -350,8 +350,9 @@ function selectStudent(student) {
     
     hideSearchResults();
     
-    // Load student fee details
-    loadStudentDetails();
+    // Trigger the change event to load student fee details
+    const studentIdField = document.getElementById('{{ form.student_id.id }}');
+    studentIdField.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 // Add event listeners for search functionality
@@ -394,10 +395,10 @@ function loadStudentDetails(student = null) {
         document.getElementById('additionalDetails').style.display = 'block';
         updatePaymentSummary();
     {% else %}
-        // Original functionality for manual student selection
+        // Functionality for manual student selection
         const studentId = document.getElementById('{{ form.student_id.id }}').value;
 
-        if (studentId && studentId !== '') {
+        if (studentId && studentId !== '' && studentId !== '0') {
             console.log('Loading fee details for student ID:', studentId);
             
             // Show loading state
@@ -405,6 +406,9 @@ function loadStudentDetails(student = null) {
             document.getElementById('studentId').textContent = 'Loading...';
             document.getElementById('studentName').textContent = 'Loading...';
             document.getElementById('studentCourse').textContent = 'Loading...';
+            document.getElementById('totalFees').textContent = 'Loading...';
+            document.getElementById('paidAmount').textContent = 'Loading...';
+            document.getElementById('dueAmount').textContent = 'Loading...';
 
             // Fetch fee details for the student
             fetch(`/api/student-fee-details/${studentId}`)
@@ -442,7 +446,10 @@ function loadStudentDetails(student = null) {
                         document.getElementById('studentId').textContent = 'Error';
                         document.getElementById('studentName').textContent = 'Error loading details';
                         document.getElementById('studentCourse').textContent = '-';
-                        alert('Error loading student fee details: ' + (data.error || 'Unknown error'));
+                        document.getElementById('totalFees').textContent = '0.00';
+                        document.getElementById('paidAmount').textContent = '0.00';
+                        document.getElementById('dueAmount').textContent = '0.00';
+                        showNotification('Error loading student fee details: ' + (data.error || 'Unknown error'), 'error');
                     }
                 })
                 .catch(error => {
@@ -450,7 +457,10 @@ function loadStudentDetails(student = null) {
                     document.getElementById('studentId').textContent = 'Error';
                     document.getElementById('studentName').textContent = 'Error loading details';
                     document.getElementById('studentCourse').textContent = '-';
-                    alert('Error loading student details: ' + error.message);
+                    document.getElementById('totalFees').textContent = '0.00';
+                    document.getElementById('paidAmount').textContent = '0.00';
+                    document.getElementById('dueAmount').textContent = '0.00';
+                    showNotification('Error loading student details: ' + error.message, 'error');
                 });
         } else {
             console.log('No student ID provided, hiding details');
