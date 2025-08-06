@@ -705,7 +705,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Populate existing fee management fields
                 if (document.getElementById('totalFeesPaid')) {
-                    document.getElementById('totalFeesPaid').value = feeData.total_fees_paid || 0;
+                    document.getElementById('totalFeesPaid').value = parseFloat(feeData.total_fees_paid || 0).toFixed(2);
                 }
                 if (document.getElementById('meeraRebateApplied')) {
                     document.getElementById('meeraRebateApplied').checked = feeData.meera_rebate_applied || false;
@@ -717,7 +717,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('meeraRebateGranted').checked = feeData.meera_rebate_granted || false;
                 }
                 if (document.getElementById('meeraRebateAmount')) {
-                    document.getElementById('meeraRebateAmount').value = feeData.meera_rebate_amount || 0;
+                    document.getElementById('meeraRebateAmount').value = parseFloat(feeData.meera_rebate_amount || 0).toFixed(2);
                 }
                 if (document.getElementById('scholarshipApplied')) {
                     document.getElementById('scholarshipApplied').checked = feeData.scholarship_applied || false;
@@ -729,10 +729,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('scholarshipGranted').checked = feeData.scholarship_granted || false;
                 }
                 if (document.getElementById('governmentScholarshipAmount')) {
-                    document.getElementById('governmentScholarshipAmount').value = feeData.government_scholarship_amount || 0;
+                    document.getElementById('governmentScholarshipAmount').value = parseFloat(feeData.government_scholarship_amount || 0).toFixed(2);
                 }
                 if (document.getElementById('totalAmountDue')) {
-                    document.getElementById('totalAmountDue').value = feeData.total_amount_due || 0;
+                    document.getElementById('totalAmountDue').value = parseFloat(feeData.total_amount_due || 0).toFixed(2);
                 }
                 if (document.getElementById('pendingDuesLibraries')) {
                     document.getElementById('pendingDuesLibraries').checked = feeData.pending_dues_for_libraries || false;
