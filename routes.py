@@ -1589,6 +1589,14 @@ def edit_student(student_id):
     if not form.subject_3_name.data and student.subject_3_name:
         form.subject_3_name.data = student.subject_3_name
 
+    # Get existing fee record for the student
+    fee_record = CollegeFees.query.filter_by(student_id=student.id).first()
+    
+    # Get course details for fee information
+    course_detail = None
+    if student.current_course:
+        course_detail = CourseDetails.query.filter_by(course_full_name=student.current_course).first()
+
     if form.validate_on_submit():
         form.populate_obj(student)
         student.updated_at = datetime.utcnow()
@@ -1643,7 +1651,8 @@ def edit_student(student_id):
             db.session.rollback()
             flash(f'Error updating student: {str(e)}', 'error')
 
-    return render_template('students/student_form.html', form=form, title='Edit Student', student=student)
+    return render_template('students/student_form.html', form=form, title='Edit Student', student=student, 
+                         fee_record=fee_record, course_detail=course_detail)
 
 @app.route('/students/delete/<int:student_id>', methods=['DELETE'])
 @login_required

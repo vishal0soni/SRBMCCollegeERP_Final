@@ -660,6 +660,101 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Editing student - Current subjects:', currentSubject1, currentSubject2, currentSubject3);
     console.log('Editing student - Current course:', currentCourse);
 
+    // Load existing fee data directly from template variables (server-side data)
+    {% if fee_record %}
+    const existingFeeData = {
+        course_tuition_fee: {{ fee_record.course_tuition_fee or 0 }},
+        enrollment_fee: {{ fee_record.enrollment_fee or 0 }},
+        eligibility_certificate_fee: {{ fee_record.eligibility_certificate_fee or 0 }},
+        university_affiliation_fee: {{ fee_record.university_affiliation_fee or 0 }},
+        university_sports_fee: {{ fee_record.university_sports_fee or 0 }},
+        university_development_fee: {{ fee_record.university_development_fee or 0 }},
+        tc_cc_fee: {{ fee_record.tc_cc_fee or 0 }},
+        miscellaneous_fee_1: {{ fee_record.miscellaneous_fee_1 or 0 }},
+        miscellaneous_fee_2: {{ fee_record.miscellaneous_fee_2 or 0 }},
+        miscellaneous_fee_3: {{ fee_record.miscellaneous_fee_3 or 0 }},
+        total_fees_paid: {{ fee_record.calculated_total_fees_paid }},
+        meera_rebate_applied: {{ fee_record.meera_rebate_applied|tojson }},
+        meera_rebate_approved: {{ fee_record.meera_rebate_approved|tojson }},
+        meera_rebate_granted: {{ fee_record.meera_rebate_granted|tojson }},
+        meera_rebate_amount: {{ fee_record.meera_rebate_amount or 0 }},
+        scholarship_applied: {{ fee_record.scholarship_applied|tojson }},
+        scholarship_approved: {{ fee_record.scholarship_approved|tojson }},
+        scholarship_granted: {{ fee_record.scholarship_granted|tojson }},
+        government_scholarship_amount: {{ fee_record.government_scholarship_amount or 0 }},
+        total_amount_due: {{ fee_record.total_amount_due or 0 }},
+        pending_dues_for_libraries: {{ fee_record.pending_dues_for_libraries|tojson }},
+        pending_dues_for_hostel: {{ fee_record.pending_dues_for_hostel|tojson }},
+        exam_admit_card_issued: {{ fee_record.exam_admit_card_issued|tojson }}
+    };
+    {% endif %}
+
+    {% if course_detail %}
+    const existingCourseData = {
+        course_tuition_fee: {{ course_detail.course_tuition_fee or 0 }},
+        misc_course_fees_1: {{ course_detail.misc_course_fees_1 or 0 }},
+        misc_course_fees_2: {{ course_detail.misc_course_fees_2 or 0 }},
+        misc_course_fees_3: {{ course_detail.misc_course_fees_3 or 0 }},
+        misc_course_fees_4: {{ course_detail.misc_course_fees_4 or 0 }},
+        misc_course_fees_5: {{ course_detail.misc_course_fees_5 or 0 }},
+        misc_course_fees_6: {{ course_detail.misc_course_fees_6 or 0 }},
+        total_course_fees: {{ course_detail.total_course_fees or 0 }}
+    };
+    {% endif %}
+
+    // Function to populate fee data from server-side variables
+    function populateExistingFeeData() {
+        {% if fee_record %}
+        console.log('Populating existing fee data:', existingFeeData);
+
+        // Update course fee displays and the hidden input
+        document.getElementById('courseTuitionFee').textContent = `₹${parseFloat(existingFeeData.course_tuition_fee).toFixed(2)}`;
+        document.getElementById('courseTuitionFeeInput').value = parseFloat(existingFeeData.course_tuition_fee).toFixed(2);
+
+        // Update misc fees from course details if available
+        {% if course_detail %}
+        document.getElementById('miscFee1').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_1).toFixed(2)}`;
+        document.getElementById('miscFee2').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_2).toFixed(2)}`;
+        document.getElementById('miscFee3').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_3).toFixed(2)}`;
+        document.getElementById('miscFee4').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_4).toFixed(2)}`;
+        document.getElementById('miscFee5').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_5).toFixed(2)}`;
+        document.getElementById('miscFee6').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_6).toFixed(2)}`;
+        document.getElementById('totalCourseFees').textContent = `₹${parseFloat(existingCourseData.total_course_fees).toFixed(2)}`;
+        {% endif %}
+
+        // Populate existing fee structure fields
+        document.getElementById('enrollmentFee').value = parseFloat(existingFeeData.enrollment_fee).toFixed(2);
+        document.getElementById('eligibilityCertificateFee').value = parseFloat(existingFeeData.eligibility_certificate_fee).toFixed(2);
+        document.getElementById('universityAffiliationFee').value = parseFloat(existingFeeData.university_affiliation_fee).toFixed(2);
+        document.getElementById('universitySportsFee').value = parseFloat(existingFeeData.university_sports_fee).toFixed(2);
+        document.getElementById('universityDevelopmentFee').value = parseFloat(existingFeeData.university_development_fee).toFixed(2);
+        document.getElementById('tcCcFee').value = parseFloat(existingFeeData.tc_cc_fee).toFixed(2);
+        document.getElementById('miscellaneousFee1').value = parseFloat(existingFeeData.miscellaneous_fee_1).toFixed(2);
+        document.getElementById('miscellaneousFee2').value = parseFloat(existingFeeData.miscellaneous_fee_2).toFixed(2);
+        document.getElementById('miscellaneousFee3').value = parseFloat(existingFeeData.miscellaneous_fee_3).toFixed(2);
+
+        // Populate existing fee management fields
+        document.getElementById('totalFeesPaid').value = parseFloat(existingFeeData.total_fees_paid).toFixed(2);
+        document.getElementById('meeraRebateApplied').checked = existingFeeData.meera_rebate_applied;
+        document.getElementById('meeraRebateApproved').checked = existingFeeData.meera_rebate_approved;
+        document.getElementById('meeraRebateGranted').checked = existingFeeData.meera_rebate_granted;
+        document.getElementById('meeraRebateAmount').value = parseFloat(existingFeeData.meera_rebate_amount).toFixed(2);
+        document.getElementById('scholarshipApplied').checked = existingFeeData.scholarship_applied;
+        document.getElementById('scholarshipApproved').checked = existingFeeData.scholarship_approved;
+        document.getElementById('scholarshipGranted').checked = existingFeeData.scholarship_granted;
+        document.getElementById('governmentScholarshipAmount').value = parseFloat(existingFeeData.government_scholarship_amount).toFixed(2);
+        document.getElementById('totalAmountDue').value = parseFloat(existingFeeData.total_amount_due).toFixed(2);
+        document.getElementById('pendingDuesLibraries').checked = existingFeeData.pending_dues_for_libraries;
+        document.getElementById('pendingDuesHostel').checked = existingFeeData.pending_dues_for_hostel;
+        document.getElementById('examAdmitCardIssued').checked = existingFeeData.exam_admit_card_issued;
+
+        // Trigger calculation after loading data
+        calculateTotalFees();
+        
+        console.log('Fee data populated successfully from server data');
+        {% endif %}
+    }
+
     // Set the current subject values immediately on page load (before API calls)
     if (currentSubject1) {
         setTimeout(() => {
@@ -707,114 +802,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // Then fetch existing fee data for student {{ student.id }}
-    fetch(`/api/student-fee-details/{{ student.id }}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.fee_data) {
-                const feeData = data.fee_data;
-                console.log('Fee data loaded:', feeData);
-
-                // Update course fee displays and the hidden input
-                document.getElementById('courseTuitionFee').textContent = `₹${parseFloat(feeData.course_tuition_fee || 0).toFixed(2)}`;
-                document.getElementById('courseTuitionFeeInput').value = parseFloat(feeData.course_tuition_fee || 0).toFixed(2);
-
-                // Calculate and display misc fees from the fee record
-                const miscFee1 = parseFloat(feeData.miscellaneous_fee_1 || 0);
-                const miscFee2 = parseFloat(feeData.miscellaneous_fee_2 || 0);
-                const miscFee3 = parseFloat(feeData.miscellaneous_fee_3 || 0);
-
-                document.getElementById('miscFee1').textContent = `₹${miscFee1.toFixed(2)}`;
-                document.getElementById('miscFee2').textContent = `₹${miscFee2.toFixed(2)}`;
-                document.getElementById('miscFee3').textContent = `₹${miscFee3.toFixed(2)}`;
-                document.getElementById('miscFee4').textContent = `₹0.00`; // Not used in fee record
-                document.getElementById('miscFee5').textContent = `₹0.00`; // Not used in fee record  
-                document.getElementById('miscFee6').textContent = `₹0.00`; // Not used in fee record
-
-                // Calculate total course fees from actual fee components
-                const totalCourseFees = parseFloat(feeData.course_tuition_fee || 0) + miscFee1 + miscFee2 + miscFee3;
-                document.getElementById('totalCourseFees').textContent = `₹${totalCourseFees.toFixed(2)}`;
-
-                // Populate existing fee structure fields
-                if (document.getElementById('enrollmentFee')) {
-                    document.getElementById('enrollmentFee').value = parseFloat(feeData.enrollment_fee || 0).toFixed(2);
-                }
-                if (document.getElementById('eligibilityCertificateFee')) {
-                    document.getElementById('eligibilityCertificateFee').value = parseFloat(feeData.eligibility_certificate_fee || 0).toFixed(2);
-                }
-                if (document.getElementById('universityAffiliationFee')) {
-                    document.getElementById('universityAffiliationFee').value = parseFloat(feeData.university_affiliation_fee || 0).toFixed(2);
-                }
-                if (document.getElementById('universitySportsFee')) {
-                    document.getElementById('universitySportsFee').value = parseFloat(feeData.university_sports_fee || 0).toFixed(2);
-                }
-                if (document.getElementById('universityDevelopmentFee')) {
-                    document.getElementById('universityDevelopmentFee').value = parseFloat(feeData.university_development_fee || 0).toFixed(2);
-                }
-                if (document.getElementById('tcCcFee')) {
-                    document.getElementById('tcCcFee').value = parseFloat(feeData.tc_cc_fee || 0).toFixed(2);
-                }
-                if (document.getElementById('miscellaneousFee1')) {
-                    document.getElementById('miscellaneousFee1').value = parseFloat(feeData.miscellaneous_fee_1 || 0).toFixed(2);
-                }
-                if (document.getElementById('miscellaneousFee2')) {
-                    document.getElementById('miscellaneousFee2').value = parseFloat(feeData.miscellaneous_fee_2 || 0).toFixed(2);
-                }
-                if (document.getElementById('miscellaneousFee3')) {
-                    document.getElementById('miscellaneousFee3').value = parseFloat(feeData.miscellaneous_fee_3 || 0).toFixed(2);
-                }
-
-                // Populate existing fee management fields
-                if (document.getElementById('totalFeesPaid')) {
-                    // Use the database-calculated value directly
-                    document.getElementById('totalFeesPaid').value = parseFloat(feeData.total_fees_paid || 0).toFixed(2);
-                }
-                if (document.getElementById('meeraRebateApplied')) {
-                    document.getElementById('meeraRebateApplied').checked = feeData.meera_rebate_applied || false;
-                }
-                if (document.getElementById('meeraRebateApproved')) {
-                    document.getElementById('meeraRebateApproved').checked = feeData.meera_rebate_approved || false;
-                }
-                if (document.getElementById('meeraRebateGranted')) {
-                    document.getElementById('meeraRebateGranted').checked = feeData.meera_rebate_granted || false;
-                }
-                if (document.getElementById('meeraRebateAmount')) {
-                    document.getElementById('meeraRebateAmount').value = parseFloat(feeData.meera_rebate_amount || 0).toFixed(2);
-                }
-                if (document.getElementById('scholarshipApplied')) {
-                    document.getElementById('scholarshipApplied').checked = feeData.scholarship_applied || false;
-                }
-                if (document.getElementById('scholarshipApproved')) {
-                    document.getElementById('scholarshipApproved').checked = feeData.scholarship_approved || false;
-                }
-                if (document.getElementById('scholarshipGranted')) {
-                    document.getElementById('scholarshipGranted').checked = feeData.scholarship_granted || false;
-                }
-                if (document.getElementById('governmentScholarshipAmount')) {
-                    document.getElementById('governmentScholarshipAmount').value = parseFloat(feeData.government_scholarship_amount || 0).toFixed(2);
-                }
-                if (document.getElementById('totalAmountDue')) {
-                    document.getElementById('totalAmountDue').value = parseFloat(feeData.total_amount_due || 0).toFixed(2);
-                }
-                if (document.getElementById('pendingDuesLibraries')) {
-                    document.getElementById('pendingDuesLibraries').checked = feeData.pending_dues_for_libraries || false;
-                }
-                if (document.getElementById('pendingDuesHostel')) {
-                    document.getElementById('pendingDuesHostel').checked = feeData.pending_dues_for_hostel || false;
-                }
-                if (document.getElementById('examAdmitCardIssued')) {
-                    document.getElementById('examAdmitCardIssued').checked = feeData.exam_admit_card_issued || false;
-                }
-
-                // Trigger calculation after loading data
-                calculateTotalFees();
-                
-                console.log('Fee data loaded and populated successfully');
-            }
-        })
-        .catch(error => {
-            console.error('Error loading existing fee data:', error);
-        });
+    // Populate fee data immediately from server-side data
+    populateExistingFeeData();
+    
     {% else %}
         // If not editing, initialize subjects based on selected course
         if (courseSelect.value) {
