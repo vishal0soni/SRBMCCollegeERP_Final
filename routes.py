@@ -1575,10 +1575,19 @@ def edit_student(student_id):
     form = StudentForm(obj=student)
     form.current_course.choices = [(cd.course_full_name, cd.course_full_name) for cd in CourseDetails.query.all()]
 
+    # Get all subjects and populate choices
     subjects = Subject.query.all()
     form.subject_1_name.choices = [('', 'Select Subject')] + [(s.subject_name, s.subject_name) for s in subjects]
     form.subject_2_name.choices = [('', 'Select Subject')] + [(s.subject_name, s.subject_name) for s in subjects]
     form.subject_3_name.choices = [('', 'Select Subject')] + [(s.subject_name, s.subject_name) for s in subjects]
+
+    # Set the current values for subjects from the student record
+    if not form.subject_1_name.data and student.subject_1_name:
+        form.subject_1_name.data = student.subject_1_name
+    if not form.subject_2_name.data and student.subject_2_name:
+        form.subject_2_name.data = student.subject_2_name
+    if not form.subject_3_name.data and student.subject_3_name:
+        form.subject_3_name.data = student.subject_3_name
 
     if form.validate_on_submit():
         form.populate_obj(student)

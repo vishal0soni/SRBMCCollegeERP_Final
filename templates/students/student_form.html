@@ -649,19 +649,71 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Load existing fee data when editing a student FIRST
+    // Load existing data when editing a student
     {% if student %}
     // Store current subject selections to restore after course is loaded
     const currentSubject1 = '{{ student.subject_1_name or "" }}';
     const currentSubject2 = '{{ student.subject_2_name or "" }}';
     const currentSubject3 = '{{ student.subject_3_name or "" }}';
+    const currentCourse = '{{ student.current_course or "" }}';
 
-    // Fetch existing fee data for student {{ student.id }}
+    console.log('Editing student - Current subjects:', currentSubject1, currentSubject2, currentSubject3);
+    console.log('Editing student - Current course:', currentCourse);
+
+    // Set the current subject values immediately on page load (before API calls)
+    if (currentSubject1) {
+        setTimeout(() => {
+            subject1Select.value = currentSubject1;
+        }, 100);
+    }
+    if (currentSubject2) {
+        setTimeout(() => {
+            subject2Select.value = currentSubject2;
+        }, 100);
+    }
+    if (currentSubject3) {
+        setTimeout(() => {
+            subject3Select.value = currentSubject3;
+        }, 100);
+    }
+
+    // First load subjects for the current course if one is selected
+    if (currentCourse) {
+        fetch(`/api/subjects/${encodeURIComponent(currentCourse)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.subjects) {
+                    allSubjects = data.subjects;
+                    
+                    // Populate subject dropdowns with available subjects
+                    updateSubjectOptions();
+                    
+                    // Set the saved subject values
+                    if (currentSubject1) {
+                        subject1Select.value = currentSubject1;
+                    }
+                    if (currentSubject2) {
+                        subject2Select.value = currentSubject2;
+                    }
+                    if (currentSubject3) {
+                        subject3Select.value = currentSubject3;
+                    }
+                    
+                    console.log('Subjects loaded and set successfully');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching subjects:', error);
+            });
+    }
+
+    // Then fetch existing fee data for student {{ student.id }}
     fetch(`/api/student-fee-details/{{ student.id }}`)
         .then(response => response.json())
         .then(data => {
             if (data.success && data.fee_data) {
                 const feeData = data.fee_data;
+                console.log('Fee data loaded:', feeData);
 
                 // Update course fee displays and the hidden input
                 document.getElementById('courseTuitionFee').textContent = `₹${parseFloat(feeData.course_tuition_fee || 0).toFixed(2)}`;
@@ -685,31 +737,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Populate existing fee structure fields
                 if (document.getElementById('enrollmentFee')) {
-                    document.getElementById('enrollmentFee').value = feeData.enrollment_fee || 0;
+                    document.getElementById('enrollmentFee').value = parseFloat(feeData.enrollment_fee || 0).toFixed(2);
                 }
                 if (document.getElementById('eligibilityCertificateFee')) {
-                    document.getElementById('eligibilityCertificateFee').value = feeData.eligibility_certificate_fee || 0;
+                    document.getElementById('eligibilityCertificateFee').value = parseFloat(feeData.eligibility_certificate_fee || 0).toFixed(2);
                 }
                 if (document.getElementById('universityAffiliationFee')) {
-                    document.getElementById('universityAffiliationFee').value = feeData.university_affiliation_fee || 0;
+                    document.getElementById('universityAffiliationFee').value = parseFloat(feeData.university_affiliation_fee || 0).toFixed(2);
                 }
                 if (document.getElementById('universitySportsFee')) {
-                    document.getElementById('universitySportsFee').value = feeData.university_sports_fee || 0;
+                    document.getElementById('universitySportsFee').value = parseFloat(feeData.university_sports_fee || 0).toFixed(2);
                 }
                 if (document.getElementById('universityDevelopmentFee')) {
-                    document.getElementById('universityDevelopmentFee').value = feeData.university_development_fee || 0;
+                    document.getElementById('universityDevelopmentFee').value = parseFloat(feeData.university_development_fee || 0).toFixed(2);
                 }
                 if (document.getElementById('tcCcFee')) {
-                    document.getElementById('tcCcFee').value = feeData.tc_cc_fee || 0;
+                    document.getElementById('tcCcFee').value = parseFloat(feeData.tc_cc_fee || 0).toFixed(2);
                 }
                 if (document.getElementById('miscellaneousFee1')) {
-                    document.getElementById('miscellaneousFee1').value = feeData.miscellaneous_fee_1 || 0;
+                    document.getElementById('miscellaneousFee1').value = parseFloat(feeData.miscellaneous_fee_1 || 0).toFixed(2);
                 }
                 if (document.getElementById('miscellaneousFee2')) {
-                    document.getElementById('miscellaneousFee2').value = feeData.miscellaneous_fee_2 || 0;
+                    document.getElementById('miscellaneousFee2').value = parseFloat(feeData.miscellaneous_fee_2 || 0).toFixed(2);
                 }
                 if (document.getElementById('miscellaneousFee3')) {
-                    document.getElementById('miscellaneousFee3').value = feeData.miscellaneous_fee_3 || 0;
+                    document.getElementById('miscellaneousFee3').value = parseFloat(feeData.miscellaneous_fee_3 || 0).toFixed(2);
                 }
 
                 // Populate existing fee management fields
@@ -756,17 +808,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Trigger calculation after loading data
                 calculateTotalFees();
-
-                // After loading fee data and updating the UI, then fetch subjects
-                // and set the previously selected subjects.
-                updateSubjects();
-
-                // Set the subjects after they are loaded
-                subject1Select.value = currentSubject1;
-                subject2Select.value = currentSubject2;
-                subject3Select.value = currentSubject3;
-                updateSubjectOptions(); // Re-apply logic to ensure uniqueness if needed
-
+                
+                console.log('Fee data loaded and populated successfully');
             }
         })
         .catch(error => {
