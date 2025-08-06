@@ -1382,12 +1382,12 @@ def api_student_fee_details(student_id):
             fee_record.installment_6 or 0
         ]
 
-        paid_amount = fee_record.calculated_total_fees_paid
+        paid_amount = float(fee_record.calculated_total_fees_paid)
         next_installment = 1
 
         # Find next available installment
         for i, amount in enumerate(installments):
-            if float(amount) == 0:
+            if float(amount or 0) == 0:
                 next_installment = i + 1
                 break
         else:
