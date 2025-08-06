@@ -43,7 +43,7 @@
                 <li class="breadcrumb-item active">{{ title }}</li>
             </ol>
         </nav>
-        
+
         <h1 class="h3 mb-4">
             <i class="fas fa-credit-card"></i> {{ title }}
         </h1>
@@ -59,7 +59,7 @@
             <div class="card-body">
                 <form method="POST" id="paymentForm">
                     {{ form.hidden_tag() }}
-                    
+
                     <!-- Student Selection -->
                     <div class="mb-4">
                         <h6 class="text-primary mb-3">Student Details</h6>
@@ -77,8 +77,9 @@
                                         <div class="col-md-6">
                                             {% if selected_fee_record %}
                                                 {% set total_paid = selected_fee_record.calculated_total_fees_paid %}
-                                                {% set due_amount = (selected_fee_record.total_fee or 0) - total_paid %}
-                                                <p><strong>Total Fees:</strong> ₹<span id="totalFees">{{ "%.2f"|format(selected_fee_record.total_fee or 0) }}</span></p>
+                                                {% set total_fee_amount = selected_fee_record.total_fee|float or 0 %}
+                                                {% set due_amount = total_fee_amount - total_paid %}
+                                                <p><strong>Total Fees:</strong> ₹<span id="totalFees">{{ "%.2f"|format(total_fee_amount) }}</span></p>
                                                 <p><strong>Paid Amount:</strong> ₹<span id="paidAmount">{{ "%.2f"|format(total_paid) }}</span></p>
                                                 <p><strong>Due Amount:</strong> ₹<span id="dueAmount">{{ "%.2f"|format(due_amount) }}</span></p>
                                             {% else %}
@@ -104,7 +105,7 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            
+
                             <!-- Student Details Display (initially hidden) -->
                             <div id="studentDetails" class="card bg-light" style="display: none;">
                                 <div class="card-body">
@@ -124,7 +125,7 @@
                             </div>
                         {% endif %}
                     </div>
-                    
+
                     <!-- Payment Details -->
                     <h6 class="text-primary mb-3">Payment Details</h6>
                     <div class="row">
@@ -140,7 +141,7 @@
                             {% endif %}
                             <small class="text-muted">Enter the amount to be paid</small>
                         </div>
-                        
+
                         <div class="col-md-6 mb-3">
                             {{ form.payment_mode.label(class="form-label") }}
                             {{ form.payment_mode(class="form-select") }}
@@ -153,7 +154,7 @@
                             {% endif %}
                         </div>
                     </div>
-                    
+
                     <!-- Additional Payment Details -->
                     <div id="additionalDetails" style="display: none;">
                         <div class="row">
@@ -161,19 +162,19 @@
                                 <label for="transactionRef" class="form-label">Transaction Reference</label>
                                 <input type="text" class="form-control" id="transactionRef" placeholder="Transaction ID / Cheque Number">
                             </div>
-                            
+
                             <div class="col-md-6 mb-3">
                                 <label for="paymentDate" class="form-label">Payment Date</label>
                                 <input type="date" class="form-control" id="paymentDate">
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="paymentRemarks" class="form-label">Remarks</label>
                             <textarea class="form-control" id="paymentRemarks" rows="2" placeholder="Additional remarks (optional)"></textarea>
                         </div>
                     </div>
-                    
+
                     <!-- Payment Summary -->
                     <div id="paymentSummary" class="card bg-light" style="display: none;">
                         <div class="card-body">
@@ -190,7 +191,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="d-flex justify-content-between mt-4">
                         <a href="{{ url_for('fees') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Back to Fee Management
@@ -203,7 +204,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-lg-4">
         <div class="card shadow">
             <div class="card-header">
@@ -217,9 +218,9 @@
                     <li><i class="fas fa-check text-info"></i> <strong>Cheque:</strong> Bank cheque</li>
                     <li><i class="fas fa-file-invoice text-warning"></i> <strong>DD:</strong> Demand Draft</li>
                 </ul>
-                
+
                 <hr>
-                
+
                 <h6>Important Notes:</h6>
                 <div class="alert alert-info">
                     <small>
@@ -231,7 +232,7 @@
                         </ul>
                     </small>
                 </div>
-                
+
                 <div class="alert alert-warning">
                     <small>
                         <strong>Scholarship Note:</strong> Government scholarship amounts do not reduce the total payment but are tracked separately.
@@ -239,7 +240,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Student's Payment History -->
         <div class="card shadow mt-4">
             <div class="card-header">
@@ -303,7 +304,7 @@ function loadStudentDetails(student = null) {
             {% if selected_fee_record %}
                 total_fee: {{ selected_fee_record.total_fee or 0 }},
                 paid_amount: {{ selected_fee_record.calculated_total_fees_paid }},
-                due_amount: {{ (selected_fee_record.total_fee or 0) - selected_fee_record.calculated_total_fees_paid }},
+                due_amount: {{ (selected_fee_record.total_fee|float or 0) - selected_fee_record.calculated_total_fees_paid }},
                 next_installment: getNextInstallmentForStudent()
             {% else %}
                 total_fee: 0,
@@ -312,14 +313,14 @@ function loadStudentDetails(student = null) {
                 next_installment: 1
             {% endif %}
         };
-        
+
         // Show additional details and payment summary
         document.getElementById('additionalDetails').style.display = 'block';
         updatePaymentSummary();
     {% else %}
         // Original functionality for manual student selection
         const studentId = document.getElementById('{{ form.student_id.id }}').value;
-        
+
         if (studentId) {
             // Fetch fee details for the student
             fetch(`/api/student-fee-details/${studentId}`)
@@ -328,7 +329,7 @@ function loadStudentDetails(student = null) {
                     if (data.success) {
                         const feeData = data.fee_data;
                         window.studentFeeData = feeData; // Store for later use
-                        
+
                         document.getElementById('studentDetails').style.display = 'block';
                         document.getElementById('studentId').textContent = data.student_unique_id || '-';
                         document.getElementById('studentName').textContent = data.student_name || '-';
@@ -336,7 +337,7 @@ function loadStudentDetails(student = null) {
                         document.getElementById('totalFees').textContent = parseFloat(feeData.total_fee || 0).toLocaleString();
                         document.getElementById('paidAmount').textContent = parseFloat(feeData.paid_amount || 0).toLocaleString();
                         document.getElementById('dueAmount').textContent = parseFloat(feeData.due_amount || 0).toLocaleString();
-                        
+
                         // Show additional details and payment summary
                         document.getElementById('additionalDetails').style.display = 'block';
                         updatePaymentSummary();
@@ -366,7 +367,7 @@ function getNextInstallmentForStudent() {
         {{ selected_fee_record.installment_5 or 0 }},
         {{ selected_fee_record.installment_6 or 0 }}
     ];
-    
+
     for (let i = 0; i < installments.length; i++) {
         if (installments[i] === 0) {
             return i + 1;
@@ -379,14 +380,14 @@ function getNextInstallmentForStudent() {
 function updatePaymentHistory(paymentHistory) {
     const paymentHistoryContainer = document.querySelector('.card:nth-last-child(1) .list-group');
     if (!paymentHistoryContainer) return;
-    
+
     paymentHistoryContainer.innerHTML = '';
-    
+
     if (paymentHistory.length === 0) {
         paymentHistoryContainer.innerHTML = '<div class="list-group-item text-muted">No payment history found</div>';
         return;
     }
-    
+
     paymentHistory.forEach(payment => {
         const paymentItem = document.createElement('div');
         paymentItem.className = 'list-group-item';
@@ -405,13 +406,13 @@ function validateAmount() {
     const amountInput = document.getElementById('{{ form.amount.id }}');
     const dueAmount = parseFloat(document.getElementById('dueAmount').textContent.replace(',', ''));
     const enteredAmount = parseFloat(amountInput.value);
-    
+
     if (enteredAmount > dueAmount) {
         amountInput.setCustomValidity('Payment amount cannot exceed due amount');
     } else {
         amountInput.setCustomValidity('');
     }
-    
+
     updatePaymentSummary();
 }
 
@@ -420,7 +421,7 @@ function updatePaymentSummary() {
     const mode = document.getElementById('{{ form.payment_mode.id }}').value;
     const dueAmount = parseFloat(document.getElementById('dueAmount').textContent.replace(',', ''));
     const paymentAmount = parseFloat(amount) || 0;
-    
+
     if (amount && mode) {
         document.getElementById('paymentSummary').style.display = 'block';
         document.getElementById('summaryAmount').textContent = paymentAmount.toLocaleString();
@@ -458,7 +459,7 @@ document.getElementById('{{ form.student_id.id }}').addEventListener('change', f
 // Initialize payment date and load student details if pre-selected
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
-    
+
     {% if selected_student %}
         // Load details for pre-selected student
         loadStudentDetails();
@@ -468,16 +469,16 @@ document.addEventListener('DOMContentLoaded', function() {
 function handlePaymentSubmission() {
     const studentId = document.getElementById('{{ form.student_id.id }}').value;
     const amount = document.getElementById('{{ form.amount.id }}').value;
-    
+
     if (!studentId || !amount) {
         alert('Please select a student and enter payment amount');
         return false;
     }
-    
+
     // Set a flag to show receipt option after form submission
     sessionStorage.setItem('showReceiptOption', 'true');
     sessionStorage.setItem('paymentStudentId', studentId);
-    
+
     return true;
 }
 
