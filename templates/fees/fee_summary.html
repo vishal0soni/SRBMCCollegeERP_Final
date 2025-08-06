@@ -1,0 +1,263 @@
+
+{% extends "base.html" %}
+
+{% block title %}Fee Summary - SRBMC ERP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="fas fa-chart-bar"></i> Fee Summary
+            </h1>
+        </div>
+    </div>
+</div>
+
+<!-- Fee Summary Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Fees Due</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">₹{{ "%.2f"|format(total_fees_due) }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Fees Collected</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">₹{{ "%.2f"|format(total_fees_collected) }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-credit-card fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Dues</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">₹{{ "%.2f"|format(total_pending_dues) }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Students with Dues</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ students_with_dues }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row">
+    <!-- Monthly Fee Collection Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Monthly Fee Collection</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyCollectionChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Mode Distribution Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Payment Mode Distribution</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="paymentModeChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Statistics -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Fee Collection by Course</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="courseFeeChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Scholarship Distribution</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="scholarshipChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Monthly Collection Chart
+    const monthlyCtx = document.getElementById('monthlyCollectionChart').getContext('2d');
+    new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: [{
+                label: 'Collection (₹)',
+                data: {{ monthly_collections | safe }},
+                borderColor: '#1cc88a',
+                backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString();
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Collection: ₹' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Payment Mode Chart
+    const paymentCtx = document.getElementById('paymentModeChart').getContext('2d');
+    new Chart(paymentCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ payment_modes | safe }},
+            datasets: [{
+                data: {{ payment_mode_counts | safe }},
+                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Course Fee Chart
+    const courseFeeCtx = document.getElementById('courseFeeChart').getContext('2d');
+    new Chart(courseFeeCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ course_names | safe }},
+            datasets: [{
+                label: 'Total Collection (₹)',
+                data: {{ course_collections | safe }},
+                backgroundColor: '#4e73df'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Scholarship Chart
+    const scholarshipCtx = document.getElementById('scholarshipChart').getContext('2d');
+    new Chart(scholarshipCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Government Scholarship', 'Meera Rebate', 'Merit Scholarship', 'Need-based Aid'],
+            datasets: [{
+                label: 'Applied',
+                data: {{ scholarship_applied | safe }},
+                backgroundColor: '#36b9cc'
+            }, {
+                label: 'Approved',
+                data: {{ scholarship_approved | safe }},
+                backgroundColor: '#1cc88a'
+            }, {
+                label: 'Granted',
+                data: {{ scholarship_granted | safe }},
+                backgroundColor: '#f6c23e'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

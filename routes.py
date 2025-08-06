@@ -1718,6 +1718,89 @@ def export_students():
     return response
 
 # Fee Detail Routes
+@app.route('/fees/summary')
+@login_required
+def fee_summary():
+    if not can_edit_module(current_user, 'fees'):
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('dashboard'))
+
+    # Calculate total fees due, collected, and pending
+    total_fees_due = db.session.query(func.sum(CollegeFees.total_fee)).scalar() or 0
+    total_fees_collected = db.session.query(
+        func.sum(
+            func.coalesce(CollegeFees.installment_1, 0) + 
+            func.coalesce(CollegeFees.installment_2, 0) + 
+            func.coalesce(CollegeFees.installment_3, 0) + 
+            func.coalesce(CollegeFees.installment_4, 0) + 
+            func.coalesce(CollegeFees.installment_5, 0) + 
+            func.coalesce(CollegeFees.installment_6, 0)
+        )
+    ).scalar() or 0
+    total_pending_dues = total_fees_due - total_fees_collected
+
+    # Students with dues
+    students_with_dues = db.session.query(func.count(CollegeFees.id)).filter(
+        (CollegeFees.installment_1 + CollegeFees.installment_2 + CollegeFees.installment_3 + 
+         CollegeFees.installment_4 + CollegeFees.installment_5 + CollegeFees.installment_6) < CollegeFees.total_fee
+    ).scalar() or 0
+
+    # Monthly collections data
+    current_year = datetime.now().year
+    monthly_collections = []
+    for month in range(1, 13):
+        monthly_total = db.session.query(
+            func.sum(Invoice.invoice_amount)
+        ).filter(
+            func.extract('month', Invoice.date_time) == month,
+            func.extract('year', Invoice.date_time) == current_year
+        ).scalar() or 0
+        monthly_collections.append(float(monthly_total))
+
+    # Payment mode distribution (mock data for now)
+    payment_modes = ['Cash', 'Online', 'Cheque', 'DD', 'Bank Transfer']
+    payment_mode_counts = [65, 25, 8, 2, 5]  # This can be made dynamic
+
+    # Course-wise fee collection
+    course_collections_data = db.session.query(
+        Student.current_course,
+        func.sum(Invoice.invoice_amount)
+    ).join(Invoice).filter(Student.current_course.isnot(None)).group_by(Student.current_course).all()
+
+    course_names = [course[0] for course in course_collections_data if course[0]]
+    course_collections = [float(course[1]) for course in course_collections_data if course[1]]
+
+    # Scholarship data
+    scholarship_applied = [
+        Student.query.filter_by(scholarship_status='Applied').count(),
+        Student.query.filter_by(rebate_meera_scholarship_status='Applied').count(),
+        25, 15  # Mock data for Merit and Need-based
+    ]
+    scholarship_approved = [
+        Student.query.filter_by(scholarship_status='Approved').count(),
+        Student.query.filter_by(rebate_meera_scholarship_status='Approved').count(),
+        20, 12  # Mock data for Merit and Need-based
+    ]
+    scholarship_granted = [
+        Student.query.filter_by(scholarship_status='Granted').count(),
+        Student.query.filter_by(rebate_meera_scholarship_status='Granted').count(),
+        18, 10  # Mock data for Merit and Need-based
+    ]
+
+    return render_template('fees/fee_summary.html',
+                         total_fees_due=total_fees_due,
+                         total_fees_collected=total_fees_collected,
+                         total_pending_dues=total_pending_dues,
+                         students_with_dues=students_with_dues,
+                         monthly_collections=monthly_collections,
+                         payment_modes=payment_modes,
+                         payment_mode_counts=payment_mode_counts,
+                         course_names=course_names,
+                         course_collections=course_collections,
+                         scholarship_applied=scholarship_applied,
+                         scholarship_approved=scholarship_approved,
+                         scholarship_granted=scholarship_granted)
+
 @app.route('/fees/view/<int:fee_id>')
 @login_required
 def view_fee_detail(fee_id):
