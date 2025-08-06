@@ -342,6 +342,8 @@ function hideSearchResults() {
 }
 
 function selectStudent(student) {
+    console.log('Selected student:', student);
+    
     // Set the student data
     document.getElementById('studentSearch').value = `${student.student_unique_id} - ${student.first_name} ${student.last_name}`;
     document.getElementById('{{ form.student_id.id }}').value = student.id;
@@ -395,35 +397,63 @@ function loadStudentDetails(student = null) {
         // Original functionality for manual student selection
         const studentId = document.getElementById('{{ form.student_id.id }}').value;
 
-        if (studentId) {
+        if (studentId && studentId !== '') {
+            console.log('Loading fee details for student ID:', studentId);
+            
+            // Show loading state
+            document.getElementById('studentDetails').style.display = 'block';
+            document.getElementById('studentId').textContent = 'Loading...';
+            document.getElementById('studentName').textContent = 'Loading...';
+            document.getElementById('studentCourse').textContent = 'Loading...';
+
             // Fetch fee details for the student
             fetch(`/api/student-fee-details/${studentId}`)
-                .then(response => response.json())
+                .then(response => {
+                    console.log('API Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('API Response data:', data);
                     if (data.success) {
                         const feeData = data.fee_data;
                         window.studentFeeData = feeData; // Store for later use
 
-                        document.getElementById('studentDetails').style.display = 'block';
+                        // Update student details display
                         document.getElementById('studentId').textContent = data.student_unique_id || '-';
                         document.getElementById('studentName').textContent = data.student_name || '-';
                         document.getElementById('studentCourse').textContent = data.student_course || '-';
-                        document.getElementById('totalFees').textContent = parseFloat(feeData.total_fee || 0).toLocaleString();
-                        document.getElementById('paidAmount').textContent = parseFloat(feeData.paid_amount || 0).toLocaleString();
-                        document.getElementById('dueAmount').textContent = parseFloat(feeData.due_amount || 0).toLocaleString();
+                        document.getElementById('totalFees').textContent = parseFloat(feeData.total_fee || 0).toLocaleString('en-IN', {minimumFractionDigits: 2});
+                        document.getElementById('paidAmount').textContent = parseFloat(feeData.paid_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2});
+                        document.getElementById('dueAmount').textContent = parseFloat(feeData.due_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2});
+
+                        // Update payment history if available
+                        if (data.payment_history) {
+                            updatePaymentHistory(data.payment_history);
+                        }
 
                         // Show additional details and payment summary
                         document.getElementById('additionalDetails').style.display = 'block';
                         updatePaymentSummary();
                     } else {
-                        alert('Error loading student fee details');
+                        console.error('API returned error:', data.error || 'Unknown error');
+                        document.getElementById('studentId').textContent = 'Error';
+                        document.getElementById('studentName').textContent = 'Error loading details';
+                        document.getElementById('studentCourse').textContent = '-';
+                        alert('Error loading student fee details: ' + (data.error || 'Unknown error'));
                     }
                 })
                 .catch(error => {
                     console.error('Error loading student details:', error);
-                    alert('Error loading student details');
+                    document.getElementById('studentId').textContent = 'Error';
+                    document.getElementById('studentName').textContent = 'Error loading details';
+                    document.getElementById('studentCourse').textContent = '-';
+                    alert('Error loading student details: ' + error.message);
                 });
         } else {
+            console.log('No student ID provided, hiding details');
             document.getElementById('studentDetails').style.display = 'none';
             document.getElementById('additionalDetails').style.display = 'none';
             document.getElementById('paymentSummary').style.display = 'none';

@@ -1360,6 +1360,9 @@ def api_student_fee_details(student_id):
         if not fee_record:
             return jsonify({
                 'success': True,
+                'student_unique_id': student.student_unique_id,
+                'student_name': f"{student.first_name} {student.last_name}",
+                'student_course': student.current_course or 'No Course Assigned',
                 'fee_data': {
                     'total_fee': 0,
                     'paid_amount': 0,
@@ -1406,6 +1409,9 @@ def api_student_fee_details(student_id):
 
         return jsonify({
             'success': True,
+            'student_unique_id': student.student_unique_id,
+            'student_name': f"{student.first_name} {student.last_name}",
+            'student_course': student.current_course or 'No Course Assigned',
             'fee_data': {
                 'total_fee': float(total_fee),
                 'paid_amount': float(paid_amount),
