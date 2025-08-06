@@ -224,6 +224,7 @@
 
                     <!-- Fee Details -->
                     <h6 class="text-primary mb-3 mt-4">Fee Details</h6>
+                    <input type="hidden" id="courseTuitionFeeInput" name="course_tuition_fee" value="0">
                     <div id="feeDetailsSection" class="card border-light">
                         <div class="card-body">
                             <div class="row">
@@ -654,7 +655,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Update course fee displays and the hidden input
                 document.getElementById('courseTuitionFee').textContent = `₹${parseFloat(feeData.course_tuition_fee || 0).toFixed(2)}`;
                 document.getElementById('courseTuitionFeeInput').value = parseFloat(feeData.course_tuition_fee || 0).toFixed(2);
-                document.getElementById('totalCourseFees').textContent = `₹${parseFloat(feeData.total_fee || 0).toFixed(2)}`;
+                
+                // Calculate and display misc fees from the fee record
+                const miscFee1 = parseFloat(feeData.miscellaneous_fee_1 || 0);
+                const miscFee2 = parseFloat(feeData.miscellaneous_fee_2 || 0);
+                const miscFee3 = parseFloat(feeData.miscellaneous_fee_3 || 0);
+                
+                document.getElementById('miscFee1').textContent = `₹${miscFee1.toFixed(2)}`;
+                document.getElementById('miscFee2').textContent = `₹${miscFee2.toFixed(2)}`;
+                document.getElementById('miscFee3').textContent = `₹${miscFee3.toFixed(2)}`;
+                document.getElementById('miscFee4').textContent = `₹0.00`; // Not used in fee record
+                document.getElementById('miscFee5').textContent = `₹0.00`; // Not used in fee record  
+                document.getElementById('miscFee6').textContent = `₹0.00`; // Not used in fee record
+                
+                // Calculate total course fees from actual fee components
+                const totalCourseFees = parseFloat(feeData.course_tuition_fee || 0) + miscFee1 + miscFee2 + miscFee3;
+                document.getElementById('totalCourseFees').textContent = `₹${totalCourseFees.toFixed(2)}`;
 
                 // Populate existing fee structure fields
                 if (document.getElementById('enrollmentFee')) {
