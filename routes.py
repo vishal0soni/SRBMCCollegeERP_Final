@@ -423,8 +423,7 @@ def add_student():
                 )
                 db.session.add(fee_record)
                 
-                # Calculate total_fee from component fees and total_fees_paid from installments sum
-                fee_record.update_total_fee()
+                # Calculate total_fees_paid from installments sum (total_fee is auto-generated)
                 fee_record.update_total_fees_paid()
 
             db.session.commit()
@@ -1624,19 +1623,8 @@ def edit_student(student_id):
                 if request.form.get('fee_miscellaneous_fee_3'):
                     fee_record.miscellaneous_fee_3 = float(request.form.get('fee_miscellaneous_fee_3', 0) or 0)
                 
-                # Calculate total_fee properly: get course details to include complete course fees
-                course_detail = CourseDetails.query.filter_by(course_full_name=student.current_course).first()
-                if course_detail:
-                    total_course_fees = float(course_detail.total_course_fees or 0)
-                    total_additional_fees = ((fee_record.enrollment_fee or 0) + (fee_record.eligibility_certificate_fee or 0) + 
-                                           (fee_record.university_affiliation_fee or 0) + (fee_record.university_sports_fee or 0) + 
-                                           (fee_record.university_development_fee or 0) + (fee_record.tc_cc_fee or 0) + 
-                                           (fee_record.miscellaneous_fee_1 or 0) + (fee_record.miscellaneous_fee_2 or 0) + 
-                                           (fee_record.miscellaneous_fee_3 or 0))
-                    fee_record.total_fee = total_course_fees + total_additional_fees
-                else:
-                    # Fallback calculation if course details not found
-                    fee_record.update_total_fee()
+                # Don't update total_fee directly as it's a generated column in the database
+                # The database will automatically calculate it from component fees
                 
                 # Always update total_fees_paid using the formula
                 fee_record.update_total_fees_paid()

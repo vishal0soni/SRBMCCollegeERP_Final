@@ -182,9 +182,10 @@ class CollegeFees(db.Model):
         self.total_fees_paid = self.calculated_total_fees_paid
     
     def update_total_fee(self):
-        """Update total_fee field to match sum of component fees"""
+        """Calculate total_fee from sum of component fees (read-only since it's a generated column)"""
+        # This method now only calculates but doesn't set the value since total_fee is generated
         calculated_fee = self.calculated_total_fee
-        self.total_fee = calculated_fee if calculated_fee is not None else 0.0
+        return calculated_fee if calculated_fee is not None else 0.0
 
 class Invoice(db.Model):
     __tablename__ = 'invoices'
