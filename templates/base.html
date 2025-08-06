@@ -86,7 +86,8 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{{ url_for('fees') }}">Fee Management</a></li>
-                            <a class="dropdown-item" href="{{ url_for('invoices') }}">Invoices</a>
+                            <li><a class="dropdown-item" href="{{ url_for('fee_summary') }}">Fee Summary</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('invoices') }}">Invoices</a></li>
                             {% if current_user.role.access_type == 'Edit' %}
                             <li><a class="dropdown-item" href="{{ url_for('payment') }}">Process Payment</a></li>
                             {% endif %}
