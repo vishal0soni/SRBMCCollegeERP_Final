@@ -94,8 +94,12 @@
                         {% else %}
                             <div class="row">
                                 <div class="col-md-12 mb-3">
-                                    {{ form.student_id.label(class="form-label") }}
-                                    {{ form.student_id(class="form-select") }}
+                                    <label for="studentSearch" class="form-label">Search Student</label>
+                                    <div class="position-relative">
+                                        <input type="text" id="studentSearch" class="form-control" placeholder="Type student name or ID to search..." autocomplete="off">
+                                        <div id="searchResults" class="dropdown-menu" style="display: none;"></div>
+                                    </div>
+                                    {{ form.student_id(style="display: none;") }}
                                     {% if form.student_id.errors %}
                                         <div class="text-danger">
                                             {% for error in form.student_id.errors %}
@@ -103,6 +107,7 @@
                                             {% endfor %}
                                         </div>
                                     {% endif %}
+                                    <small class="text-muted">Start typing to search for students by name or ID</small>
                                 </div>
                             </div>
 
@@ -278,22 +283,91 @@
 let studentsData = [];
 
 {% if not selected_student %}
-// Only enable search functionality if no student is pre-selected
+// Enable search functionality when no student is pre-selected
+let searchTimeout;
+
 function searchStudents(query) {
-    // Function kept for backward compatibility but not used when student is pre-selected
+    if (query.length < 2) {
+        hideSearchResults();
+        return;
+    }
+    
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        fetch(`/api/search-students?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displaySearchResults(data.students);
+                } else {
+                    hideSearchResults();
+                }
+            })
+            .catch(error => {
+                console.error('Error searching students:', error);
+                hideSearchResults();
+            });
+    }, 300);
 }
 
 function displaySearchResults(students) {
-    // Function kept for backward compatibility but not used when student is pre-selected
+    const resultsContainer = document.getElementById('searchResults');
+    resultsContainer.innerHTML = '';
+    
+    if (students.length === 0) {
+        resultsContainer.innerHTML = '<div class="dropdown-item text-muted">No students found</div>';
+    } else {
+        students.forEach(student => {
+            const item = document.createElement('div');
+            item.className = 'dropdown-item';
+            item.style.cursor = 'pointer';
+            item.innerHTML = `
+                <div>
+                    <strong>${student.student_unique_id}</strong> - ${student.first_name} ${student.last_name}
+                    <br>
+                    <small class="text-muted">${student.current_course}</small>
+                </div>
+            `;
+            item.addEventListener('click', () => selectStudent(student));
+            resultsContainer.appendChild(item);
+        });
+    }
+    
+    resultsContainer.style.display = 'block';
 }
 
 function hideSearchResults() {
-    // Function kept for backward compatibility but not used when student is pre-selected
+    const resultsContainer = document.getElementById('searchResults');
+    resultsContainer.style.display = 'none';
 }
 
 function selectStudent(student) {
-    // Function kept for backward compatibility but not used when student is pre-selected
+    // Set the student data
+    document.getElementById('studentSearch').value = `${student.student_unique_id} - ${student.first_name} ${student.last_name}`;
+    document.getElementById('{{ form.student_id.id }}').value = student.id;
+    
+    hideSearchResults();
+    
+    // Load student fee details
+    loadStudentDetails();
 }
+
+// Add event listeners for search functionality
+document.getElementById('studentSearch').addEventListener('input', function(e) {
+    searchStudents(e.target.value);
+});
+
+document.getElementById('studentSearch').addEventListener('blur', function() {
+    // Delay hiding to allow for click events on results
+    setTimeout(() => hideSearchResults(), 200);
+});
+
+document.getElementById('studentSearch').addEventListener('focus', function() {
+    const query = this.value;
+    if (query.length >= 2) {
+        searchStudents(query);
+    }
+});
 {% endif %}
 
 function loadStudentDetails(student = null) {
@@ -452,6 +526,9 @@ document.getElementById('{{ form.student_id.id }}').addEventListener('change', f
         document.getElementById('studentDetails').style.display = 'none';
         document.getElementById('additionalDetails').style.display = 'none';
         document.getElementById('paymentSummary').style.display = 'none';
+        
+        // Clear search input if student is deselected
+        document.getElementById('studentSearch').value = '';
     }
 });
 {% endif %}
