@@ -115,12 +115,66 @@
                     <table class="table table-bordered table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th>Invoice Number</th>
-                                <th>Student</th>
-                                <th>Date</th>
-                                <th>Amount</th>
-                                <th>Installment</th>
-                                <th>Status</th>
+                                <th>
+                                    <a href="{{ url_for('invoices', sort='invoice_number', order='desc' if request.args.get('sort') == 'invoice_number' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), date_from=request.args.get('date_from', ''), date_to=request.args.get('date_to', '')) }}" class="text-decoration-none text-dark">
+                                        Invoice Number
+                                        {% if request.args.get('sort') == 'invoice_number' %}
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('invoices', sort='student_unique_id', order='desc' if request.args.get('sort') == 'student_unique_id' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), date_from=request.args.get('date_from', ''), date_to=request.args.get('date_to', '')) }}" class="text-decoration-none text-dark">
+                                        Student
+                                        {% if request.args.get('sort') == 'student_unique_id' %}
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('invoices', sort='date_time', order='desc' if request.args.get('sort') == 'date_time' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), date_from=request.args.get('date_from', ''), date_to=request.args.get('date_to', '')) }}" class="text-decoration-none text-dark">
+                                        Date
+                                        {% if request.args.get('sort') == 'date_time' %}
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('invoices', sort='invoice_amount', order='desc' if request.args.get('sort') == 'invoice_amount' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), date_from=request.args.get('date_from', ''), date_to=request.args.get('date_to', '')) }}" class="text-decoration-none text-dark">
+                                        Amount
+                                        {% if request.args.get('sort') == 'invoice_amount' %}
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('invoices', sort='installment_number', order='desc' if request.args.get('sort') == 'installment_number' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), date_from=request.args.get('date_from', ''), date_to=request.args.get('date_to', '')) }}" class="text-decoration-none text-dark">
+                                        Installment
+                                        {% if request.args.get('sort') == 'installment_number' %}
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ url_for('invoices', sort='original_invoice_printed', order='desc' if request.args.get('sort') == 'original_invoice_printed' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), date_from=request.args.get('date_from', ''), date_to=request.args.get('date_to', '')) }}" class="text-decoration-none text-dark">
+                                        Status
+                                        {% if request.args.get('sort') == 'original_invoice_printed' %}
+                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -179,7 +233,7 @@
                     <ul class="pagination justify-content-center">
                         {% if invoices.has_prev %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('invoices', page=invoices.prev_num) }}">Previous</a>
+                                <a class="page-link" href="{{ url_for('invoices', page=invoices.prev_num, search=request.args.get('search', ''), date_from=request.args.get('date_from', ''), date_to=request.args.get('date_to', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Previous</a>
                             </li>
                         {% endif %}
 
@@ -187,7 +241,7 @@
                             {% if page_num %}
                                 {% if page_num != invoices.page %}
                                     <li class="page-item">
-                                        <a class="page-link" href="{{ url_for('invoices', page=page_num) }}">{{ page_num }}</a>
+                                        <a class="page-link" href="{{ url_for('invoices', page=page_num, search=request.args.get('search', ''), date_from=request.args.get('date_from', ''), date_to=request.args.get('date_to', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">{{ page_num }}</a>
                                     </li>
                                 {% else %}
                                     <li class="page-item active">
@@ -203,7 +257,7 @@
 
                         {% if invoices.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('invoices', page=invoices.next_num) }}">Next</a>
+                                <a class="page-link" href="{{ url_for('invoices', page=invoices.next_num, search=request.args.get('search', ''), date_from=request.args.get('date_from', ''), date_to=request.args.get('date_to', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Next</a>
                             </li>
                         {% endif %}
                     </ul>

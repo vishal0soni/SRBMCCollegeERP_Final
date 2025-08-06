@@ -1520,6 +1520,8 @@ def invoices():
     search = request.args.get('search', '')
     date_from = request.args.get('date_from', '')
     date_to = request.args.get('date_to', '')
+    sort_by = request.args.get('sort', 'date_time')
+    sort_order = request.args.get('order', 'desc')
 
     query = db.session.query(Invoice, Student).join(Student)
 
@@ -1548,8 +1550,20 @@ def invoices():
         except ValueError:
             pass
 
-    # Order by most recent first
-    query = query.order_by(Invoice.date_time.desc())
+    # Sorting
+    if hasattr(Invoice, sort_by):
+        if sort_order == 'desc':
+            query = query.order_by(getattr(Invoice, sort_by).desc())
+        else:
+            query = query.order_by(getattr(Invoice, sort_by))
+    elif hasattr(Student, sort_by):
+        if sort_order == 'desc':
+            query = query.order_by(getattr(Student, sort_by).desc())
+        else:
+            query = query.order_by(getattr(Student, sort_by))
+    else:
+        # Default ordering by date
+        query = query.order_by(Invoice.date_time.desc())
 
     invoices = query.paginate(page=page, per_page=20, error_out=False)
     return render_template('fees/invoices.html', invoices=invoices)
