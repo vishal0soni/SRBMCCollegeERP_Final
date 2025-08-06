@@ -23,72 +23,7 @@
     </div>
 </div>
 
-<!-- Fee Summary Cards -->
-<div class="row mb-4">
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Fees Due</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₹12,45,000</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Fees Collected</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₹8,75,000</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-credit-card fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Dues</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₹3,70,000</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Students with Dues</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">45</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-users fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Search and Filter Controls -->
 <div class="row mb-4">
@@ -380,30 +315,7 @@
     </div>
 </div>
 
-<!-- Fee Collection Chart -->
-<div class="row mt-4">
-    <div class="col-lg-6 mb-4">
-        <div class="card shadow">
-            <div class="card-header">
-                <h6 class="m-0 font-weight-bold text-primary">Monthly Fee Collection</h6>
-            </div>
-            <div class="card-body">
-                <canvas id="monthlyCollectionChart"></canvas>
-            </div>
-        </div>
-    </div>
 
-    <div class="col-lg-6 mb-4">
-        <div class="card shadow">
-            <div class="card-header">
-                <h6 class="m-0 font-weight-bold text-primary">Payment Mode Distribution</h6>
-            </div>
-            <div class="card-body">
-                <canvas id="paymentModeChart"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
@@ -424,56 +336,6 @@ function generateFeeStatement(studentId) {
 }
 
 
-// Monthly Collection Chart
-document.addEventListener('DOMContentLoaded', function() {
-    const monthlyCtx = document.getElementById('monthlyCollectionChart').getContext('2d');
-    new Chart(monthlyCtx, {
-        type: 'line',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            datasets: [{
-                label: 'Collection (₹)',
-                data: [45000, 52000, 48000, 61000, 55000, 67000, 72000, 58000, 64000, 70000, 0, 0],
-                borderColor: '#1cc88a',
-                backgroundColor: 'rgba(28, 200, 138, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '₹' + value.toLocaleString();
-                        }
-                    }
-                }
-            }
-        }
-    });
 
-    // Payment Mode Chart
-    const paymentCtx = document.getElementById('paymentModeChart').getContext('2d');
-    new Chart(paymentCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Cash', 'Online', 'Cheque', 'DD'],
-            datasets: [{
-                data: [65, 25, 8, 2],
-                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e']
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    });
-});
 </script>
 {% endblock %}
