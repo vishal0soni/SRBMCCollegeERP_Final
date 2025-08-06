@@ -158,7 +158,7 @@ def get_fees_export_data():
     data = []
     for fee, student in fees:
         paid_amount = fee.calculated_total_fees_paid
-        total_fee = float(fee.total_fee or 0)
+        total_fee = fee.calculated_total_fee
         due_amount = total_fee - paid_amount
 
         payment_status = 'Paid' if due_amount <= 0 else ('Partial' if paid_amount > 0 else 'Pending')

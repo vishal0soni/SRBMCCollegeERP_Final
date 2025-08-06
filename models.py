@@ -168,9 +168,22 @@ class CollegeFees(db.Model):
                     (self.installment_3 or 0) + (self.installment_4 or 0) + 
                     (self.installment_5 or 0) + (self.installment_6 or 0))
     
+    @property
+    def calculated_total_fee(self):
+        """Calculate total fee from component fees"""
+        return float((self.course_tuition_fee or 0) + (self.enrollment_fee or 0) + 
+                    (self.university_affiliation_fee or 0) + (self.university_sports_fee or 0) + 
+                    (self.university_development_fee or 0) + (self.tc_cc_fee or 0) + 
+                    (self.miscellaneous_fee_1 or 0) + (self.miscellaneous_fee_2 or 0) + 
+                    (self.miscellaneous_fee_3 or 0))
+    
     def update_total_fees_paid(self):
         """Update total_fees_paid field to match sum of installments"""
         self.total_fees_paid = self.calculated_total_fees_paid
+    
+    def update_total_fee(self):
+        """Update total_fee field to match sum of component fees"""
+        self.total_fee = self.calculated_total_fee
 
 class Invoice(db.Model):
     __tablename__ = 'invoices'

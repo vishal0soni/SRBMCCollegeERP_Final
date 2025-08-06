@@ -267,39 +267,39 @@
                                     <h6 class="text-secondary mb-3">Additional Fees</h6>
                                     <div class="mb-3">
                                         <label class="form-label">Enrollment Fee</label>
-                                        <input type="number" class="form-control additional-fee-input" id="enrollmentFee" step="0.01" value="0" data-fee="enrollment_fee">
+                                        <input type="number" step="0.01" class="form-control additional-fee-input" id="enrollmentFee" value="0" data-fee="enrollment_fee" onchange="calculateTotalFees()">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Eligibility Certificate Fee</label>
-                                        <input type="number" class="form-control additional-fee-input" id="eligibilityCertificateFee" step="0.01" value="0" data-fee="eligibility_certificate_fee">
+                                        <input type="number" step="0.01" class="form-control additional-fee-input" id="eligibilityCertificateFee" value="0" data-fee="eligibility_certificate_fee" onchange="calculateTotalFees()">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">University Affiliation Fee</label>
-                                        <input type="number" class="form-control additional-fee-input" id="universityAffiliationFee" step="0.01" value="0" data-fee="university_affiliation_fee">
+                                        <input type="number" step="0.01" class="form-control additional-fee-input" id="universityAffiliationFee" value="0" data-fee="university_affiliation_fee" onchange="calculateTotalFees()">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">University Sports Fee</label>
-                                        <input type="number" class="form-control additional-fee-input" id="universitySportsFee" step="0.01" value="0" data-fee="university_sports_fee">
+                                        <input type="number" step="0.01" class="form-control additional-fee-input" id="universitySportsFee" value="0" data-fee="university_sports_fee" onchange="calculateTotalFees()">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">University Development Fee</label>
-                                        <input type="number" class="form-control additional-fee-input" id="universityDevelopmentFee" step="0.01" value="0" data-fee="university_development_fee">
+                                        <input type="number" step="0.01" class="form-control additional-fee-input" id="universityDevelopmentFee" value="0" data-fee="university_development_fee" onchange="calculateTotalFees()">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">TC/CC Fee</label>
-                                        <input type="number" class="form-control additional-fee-input" id="tcCcFee" step="0.01" value="0" data-fee="tc_cc_fee">
+                                        <input type="number" step="0.01" class="form-control additional-fee-input" id="tcCcFee" value="0" data-fee="tc_cc_fee" onchange="calculateTotalFees()">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Miscellaneous Fee 1</label>
-                                        <input type="number" class="form-control additional-fee-input" id="miscellaneousFee1" step="0.01" value="0" data-fee="miscellaneous_fee_1">
+                                        <input type="number" step="0.01" class="form-control additional-fee-input" id="miscellaneousFee1" value="0" data-fee="miscellaneous_fee_1" onchange="calculateTotalFees()">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Miscellaneous Fee 2</label>
-                                        <input type="number" class="form-control additional-fee-input" id="miscellaneousFee2" step="0.01" value="0" data-fee="miscellaneous_fee_2">
+                                        <input type="number" step="0.01" class="form-control additional-fee-input" id="miscellaneousFee2" value="0" data-fee="miscellaneous_fee_2" onchange="calculateTotalFees()">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Miscellaneous Fee 3</label>
-                                        <input type="number" class="form-control additional-fee-input" id="miscellaneousFee3" step="0.01" value="0" data-fee="miscellaneous_fee_3">
+                                        <input type="number" step="0.01" class="form-control additional-fee-input" id="miscellaneousFee3" value="0" data-fee="miscellaneous_fee_3" onchange="calculateTotalFees()">
                                     </div>
                                     <hr>
                                     <div class="mb-2">
@@ -312,10 +312,10 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Fee Management & Scholarships -->
                             <h6 class="text-primary mb-4 mt-4">Fee Management & Scholarships</h6>
-                            
+
                             <!-- Meera Rebate Row -->
                             <div class="row align-items-center mb-3 py-2 border-bottom">
                                 <div class="col-md-3">
@@ -344,7 +344,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Government Scholarship Row -->
                             <div class="row align-items-center mb-4 py-2">
                                 <div class="col-md-3">
@@ -374,7 +374,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Payment Summary -->
                             <div class="row mb-3">
                                 <div class="col-md-6">
@@ -390,7 +390,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Other Status (Hidden by default - can be shown if needed) -->
                             <div class="collapse" id="otherStatusCollapse">
                                 <div class="row">
@@ -412,7 +412,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Toggle button for additional options -->
                             <div class="text-center">
                                 <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#otherStatusCollapse">
@@ -465,7 +465,7 @@ function updateSubjects() {
                 console.error('Error fetching subjects:', error);
             });
     }
-    
+
     // Update course fees
     updateCourseFees();
 }
@@ -474,13 +474,13 @@ function updateSubjectOptions() {
     const subject1Select = document.getElementById('{{ form.subject_1_name.id }}');
     const subject2Select = document.getElementById('{{ form.subject_2_name.id }}');
     const subject3Select = document.getElementById('{{ form.subject_3_name.id }}');
-    
+
     const selectedSubjects = [
         subject1Select.value,
         subject2Select.value,
         subject3Select.value
     ];
-    
+
     // Update each select with filtered options
     updateSingleSubjectSelect(subject1Select, selectedSubjects, 0);
     updateSingleSubjectSelect(subject2Select, selectedSubjects, 1);
@@ -489,15 +489,15 @@ function updateSubjectOptions() {
 
 function updateSingleSubjectSelect(selectElement, selectedSubjects, currentIndex) {
     const currentValue = selectElement.value;
-    
+
     // Clear options
     selectElement.innerHTML = '<option value="">Select Subject</option>';
-    
+
     // Add available subjects (excluding already selected ones)
     allSubjects.forEach(subject => {
         const isSelected = selectedSubjects.includes(subject.name) && 
                           selectedSubjects[currentIndex] !== subject.name;
-        
+
         if (!isSelected) {
             const option = new Option(subject.name, subject.name);
             if (subject.name === currentValue) {
@@ -511,14 +511,14 @@ function updateSingleSubjectSelect(selectElement, selectedSubjects, currentIndex
 function updateCourseFees() {
     const courseSelect = document.getElementById('{{ form.current_course.id }}');
     const courseName = courseSelect.value;
-    
+
     if (courseName) {
         fetch(`/api/course-fees/${encodeURIComponent(courseName)}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.fees) {
                     const fees = data.fees;
-                    
+
                     // Update course fee displays
                     document.getElementById('courseTuitionFee').textContent = `₹${parseFloat(fees.course_tuition_fee || 0).toFixed(2)}`;
                     document.getElementById('miscFee1').textContent = `₹${parseFloat(fees.misc_course_fees_1 || 0).toFixed(2)}`;
@@ -528,10 +528,13 @@ function updateCourseFees() {
                     document.getElementById('miscFee5').textContent = `₹${parseFloat(fees.misc_course_fees_5 || 0).toFixed(2)}`;
                     document.getElementById('miscFee6').textContent = `₹${parseFloat(fees.misc_course_fees_6 || 0).toFixed(2)}`;
                     document.getElementById('totalCourseFees').textContent = `₹${parseFloat(fees.total_course_fees || 0).toFixed(2)}`;
-                    
+
                     // Store course fees data for form submission
                     window.courseFees = fees;
-                    
+
+                    // Update the hidden input for course tuition fee
+                    document.getElementById('courseTuitionFeeInput').value = parseFloat(fees.course_tuition_fee || 0).toFixed(2);
+
                     calculateTotalFees();
                 } else {
                     // Clear fee displays if no course selected or error
@@ -557,36 +560,40 @@ function clearFeeDisplays() {
     document.getElementById('miscFee6').textContent = '₹0.00';
     document.getElementById('totalCourseFees').textContent = '₹0.00';
     window.courseFees = null;
+
+    // Clear the hidden input for course tuition fee
+    document.getElementById('courseTuitionFeeInput').value = '0.00';
+
     calculateTotalFees();
 }
 
 function calculateTotalFees() {
-    const courseFees = parseFloat(window.courseFees?.total_course_fees || 0);
-    
+    const courseTuitionFee = parseFloat(document.getElementById('courseTuitionFeeInput').value || 0);
+
     let additionalFees = 0;
     document.querySelectorAll('.additional-fee-input').forEach(input => {
         additionalFees += parseFloat(input.value || 0);
     });
-    
-    const grandTotal = courseFees + additionalFees;
-    
+
+    const grandTotal = courseTuitionFee + additionalFees;
+
     // Calculate amount due with Meera rebate affecting total due
     const totalFeesPaid = parseFloat(document.getElementById('totalFeesPaid')?.value || 0);
     const meeraRebateGranted = document.getElementById('meeraRebateGranted')?.checked || false;
     const meeraRebateAmount = parseFloat(document.getElementById('meeraRebateAmount')?.value || 0);
-    
+
     // Meera scholarship affects total due calculation
     let adjustedGrandTotal = grandTotal;
     if (meeraRebateGranted && meeraRebateAmount > 0) {
         adjustedGrandTotal = grandTotal - meeraRebateAmount;
     }
-    
+
     const totalAmountDue = Math.max(0, adjustedGrandTotal - totalFeesPaid);
-    
+
     // Update displays
     document.getElementById('totalAdditionalFees').textContent = `₹${additionalFees.toFixed(2)}`;
     document.getElementById('grandTotalFees').textContent = `₹${grandTotal.toFixed(2)}`;
-    
+
     // Update the total amount due field
     const totalAmountDueField = document.getElementById('totalAmountDue');
     if (totalAmountDueField) {
@@ -600,28 +607,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const subject1Select = document.getElementById('{{ form.subject_1_name.id }}');
     const subject2Select = document.getElementById('{{ form.subject_2_name.id }}');
     const subject3Select = document.getElementById('{{ form.subject_3_name.id }}');
-    
+
     // Set up event listeners
     courseSelect.addEventListener('change', function() {
         updateSubjects();
     });
-    
+
     // Set up subject change listeners to update other dropdowns
     subject1Select.addEventListener('change', updateSubjectOptions);
     subject2Select.addEventListener('change', updateSubjectOptions);
     subject3Select.addEventListener('change', updateSubjectOptions);
-    
+
     // Set up additional fee input listeners
     document.querySelectorAll('.additional-fee-input').forEach(input => {
         input.addEventListener('input', calculateTotalFees);
     });
-    
+
     // Set up new fee management field listeners
     const feeManagementFields = [
         'totalFeesPaid', 'meeraRebateGranted', 'meeraRebateAmount',
         'scholarshipGranted', 'governmentScholarshipAmount'
     ];
-    
+
     feeManagementFields.forEach(fieldId => {
         const element = document.getElementById(fieldId);
         if (element) {
@@ -629,12 +636,12 @@ document.addEventListener('DOMContentLoaded', function() {
             element.addEventListener('change', calculateTotalFees);
         }
     });
-    
+
     // Initialize if course is already selected
     if (courseSelect.value) {
         updateSubjects();
     }
-    
+
     // Load existing fee data when editing a student
     {% if student %}
     // Fetch existing fee data for student {{ student.id }}
@@ -643,19 +650,12 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success && data.fee_data) {
                 const feeData = data.fee_data;
-                
-                // Store fee data globally for calculations
-                window.courseFees = {
-                    course_tuition_fee: feeData.course_tuition_fee,
-                    misc_course_fees_1: feeData.enrollment_fee,
-                    misc_course_fees_2: feeData.eligibility_certificate_fee,
-                    misc_course_fees_3: feeData.university_affiliation_fee,
-                    misc_course_fees_4: feeData.university_sports_fee,
-                    misc_course_fees_5: feeData.university_development_fee,
-                    misc_course_fees_6: feeData.tc_cc_fee,
-                    total_course_fees: feeData.total_fee
-                };
-                
+
+                // Update course fee displays and the hidden input
+                document.getElementById('courseTuitionFee').textContent = `₹${parseFloat(feeData.course_tuition_fee || 0).toFixed(2)}`;
+                document.getElementById('courseTuitionFeeInput').value = parseFloat(feeData.course_tuition_fee || 0).toFixed(2);
+                document.getElementById('totalCourseFees').textContent = `₹${parseFloat(feeData.total_fee || 0).toFixed(2)}`;
+
                 // Populate existing fee structure fields
                 if (document.getElementById('enrollmentFee')) {
                     document.getElementById('enrollmentFee').value = feeData.enrollment_fee || 0;
@@ -684,7 +684,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (document.getElementById('miscellaneousFee3')) {
                     document.getElementById('miscellaneousFee3').value = feeData.miscellaneous_fee_3 || 0;
                 }
-                
+
                 // Populate existing fee management fields
                 if (document.getElementById('totalFeesPaid')) {
                     document.getElementById('totalFeesPaid').value = feeData.total_fees_paid || 0;
@@ -725,7 +725,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (document.getElementById('examAdmitCardIssued')) {
                     document.getElementById('examAdmitCardIssued').checked = feeData.exam_admit_card_issued || false;
                 }
-                
+
                 // Trigger calculation after loading data
                 calculateTotalFees();
             }
@@ -734,50 +734,51 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error loading existing fee data:', error);
         });
     {% endif %}
-    
+
     // Override form submission to include fee data
     const form = document.querySelector('form');
     form.addEventListener('submit', function(e) {
-        if (window.courseFees) {
-            // Add hidden inputs for fee data
-            const feeData = {
-                course_tuition_fee: window.courseFees.course_tuition_fee || 0,
-                enrollment_fee: document.getElementById('enrollmentFee').value || 0,
-                eligibility_certificate_fee: document.getElementById('eligibilityCertificateFee').value || 0,
-                university_affiliation_fee: document.getElementById('universityAffiliationFee').value || 0,
-                university_sports_fee: document.getElementById('universitySportsFee').value || 0,
-                university_development_fee: document.getElementById('universityDevelopmentFee').value || 0,
-                tc_cc_fee: document.getElementById('tcCcFee').value || 0,
-                miscellaneous_fee_1: document.getElementById('miscellaneousFee1').value || 0,
-                miscellaneous_fee_2: document.getElementById('miscellaneousFee2').value || 0,
-                miscellaneous_fee_3: document.getElementById('miscellaneousFee3').value || 0,
-                total_fee: parseFloat(document.getElementById('grandTotalFees').textContent.replace('₹', '')) || 0,
-                
-                // New fee management fields
-                total_fees_paid: document.getElementById('totalFeesPaid').value || 0,
-                meera_rebate_applied: document.getElementById('meeraRebateApplied').checked || false,
-                meera_rebate_approved: document.getElementById('meeraRebateApproved').checked || false,
-                meera_rebate_granted: document.getElementById('meeraRebateGranted').checked || false,
-                meera_rebate_amount: document.getElementById('meeraRebateAmount').value || 0,
-                scholarship_applied: document.getElementById('scholarshipApplied').checked || false,
-                scholarship_approved: document.getElementById('scholarshipApproved').checked || false,
-                scholarship_granted: document.getElementById('scholarshipGranted').checked || false,
-                government_scholarship_amount: document.getElementById('governmentScholarshipAmount').value || 0,
-                total_amount_due: document.getElementById('totalAmountDue').value || 0,
-                pending_dues_for_libraries: document.getElementById('pendingDuesLibraries').checked || false,
-                pending_dues_for_hostel: document.getElementById('pendingDuesHostel').checked || false,
-                exam_admit_card_issued: document.getElementById('examAdmitCardIssued').checked || false
-            };
-            
-            // Add hidden inputs for each fee field
-            Object.keys(feeData).forEach(key => {
-                const hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.name = `fee_${key}`;
-                hiddenInput.value = feeData[key];
-                form.appendChild(hiddenInput);
-            });
-        }
+        // Manually calculate and update the grand total before submission
+        calculateTotalFees();
+
+        // Add hidden inputs for fee data
+        const feeData = {
+            course_tuition_fee: document.getElementById('courseTuitionFeeInput').value || '0.00',
+            enrollment_fee: document.getElementById('enrollmentFee').value || '0.00',
+            eligibility_certificate_fee: document.getElementById('eligibilityCertificateFee').value || '0.00',
+            university_affiliation_fee: document.getElementById('universityAffiliationFee').value || '0.00',
+            university_sports_fee: document.getElementById('universitySportsFee').value || '0.00',
+            university_development_fee: document.getElementById('universityDevelopmentFee').value || '0.00',
+            tc_cc_fee: document.getElementById('tcCcFee').value || '0.00',
+            miscellaneous_fee_1: document.getElementById('miscellaneousFee1').value || '0.00',
+            miscellaneous_fee_2: document.getElementById('miscellaneousFee2').value || '0.00',
+            miscellaneous_fee_3: document.getElementById('miscellaneousFee3').value || '0.00',
+            total_fee: parseFloat(document.getElementById('grandTotalFees').textContent.replace('₹', '')) || 0.00,
+
+            // New fee management fields
+            total_fees_paid: document.getElementById('totalFeesPaid').value || '0.00',
+            meera_rebate_applied: document.getElementById('meeraRebateApplied').checked || false,
+            meera_rebate_approved: document.getElementById('meeraRebateApproved').checked || false,
+            meera_rebate_granted: document.getElementById('meeraRebateGranted').checked || false,
+            meera_rebate_amount: document.getElementById('meeraRebateAmount').value || '0.00',
+            scholarship_applied: document.getElementById('scholarshipApplied').checked || false,
+            scholarship_approved: document.getElementById('scholarshipApproved').checked || false,
+            scholarship_granted: document.getElementById('scholarshipGranted').checked || false,
+            government_scholarship_amount: document.getElementById('governmentScholarshipAmount').value || '0.00',
+            total_amount_due: document.getElementById('totalAmountDue').value || '0.00',
+            pending_dues_for_libraries: document.getElementById('pendingDuesLibraries').checked || false,
+            pending_dues_for_hostel: document.getElementById('pendingDuesHostel').checked || false,
+            exam_admit_card_issued: document.getElementById('examAdmitCardIssued').checked || false
+        };
+
+        // Add hidden inputs for each fee field
+        Object.keys(feeData).forEach(key => {
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = `fee_${key}`;
+            hiddenInput.value = feeData[key];
+            form.appendChild(hiddenInput);
+        });
     });
 });
 </script>

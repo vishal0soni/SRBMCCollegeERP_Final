@@ -401,7 +401,6 @@ def add_student():
                     miscellaneous_fee_1=miscellaneous_fee_1,
                     miscellaneous_fee_2=miscellaneous_fee_2,
                     miscellaneous_fee_3=miscellaneous_fee_3,
-                    total_fee=total_fee,
                     # New fee management fields
                     meera_rebate_applied=meera_rebate_applied,
                     meera_rebate_approved=meera_rebate_approved,
@@ -418,7 +417,8 @@ def add_student():
                 )
                 db.session.add(fee_record)
                 
-                # Calculate total_fees_paid from installments sum
+                # Calculate total_fee from component fees and total_fees_paid from installments sum
+                fee_record.update_total_fee()
                 fee_record.update_total_fees_paid()
 
             db.session.commit()
@@ -1617,10 +1617,8 @@ def edit_student(student_id):
                     fee_record.miscellaneous_fee_2 = float(request.form.get('fee_miscellaneous_fee_2', 0) or 0)
                 if request.form.get('fee_miscellaneous_fee_3'):
                     fee_record.miscellaneous_fee_3 = float(request.form.get('fee_miscellaneous_fee_3', 0) or 0)
-                if request.form.get('fee_total_fee'):
-                    fee_record.total_fee = float(request.form.get('fee_total_fee', 0) or 0)
-                
-                # Always update total_fees_paid using the formula
+                # Always update total_fee and total_fees_paid using the formulas
+                fee_record.update_total_fee()
                 fee_record.update_total_fees_paid()
 
             db.session.commit()
