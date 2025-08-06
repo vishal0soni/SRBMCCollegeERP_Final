@@ -569,16 +569,20 @@ function clearFeeDisplays() {
 }
 
 function calculateTotalFees() {
-    // Get the total course fees from the display (includes tuition + all misc fees)
-    const totalCourseFeesText = document.getElementById('totalCourseFees').textContent.replace('₹', '').replace(',', '');
-    const totalCourseFees = parseFloat(totalCourseFeesText || 0);
-
-    let additionalFees = 0;
+    // Calculate total fee using the same formula as database:
+    // course_tuition_fee + enrollment_fee + university_affiliation_fee + 
+    // university_sports_fee + university_development_fee + tc_cc_fee + 
+    // miscellaneous_fee_1 + miscellaneous_fee_2 + miscellaneous_fee_3
+    
+    const courseTuitionFee = parseFloat(document.getElementById('courseTuitionFeeInput')?.value || 0);
+    let componentFees = courseTuitionFee;
+    
+    // Add all additional fee components
     document.querySelectorAll('.additional-fee-input').forEach(input => {
-        additionalFees += parseFloat(input.value || 0);
+        componentFees += parseFloat(input.value || 0);
     });
 
-    const grandTotal = totalCourseFees + additionalFees;
+    const grandTotal = componentFees;
 
     // Calculate amount due with Meera rebate affecting total due
     const totalFeesPaid = parseFloat(document.getElementById('totalFeesPaid')?.value || 0);

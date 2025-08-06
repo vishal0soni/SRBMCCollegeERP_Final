@@ -373,12 +373,11 @@ def add_student():
                 miscellaneous_fee_2 = float(request.form.get('fee_miscellaneous_fee_2', 0) or 0)
                 miscellaneous_fee_3 = float(request.form.get('fee_miscellaneous_fee_3', 0) or 0)
                 
-                # Calculate total fee using complete course fees (tuition + misc) + additional fees
-                total_course_fees = float(course_detail.total_course_fees or 0)
-                total_additional_fees = (enrollment_fee + eligibility_certificate_fee + university_affiliation_fee + 
-                                       university_sports_fee + university_development_fee + tc_cc_fee + 
-                                       miscellaneous_fee_1 + miscellaneous_fee_2 + miscellaneous_fee_3)
-                total_fee = total_course_fees + total_additional_fees
+                # Note: total_fee is automatically calculated by database formula
+                # No manual calculation needed as database handles:
+                # course_tuition_fee + enrollment_fee + university_affiliation_fee + 
+                # university_sports_fee + university_development_fee + tc_cc_fee + 
+                # miscellaneous_fee_1 + miscellaneous_fee_2 + miscellaneous_fee_3
 
                 # Get new fee management fields from form - don't use form value for total_fees_paid as it's calculated
                 meera_rebate_applied = request.form.get('fee_meera_rebate_applied') == 'true'
@@ -422,9 +421,9 @@ def add_student():
                     exam_admit_card_issued=exam_admit_card_issued
                 )
                 db.session.add(fee_record)
+                db.session.flush()  # Flush to get the auto-calculated total_fee from database
                 
-                # Calculate total_fee from component fees and total_fees_paid from installments sum
-                fee_record.update_total_fee()
+                # Only update total_fees_paid from installments sum (total_fee is handled by database)
                 fee_record.update_total_fees_paid()
 
             db.session.commit()
@@ -548,7 +547,8 @@ def add_course_details():
     form.course_short_name.choices = [(c.course_short_name, f"{c.course_short_name} - {c.course_full_name}") for c in Course.query.all()]
 
     if form.validate_on_submit():
-        # Calculate total course fees
+        # Note: If total_course_fees also has a database formula, remove manual calculation
+        # Otherwise, keep the calculation for course_details table
         total_fees = (form.course_tuition_fee.data + form.misc_course_fees_1.data + 
                      form.misc_course_fees_2.data + form.misc_course_fees_3.data + 
                      form.misc_course_fees_4.data + form.misc_course_fees_5.data + 
@@ -611,7 +611,7 @@ def edit_course_details(detail_id):
     form.course_short_name.choices = [(c.course_short_name, f"{c.course_short_name} - {c.course_full_name}") for c in Course.query.all()]
 
     if form.validate_on_submit():
-        # Calculate total course fees
+        # Calculate total course fees for course_details table
         total_fees = (form.course_tuition_fee.data + form.misc_course_fees_1.data + 
                      form.misc_course_fees_2.data + form.misc_course_fees_3.data + 
                      form.misc_course_fees_4.data + form.misc_course_fees_5.data + 
@@ -1624,10 +1624,8 @@ def edit_student(student_id):
                 if request.form.get('fee_miscellaneous_fee_3'):
                     fee_record.miscellaneous_fee_3 = float(request.form.get('fee_miscellaneous_fee_3', 0) or 0)
                 
-                # Update total_fee using the model method to avoid generated column error
-                fee_record.update_total_fee()
-                
-                # Always update total_fees_paid using the formula
+                # Database automatically calculates total_fee from component fees
+                # Only update total_fees_paid using the installments formula
                 fee_record.update_total_fees_paid()
 
             db.session.commit()
