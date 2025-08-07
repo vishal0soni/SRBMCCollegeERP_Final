@@ -328,7 +328,19 @@ function displaySearchResults(students) {
                     <small class="text-muted">${student.current_course}</small>
                 </div>
             `;
-            item.addEventListener('click', () => selectStudent(student));
+            
+            // Use mousedown instead of click to prevent blur event from hiding results first
+            item.addEventListener('mousedown', (e) => {
+                e.preventDefault(); // Prevent blur event
+                selectStudent(student);
+            });
+            
+            // Also add click as fallback
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                selectStudent(student);
+            });
+            
             resultsContainer.appendChild(item);
         });
     }
@@ -348,10 +360,18 @@ function selectStudent(student) {
     document.getElementById('studentSearch').value = `${student.student_unique_id} - ${student.first_name} ${student.last_name}`;
     document.getElementById('{{ form.student_id.id }}').value = student.id;
     
+    // Hide search results immediately
     hideSearchResults();
     
-    // Directly call loadStudentDetails to ensure it works
+    // Show student details section immediately
+    const detailsDiv = document.getElementById('studentDetails');
+    detailsDiv.style.display = 'block';
+    
+    // Load student fee details
     loadStudentDetails();
+    
+    // Remove focus from search input to prevent further searching
+    document.getElementById('studentSearch').blur();
 }
 
 // Add event listeners for search functionality
@@ -361,7 +381,13 @@ document.getElementById('studentSearch').addEventListener('input', function(e) {
 
 document.getElementById('studentSearch').addEventListener('blur', function() {
     // Delay hiding to allow for click events on results
-    setTimeout(() => hideSearchResults(), 200);
+    setTimeout(() => {
+        // Only hide if no student was selected
+        const resultsContainer = document.getElementById('searchResults');
+        if (resultsContainer.style.display !== 'none') {
+            hideSearchResults();
+        }
+    }, 300);
 });
 
 document.getElementById('studentSearch').addEventListener('focus', function() {
