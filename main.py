@@ -6,7 +6,8 @@ def check_database_connection():
     try:
         from app import db
         with app.app_context():
-            db.engine.execute("SELECT 1")
+            with db.engine.connect() as connection:
+                connection.execute(db.text("SELECT 1"))
         return True
     except Exception as e:
         print(f"Database connection failed: {e}")
