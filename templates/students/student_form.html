@@ -501,7 +501,7 @@ function updateSingleSubjectSelect(selectElement, selectedSubjects, currentIndex
 
     // Add available subjects (excluding already selected ones)
     allSubjects.forEach(subject => {
-        const isSelected = selectedSubjects.includes(subject.name) && 
+        const isSelected = selectedSubjects.includes(subject.name) &&
                           selectedSubjects[currentIndex] !== subject.name;
 
         if (!isSelected) {
@@ -575,8 +575,8 @@ function clearFeeDisplays() {
 
 function calculateTotalFees() {
     // Calculate total fee using the same formula as database:
-    // course_tuition_fee + enrollment_fee + university_affiliation_fee + 
-    // university_sports_fee + university_development_fee + tc_cc_fee + 
+    // course_tuition_fee + enrollment_fee + university_affiliation_fee +
+    // university_sports_fee + university_development_fee + tc_cc_fee +
     // miscellaneous_fee_1 + miscellaneous_fee_2 + miscellaneous_fee_3
 
     const courseTuitionFee = parseFloat(document.getElementById('courseTuitionFeeInput')?.value || 0);
@@ -757,7 +757,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Trigger calculation after loading data
         calculateTotalFees();
-        
+
         console.log('Fee data populated successfully from server data');
         {% endif %}
     }
@@ -786,10 +786,10 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success && data.subjects) {
                     allSubjects = data.subjects;
-                    
+
                     // Populate subject dropdowns with available subjects
                     updateSubjectOptions();
-                    
+
                     // Set the saved subject values
                     if (currentSubject1) {
                         subject1Select.value = currentSubject1;
@@ -800,7 +800,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (currentSubject3) {
                         subject3Select.value = currentSubject3;
                     }
-                    
+
                     console.log('Subjects loaded and set successfully');
                 }
             })
@@ -811,7 +811,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Populate fee data immediately from server-side data
     populateExistingFeeData();
-    
+
     {% else %}
         // If not editing, initialize subjects based on selected course
         if (courseSelect.value) {
@@ -871,12 +871,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Get references to form elements
         const scholarshipStatusDropdown = document.getElementById('{{ form.scholarship_status.id }}');
         const meeraRebateStatusDropdown = document.getElementById('{{ form.rebate_meera_scholarship_status.id }}');
-        
+
         const scholarshipApplied = document.getElementById('scholarshipApplied');
         const scholarshipApproved = document.getElementById('scholarshipApproved');
         const scholarshipGranted = document.getElementById('scholarshipGranted');
         const governmentScholarshipAmount = document.getElementById('governmentScholarshipAmount');
-        
+
         const meeraRebateApplied = document.getElementById('meeraRebateApplied');
         const meeraRebateApproved = document.getElementById('meeraRebateApproved');
         const meeraRebateGranted = document.getElementById('meeraRebateGranted');
@@ -887,7 +887,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update checkboxes when dropdown changes
             scholarshipStatusDropdown.addEventListener('change', function() {
                 const status = this.value;
-                
+
                 if (status === 'Rejected') {
                     // Disable and uncheck all checkboxes, reset amount
                     scholarshipApplied.checked = false;
@@ -908,7 +908,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (governmentScholarshipAmount) {
                         governmentScholarshipAmount.disabled = false;
                     }
-                    
+
                     // Set appropriate checkboxes based on status
                     if (status === 'Applied') {
                         scholarshipApplied.checked = true;
@@ -965,7 +965,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update checkboxes when dropdown changes
             meeraRebateStatusDropdown.addEventListener('change', function() {
                 const status = this.value;
-                
+
                 if (status === 'Rejected') {
                     // Disable and uncheck all checkboxes, reset amount
                     meeraRebateApplied.checked = false;
@@ -986,7 +986,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (meeraRebateAmount) {
                         meeraRebateAmount.disabled = false;
                     }
-                    
+
                     // Set appropriate checkboxes based on status
                     if (status === 'Applied') {
                         meeraRebateApplied.checked = true;
@@ -1053,7 +1053,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const scholarshipApproved = document.getElementById('scholarshipApproved');
             const scholarshipGranted = document.getElementById('scholarshipGranted');
             const governmentScholarshipAmount = document.getElementById('governmentScholarshipAmount');
-            
+
             if (scholarshipApplied) scholarshipApplied.disabled = true;
             if (scholarshipApproved) scholarshipApproved.disabled = true;
             if (scholarshipGranted) scholarshipGranted.disabled = true;
@@ -1069,7 +1069,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const meeraRebateApproved = document.getElementById('meeraRebateApproved');
             const meeraRebateGranted = document.getElementById('meeraRebateGranted');
             const meeraRebateAmount = document.getElementById('meeraRebateAmount');
-            
+
             if (meeraRebateApplied) meeraRebateApplied.disabled = true;
             if (meeraRebateApproved) meeraRebateApproved.disabled = true;
             if (meeraRebateGranted) meeraRebateGranted.disabled = true;

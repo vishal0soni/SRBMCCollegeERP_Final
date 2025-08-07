@@ -5,19 +5,19 @@ from sqlalchemy import func
 
 class UserRole(db.Model):
     __tablename__ = 'user_roles'
-    
+
     role_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     role_name = db.Column(db.String(100), nullable=False, unique=True)
     role_description = db.Column(db.Text)
     access_type = db.Column(db.String(20), nullable=False)  # 'Edit' or 'Read'
     access_level = db.Column(db.Integer, nullable=False)
-    
+
     # Relationship
     users = db.relationship('UserProfile', backref='role', lazy=True)
 
 class UserProfile(UserMixin, db.Model):
     __tablename__ = 'user_profiles'
-    
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     role_id = db.Column(db.Integer, db.ForeignKey('user_roles.role_id'), nullable=False)
     first_name = db.Column(db.String(100), nullable=False)
@@ -38,20 +38,20 @@ class UserProfile(UserMixin, db.Model):
 
 class Course(db.Model):
     __tablename__ = 'courses'
-    
+
     course_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     course_short_name = db.Column(db.String(10), nullable=False, unique=True)
     course_full_name = db.Column(db.String(200), nullable=False)
     course_category = db.Column(db.String(100))
     duration = db.Column(db.Integer)  # in years
-    
+
     # Relationships
     course_details = db.relationship('CourseDetails', backref='course', lazy=True)
     subjects = db.relationship('Subject', backref='course', lazy=True)
 
 class CourseDetails(db.Model):
     __tablename__ = 'course_details'
-    
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     course_full_name = db.Column(db.String(200), nullable=False)
     course_short_name = db.Column(db.String(10), db.ForeignKey('courses.course_short_name'), nullable=False)
@@ -68,7 +68,7 @@ class CourseDetails(db.Model):
 
 class Subject(db.Model):
     __tablename__ = 'subjects'
-    
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     course_short_name = db.Column(db.String(10), db.ForeignKey('courses.course_short_name'), nullable=False)
     subject_name = db.Column(db.String(200), nullable=False)
@@ -76,7 +76,7 @@ class Subject(db.Model):
 
 class Student(db.Model):
     __tablename__ = 'students'
-    
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     student_unique_id = db.Column(db.String(20), unique=True, nullable=False)
     external_id = db.Column(db.String(50))
@@ -105,7 +105,7 @@ class Student(db.Model):
     dropout_status = db.Column(db.String(20), default='Active')  # Active, Dropout
     admission_date = db.Column(db.Date, default=datetime.utcnow().date())
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     # Relationships
     fees = db.relationship('CollegeFees', backref='student', lazy=True)
     exams = db.relationship('Exam', backref='student', lazy=True)
@@ -113,11 +113,11 @@ class Student(db.Model):
 
 class CollegeFees(db.Model):
     __tablename__ = 'college_fees'
-    
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('courses.course_id'))
-    course_tuition_fee = db.Column(db.Numeric(10, 2), default=0)
+    total_course_fees = db.Column(db.Numeric(10, 2), default=0)
     enrollment_fee = db.Column(db.Numeric(10, 2), default=0)
     eligibility_certificate_fee = db.Column(db.Numeric(10, 2), default=0)
     university_affiliation_fee = db.Column(db.Numeric(10, 2), default=0)
@@ -129,7 +129,7 @@ class CollegeFees(db.Model):
     miscellaneous_fee_3 = db.Column(db.Numeric(10, 2), default=0)
     total_fee = db.Column(db.Numeric(10, 2), default=0)
     payment_mode = db.Column(db.String(50))
-    
+
     # Installments
     installment_1 = db.Column(db.Numeric(10, 2), default=0)
     invoice1_number = db.Column(db.String(50))
@@ -143,7 +143,7 @@ class CollegeFees(db.Model):
     invoice5_number = db.Column(db.String(50))
     installment_6 = db.Column(db.Numeric(10, 2), default=0)
     invoice6_number = db.Column(db.String(50))
-    
+
     # New fields requested by user
     total_fees_paid = db.Column(db.Numeric(10, 2), default=0)
     meera_rebate_applied = db.Column(db.Boolean, default=False)
@@ -158,16 +158,16 @@ class CollegeFees(db.Model):
     pending_dues_for_libraries = db.Column(db.Boolean, default=False)
     pending_dues_for_hostel = db.Column(db.Boolean, default=False)
     exam_admit_card_issued = db.Column(db.Boolean, default=False)
-    
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     @property
     def calculated_total_fees_paid(self):
         """Calculate total fees paid from sum of all installments"""
         return float((self.installment_1 or 0) + (self.installment_2 or 0) + 
                     (self.installment_3 or 0) + (self.installment_4 or 0) + 
                     (self.installment_5 or 0) + (self.installment_6 or 0))
-    
+
     @property
     def calculated_total_fee(self):
         """Calculate total fee from component fees"""
@@ -176,14 +176,14 @@ class CollegeFees(db.Model):
                     (self.university_development_fee or 0) + (self.tc_cc_fee or 0) + 
                     (self.miscellaneous_fee_1 or 0) + (self.miscellaneous_fee_2 or 0) + 
                     (self.miscellaneous_fee_3 or 0))
-    
+
     def update_total_fees_paid(self):
         """Update total_fees_paid field - now handled by database formula"""
         # The total_fees_paid is now calculated by the database formula:
         # installment_1 + installment_2 + installment_3 + installment_4 + installment_5 + installment_6
         # No need to manually calculate as the database handles this automatically
         pass
-    
+
     def update_total_fee(self):
         """Update total_fee field to match sum of component fees - now handled by database formula"""
         # The total_fee is now calculated by the database formula:
@@ -193,7 +193,7 @@ class CollegeFees(db.Model):
 
 class Invoice(db.Model):
     __tablename__ = 'invoices'
-    
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('courses.course_id'))
@@ -205,38 +205,38 @@ class Invoice(db.Model):
 
 class Exam(db.Model):
     __tablename__ = 'exams'
-    
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('courses.course_id'))
     semester = db.Column(db.String(20))
     exam_name = db.Column(db.String(100), nullable=False)
-    
+
     # Subject marks (up to 6 subjects)
     subject1_name = db.Column(db.String(200))
     subject1_max_marks = db.Column(db.Integer, default=100)
     subject1_obtained_marks = db.Column(db.Integer, default=0)
-    
+
     subject2_name = db.Column(db.String(200))
     subject2_max_marks = db.Column(db.Integer, default=100)
     subject2_obtained_marks = db.Column(db.Integer, default=0)
-    
+
     subject3_name = db.Column(db.String(200))
     subject3_max_marks = db.Column(db.Integer, default=100)
     subject3_obtained_marks = db.Column(db.Integer, default=0)
-    
+
     subject4_name = db.Column(db.String(200))
     subject4_max_marks = db.Column(db.Integer, default=100)
     subject4_obtained_marks = db.Column(db.Integer, default=0)
-    
+
     subject5_name = db.Column(db.String(200))
     subject5_max_marks = db.Column(db.Integer, default=100)
     subject5_obtained_marks = db.Column(db.Integer, default=0)
-    
+
     subject6_name = db.Column(db.String(200))
     subject6_max_marks = db.Column(db.Integer, default=100)
     subject6_obtained_marks = db.Column(db.Integer, default=0)
-    
+
     total_max_marks = db.Column(db.Integer, default=0)
     total_obtained_marks = db.Column(db.Integer, default=0)
     percentage = db.Column(db.Numeric(5, 2), default=0)

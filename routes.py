@@ -361,8 +361,8 @@ def add_student():
             course_detail = CourseDetails.query.filter_by(course_full_name=form.current_course.data).first()
 
             if course and course_detail:
-                # Get fee data from form (submitted via JavaScript)
-                course_tuition_fee = float(request.form.get('fee_course_tuition_fee', course_detail.course_tuition_fee) or 0)
+                # Get fee data from form (submitted via JavaScript) - use total_course_fees from course_details
+                total_course_fees = float(request.form.get('fee_total_course_fees', course_detail.total_course_fees) or 0)
                 enrollment_fee = float(request.form.get('fee_enrollment_fee', 0) or 0)
                 eligibility_certificate_fee = float(request.form.get('fee_eligibility_certificate_fee', 0) or 0)
                 university_affiliation_fee = float(request.form.get('fee_university_affiliation_fee', 0) or 0)
@@ -417,7 +417,7 @@ def add_student():
                 fee_record = CollegeFees(
                     student_id=student.id,
                     course_id=course.course_id,
-                    course_tuition_fee=course_tuition_fee,
+                    total_course_fees=total_course_fees,
                     enrollment_fee=enrollment_fee,
                     eligibility_certificate_fee=eligibility_certificate_fee,
                     university_affiliation_fee=university_affiliation_fee,
@@ -608,7 +608,7 @@ def add_course_details():
             if course:
                 existing_fees = CollegeFees.query.filter_by(course_id=course.course_id).all()
                 for fee_record in existing_fees:
-                    fee_record.course_tuition_fee = total_fees
+                    fee_record.total_course_fees = total_fees
                     fee_record.total_fee = total_fees
 
             db.session.commit()
@@ -1554,7 +1554,7 @@ def api_student_fee_details(student_id):
                 'pending_dues_for_hostel': fee_record.pending_dues_for_hostel or False,
                 'exam_admit_card_issued': fee_record.exam_admit_card_issued or False,
                 # Existing fee structure fields
-                'course_tuition_fee': float(fee_record.course_tuition_fee or 0),
+                'total_course_fees': float(fee_record.total_course_fees or 0),
                 'enrollment_fee': float(fee_record.enrollment_fee or 0),
                 'eligibility_certificate_fee': float(fee_record.eligibility_certificate_fee or 0),
                 'university_affiliation_fee': float(fee_record.university_affiliation_fee or 0),
@@ -1810,8 +1810,8 @@ def edit_student(student_id):
                 fee_record.exam_admit_card_issued = request.form.get('fee_exam_admit_card_issued') == 'true'
 
                 # Update other fee fields if provided
-                if request.form.get('fee_course_tuition_fee'):
-                    fee_record.course_tuition_fee = float(request.form.get('fee_course_tuition_fee', 0) or 0)
+                if request.form.get('fee_total_course_fees'):
+                    fee_record.total_course_fees = float(request.form.get('fee_total_course_fees', 0) or 0)
                 if request.form.get('fee_enrollment_fee'):
                     fee_record.enrollment_fee = float(request.form.get('fee_enrollment_fee', 0) or 0)
                 if request.form.get('fee_eligibility_certificate_fee'):
