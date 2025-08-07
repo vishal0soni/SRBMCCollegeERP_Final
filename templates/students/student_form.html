@@ -714,9 +714,14 @@ document.addEventListener('DOMContentLoaded', function() {
         {% if fee_record %}
         console.log('Populating existing fee data:', existingFeeData);
 
-        // Update course fee displays and the hidden input
-        document.getElementById('courseTuitionFee').textContent = `₹${parseFloat(existingFeeData.total_course_fees).toFixed(2)}`;
-        document.getElementById('courseTuitionFeeInput').value = parseFloat(existingFeeData.total_course_fees).toFixed(2);
+        // Update course fee displays and the hidden input - use course_tuition_fee from course_details, not fee record
+        {% if course_detail %}
+        document.getElementById('courseTuitionFee').textContent = `₹${parseFloat(existingCourseData.course_tuition_fee).toFixed(2)}`;
+        document.getElementById('courseTuitionFeeInput').value = parseFloat(existingCourseData.course_tuition_fee).toFixed(2);
+        {% else %}
+        document.getElementById('courseTuitionFee').textContent = `₹0.00`;
+        document.getElementById('courseTuitionFeeInput').value = '0.00';
+        {% endif %}
 
         // Update misc fees from course details if available
         {% if course_detail %}
