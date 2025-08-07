@@ -1812,6 +1812,9 @@ def edit_student(student_id):
                 # Update other fee fields if provided
                 if request.form.get('fee_total_course_fees'):
                     fee_record.total_course_fees = float(request.form.get('fee_total_course_fees', 0) or 0)
+                # Handle course_tuition_fee form data and map it to total_course_fees
+                if request.form.get('fee_course_tuition_fee'):
+                    fee_record.total_course_fees = float(request.form.get('fee_course_tuition_fee', 0) or 0)
                 if request.form.get('fee_enrollment_fee'):
                     fee_record.enrollment_fee = float(request.form.get('fee_enrollment_fee', 0) or 0)
                 if request.form.get('fee_eligibility_certificate_fee'):

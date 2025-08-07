@@ -596,7 +596,7 @@ function calculateTotalFees() {
     // Note: totalFeesPaid is now auto-calculated by database, so we use the displayed value
     const totalFeesPaid = parseFloat(document.getElementById('totalFeesPaid')?.value || 0);
     const meeraRebateGranted = document.getElementById('meeraRebateGranted')?.checked || false;
-    const meeraRebateAmount = parseFloat(document.getElementById('meeraRebateAmount')?.value || 0);
+    const meeraRebateAmount = parseFloat(document.getElementById('meeraRebateAmount').value || 0);
 
     // Meera scholarship affects total due calculation
     let adjustedGrandTotal = grandTotal;
@@ -715,8 +715,8 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Populating existing fee data:', existingFeeData);
 
         // Update course fee displays and the hidden input
-        document.getElementById('courseTuitionFee').textContent = `₹${parseFloat(existingFeeData.course_tuition_fee).toFixed(2)}`;
-        document.getElementById('courseTuitionFeeInput').value = parseFloat(existingFeeData.course_tuition_fee).toFixed(2);
+        document.getElementById('courseTuitionFee').textContent = `₹${parseFloat(existingFeeData.total_course_fees).toFixed(2)}`;
+        document.getElementById('courseTuitionFeeInput').value = parseFloat(existingFeeData.total_course_fees).toFixed(2);
 
         // Update misc fees from course details if available
         {% if course_detail %}
