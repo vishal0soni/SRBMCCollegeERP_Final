@@ -388,6 +388,27 @@ def add_student():
                 scholarship_approved = request.form.get('fee_scholarship_approved') == 'true'
                 scholarship_granted = request.form.get('fee_scholarship_granted') == 'true'
                 government_scholarship_amount = float(request.form.get('fee_government_scholarship_amount', 0) or 0)
+
+                # Synchronize student dropdown values with checkbox states
+                if meera_rebate_granted:
+                    student.rebate_meera_scholarship_status = 'Granted'
+                elif meera_rebate_approved:
+                    student.rebate_meera_scholarship_status = 'Approved'
+                elif meera_rebate_applied:
+                    student.rebate_meera_scholarship_status = 'Applied'
+                elif student.rebate_meera_scholarship_status == 'Rejected':
+                    # If rejected, ensure amount is 0
+                    meera_rebate_amount = 0
+
+                if scholarship_granted:
+                    student.scholarship_status = 'Granted'
+                elif scholarship_approved:
+                    student.scholarship_status = 'Approved'
+                elif scholarship_applied:
+                    student.scholarship_status = 'Applied'
+                elif student.scholarship_status == 'Rejected':
+                    # If rejected, ensure amount is 0
+                    government_scholarship_amount = 0
                 total_amount_due = float(request.form.get('fee_total_amount_due', 0) or 0)
                 pending_dues_for_libraries = request.form.get('fee_pending_dues_for_libraries') == 'true'
                 pending_dues_for_hostel = request.form.get('fee_pending_dues_for_hostel') == 'true'
@@ -1743,15 +1764,46 @@ def edit_student(student_id):
             # Update fee record if fee data is provided
             fee_record = CollegeFees.query.filter_by(student_id=student.id).first()
             if fee_record:
+                # Get checkbox states
+                meera_rebate_applied = request.form.get('fee_meera_rebate_applied') == 'true'
+                meera_rebate_approved = request.form.get('fee_meera_rebate_approved') == 'true'
+                meera_rebate_granted = request.form.get('fee_meera_rebate_granted') == 'true'
+                meera_rebate_amount = float(request.form.get('fee_meera_rebate_amount', fee_record.meera_rebate_amount) or 0)
+                scholarship_applied = request.form.get('fee_scholarship_applied') == 'true'
+                scholarship_approved = request.form.get('fee_scholarship_approved') == 'true'
+                scholarship_granted = request.form.get('fee_scholarship_granted') == 'true'
+                government_scholarship_amount = float(request.form.get('fee_government_scholarship_amount', fee_record.government_scholarship_amount) or 0)
+
+                # Synchronize student dropdown values with checkbox states
+                if meera_rebate_granted:
+                    student.rebate_meera_scholarship_status = 'Granted'
+                elif meera_rebate_approved:
+                    student.rebate_meera_scholarship_status = 'Approved'  
+                elif meera_rebate_applied:
+                    student.rebate_meera_scholarship_status = 'Applied'
+                elif student.rebate_meera_scholarship_status == 'Rejected':
+                    # If rejected, ensure amount is 0
+                    meera_rebate_amount = 0
+
+                if scholarship_granted:
+                    student.scholarship_status = 'Granted'
+                elif scholarship_approved:
+                    student.scholarship_status = 'Approved'
+                elif scholarship_applied:
+                    student.scholarship_status = 'Applied'
+                elif student.scholarship_status == 'Rejected':
+                    # If rejected, ensure amount is 0
+                    government_scholarship_amount = 0
+
                 # Update existing fee record with new fee management fields
-                fee_record.meera_rebate_applied = request.form.get('fee_meera_rebate_applied') == 'true'
-                fee_record.meera_rebate_approved = request.form.get('fee_meera_rebate_approved') == 'true'
-                fee_record.meera_rebate_granted = request.form.get('fee_meera_rebate_granted') == 'true'
-                fee_record.meera_rebate_amount = float(request.form.get('fee_meera_rebate_amount', fee_record.meera_rebate_amount) or 0)
-                fee_record.scholarship_applied = request.form.get('fee_scholarship_applied') == 'true'
-                fee_record.scholarship_approved = request.form.get('fee_scholarship_approved') == 'true'
-                fee_record.scholarship_granted = request.form.get('fee_scholarship_granted') == 'true'
-                fee_record.government_scholarship_amount = float(request.form.get('fee_government_scholarship_amount', fee_record.government_scholarship_amount) or 0)
+                fee_record.meera_rebate_applied = meera_rebate_applied
+                fee_record.meera_rebate_approved = meera_rebate_approved
+                fee_record.meera_rebate_granted = meera_rebate_granted
+                fee_record.meera_rebate_amount = meera_rebate_amount
+                fee_record.scholarship_applied = scholarship_applied
+                fee_record.scholarship_approved = scholarship_approved
+                fee_record.scholarship_granted = scholarship_granted
+                fee_record.government_scholarship_amount = government_scholarship_amount
                 fee_record.total_amount_due = float(request.form.get('fee_total_amount_due', fee_record.total_amount_due) or 0)
                 fee_record.pending_dues_for_libraries = request.form.get('fee_pending_dues_for_libraries') == 'true'
                 fee_record.pending_dues_for_hostel = request.form.get('fee_pending_dues_for_hostel') == 'true'

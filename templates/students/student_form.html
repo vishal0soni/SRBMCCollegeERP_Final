@@ -653,6 +653,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Set up synchronization between checkboxes and dropdowns
+    setupScholarshipSynchronization();
+
     // Load existing data when editing a student
     {% if student %}
     // Store current subject selections to restore after course is loaded
@@ -862,6 +865,220 @@ document.addEventListener('DOMContentLoaded', function() {
             form.appendChild(hiddenInput);
         });
     });
+
+    // Function to setup synchronization between checkboxes and dropdowns
+    function setupScholarshipSynchronization() {
+        // Get references to form elements
+        const scholarshipStatusDropdown = document.getElementById('{{ form.scholarship_status.id }}');
+        const meeraRebateStatusDropdown = document.getElementById('{{ form.rebate_meera_scholarship_status.id }}');
+        
+        const scholarshipApplied = document.getElementById('scholarshipApplied');
+        const scholarshipApproved = document.getElementById('scholarshipApproved');
+        const scholarshipGranted = document.getElementById('scholarshipGranted');
+        const governmentScholarshipAmount = document.getElementById('governmentScholarshipAmount');
+        
+        const meeraRebateApplied = document.getElementById('meeraRebateApplied');
+        const meeraRebateApproved = document.getElementById('meeraRebateApproved');
+        const meeraRebateGranted = document.getElementById('meeraRebateGranted');
+        const meeraRebateAmount = document.getElementById('meeraRebateAmount');
+
+        // Government Scholarship synchronization
+        if (scholarshipStatusDropdown && scholarshipApplied && scholarshipApproved && scholarshipGranted) {
+            // Update checkboxes when dropdown changes
+            scholarshipStatusDropdown.addEventListener('change', function() {
+                const status = this.value;
+                
+                if (status === 'Rejected') {
+                    // Disable and uncheck all checkboxes, reset amount
+                    scholarshipApplied.checked = false;
+                    scholarshipApproved.checked = false;
+                    scholarshipGranted.checked = false;
+                    scholarshipApplied.disabled = true;
+                    scholarshipApproved.disabled = true;
+                    scholarshipGranted.disabled = true;
+                    if (governmentScholarshipAmount) {
+                        governmentScholarshipAmount.value = '0';
+                        governmentScholarshipAmount.disabled = true;
+                    }
+                } else {
+                    // Enable checkboxes
+                    scholarshipApplied.disabled = false;
+                    scholarshipApproved.disabled = false;
+                    scholarshipGranted.disabled = false;
+                    if (governmentScholarshipAmount) {
+                        governmentScholarshipAmount.disabled = false;
+                    }
+                    
+                    // Set appropriate checkboxes based on status
+                    if (status === 'Applied') {
+                        scholarshipApplied.checked = true;
+                        scholarshipApproved.checked = false;
+                        scholarshipGranted.checked = false;
+                    } else if (status === 'Approved') {
+                        scholarshipApplied.checked = true;
+                        scholarshipApproved.checked = true;
+                        scholarshipGranted.checked = false;
+                    } else if (status === 'Granted') {
+                        scholarshipApplied.checked = true;
+                        scholarshipApproved.checked = true;
+                        scholarshipGranted.checked = true;
+                    }
+                }
+                calculateTotalFees();
+            });
+
+            // Update dropdown when "Granted" checkbox is checked
+            scholarshipGranted.addEventListener('change', function() {
+                if (this.checked) {
+                    scholarshipStatusDropdown.value = 'Granted';
+                    scholarshipApplied.checked = true;
+                    scholarshipApproved.checked = true;
+                }
+                calculateTotalFees();
+            });
+
+            // Ensure consistency when other checkboxes are unchecked
+            scholarshipApproved.addEventListener('change', function() {
+                if (!this.checked) {
+                    scholarshipGranted.checked = false;
+                    if (scholarshipStatusDropdown.value === 'Granted') {
+                        scholarshipStatusDropdown.value = 'Applied';
+                    }
+                }
+                calculateTotalFees();
+            });
+
+            scholarshipApplied.addEventListener('change', function() {
+                if (!this.checked) {
+                    scholarshipApproved.checked = false;
+                    scholarshipGranted.checked = false;
+                    if (scholarshipStatusDropdown.value === 'Granted' || scholarshipStatusDropdown.value === 'Approved') {
+                        scholarshipStatusDropdown.value = '';
+                    }
+                }
+                calculateTotalFees();
+            });
+        }
+
+        // Meera Rebate synchronization
+        if (meeraRebateStatusDropdown && meeraRebateApplied && meeraRebateApproved && meeraRebateGranted) {
+            // Update checkboxes when dropdown changes
+            meeraRebateStatusDropdown.addEventListener('change', function() {
+                const status = this.value;
+                
+                if (status === 'Rejected') {
+                    // Disable and uncheck all checkboxes, reset amount
+                    meeraRebateApplied.checked = false;
+                    meeraRebateApproved.checked = false;
+                    meeraRebateGranted.checked = false;
+                    meeraRebateApplied.disabled = true;
+                    meeraRebateApproved.disabled = true;
+                    meeraRebateGranted.disabled = true;
+                    if (meeraRebateAmount) {
+                        meeraRebateAmount.value = '0';
+                        meeraRebateAmount.disabled = true;
+                    }
+                } else {
+                    // Enable checkboxes
+                    meeraRebateApplied.disabled = false;
+                    meeraRebateApproved.disabled = false;
+                    meeraRebateGranted.disabled = false;
+                    if (meeraRebateAmount) {
+                        meeraRebateAmount.disabled = false;
+                    }
+                    
+                    // Set appropriate checkboxes based on status
+                    if (status === 'Applied') {
+                        meeraRebateApplied.checked = true;
+                        meeraRebateApproved.checked = false;
+                        meeraRebateGranted.checked = false;
+                    } else if (status === 'Approved') {
+                        meeraRebateApplied.checked = true;
+                        meeraRebateApproved.checked = true;
+                        meeraRebateGranted.checked = false;
+                    } else if (status === 'Granted') {
+                        meeraRebateApplied.checked = true;
+                        meeraRebateApproved.checked = true;
+                        meeraRebateGranted.checked = true;
+                    }
+                }
+                calculateTotalFees();
+            });
+
+            // Update dropdown when "Granted" checkbox is checked
+            meeraRebateGranted.addEventListener('change', function() {
+                if (this.checked) {
+                    meeraRebateStatusDropdown.value = 'Granted';
+                    meeraRebateApplied.checked = true;
+                    meeraRebateApproved.checked = true;
+                }
+                calculateTotalFees();
+            });
+
+            // Ensure consistency when other checkboxes are unchecked
+            meeraRebateApproved.addEventListener('change', function() {
+                if (!this.checked) {
+                    meeraRebateGranted.checked = false;
+                    if (meeraRebateStatusDropdown.value === 'Granted') {
+                        meeraRebateStatusDropdown.value = 'Applied';
+                    }
+                }
+                calculateTotalFees();
+            });
+
+            meeraRebateApplied.addEventListener('change', function() {
+                if (!this.checked) {
+                    meeraRebateApproved.checked = false;
+                    meeraRebateGranted.checked = false;
+                    if (meeraRebateStatusDropdown.value === 'Granted' || meeraRebateStatusDropdown.value === 'Approved') {
+                        meeraRebateStatusDropdown.value = '';
+                    }
+                }
+                calculateTotalFees();
+            });
+        }
+
+        // Initialize states based on existing data
+        initializeScholarshipStates();
+    }
+
+    // Function to initialize scholarship states on page load
+    function initializeScholarshipStates() {
+        const scholarshipStatusDropdown = document.getElementById('{{ form.scholarship_status.id }}');
+        const meeraRebateStatusDropdown = document.getElementById('{{ form.rebate_meera_scholarship_status.id }}');
+
+        // Initialize government scholarship state
+        if (scholarshipStatusDropdown && scholarshipStatusDropdown.value === 'Rejected') {
+            const scholarshipApplied = document.getElementById('scholarshipApplied');
+            const scholarshipApproved = document.getElementById('scholarshipApproved');
+            const scholarshipGranted = document.getElementById('scholarshipGranted');
+            const governmentScholarshipAmount = document.getElementById('governmentScholarshipAmount');
+            
+            if (scholarshipApplied) scholarshipApplied.disabled = true;
+            if (scholarshipApproved) scholarshipApproved.disabled = true;
+            if (scholarshipGranted) scholarshipGranted.disabled = true;
+            if (governmentScholarshipAmount) {
+                governmentScholarshipAmount.disabled = true;
+                governmentScholarshipAmount.value = '0';
+            }
+        }
+
+        // Initialize Meera rebate state
+        if (meeraRebateStatusDropdown && meeraRebateStatusDropdown.value === 'Rejected') {
+            const meeraRebateApplied = document.getElementById('meeraRebateApplied');
+            const meeraRebateApproved = document.getElementById('meeraRebateApproved');
+            const meeraRebateGranted = document.getElementById('meeraRebateGranted');
+            const meeraRebateAmount = document.getElementById('meeraRebateAmount');
+            
+            if (meeraRebateApplied) meeraRebateApplied.disabled = true;
+            if (meeraRebateApproved) meeraRebateApproved.disabled = true;
+            if (meeraRebateGranted) meeraRebateGranted.disabled = true;
+            if (meeraRebateAmount) {
+                meeraRebateAmount.disabled = true;
+                meeraRebateAmount.value = '0';
+            }
+        }
+    }
 });
 </script>
 {% endblock %}
