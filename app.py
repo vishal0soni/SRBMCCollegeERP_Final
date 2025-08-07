@@ -25,6 +25,13 @@ def create_app():
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "pool_recycle": 300,
         "pool_pre_ping": True,
+        "pool_timeout": 20,
+        "pool_size": 10,
+        "max_overflow": 0,
+        "connect_args": {
+            "connect_timeout": 10,
+            "application_name": "SRBMC_ERP"
+        }
     }
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     
@@ -52,11 +59,15 @@ def create_app():
         # Import models to ensure tables are created
         from models import UserProfile, UserRole, Student, Course, CourseDetails, Subject, CollegeFees, Invoice, Exam
         
-        # Create database tables
-        db.create_all()
-        
-        # Create default roles and users
-        create_default_data()
+        try:
+            # Create database tables
+            db.create_all()
+            
+            # Create default roles and users
+            create_default_data()
+        except Exception as e:
+            print(f"Database initialization error: {e}")
+            print("Please check your database connection and try again.")
     
     return app
 
