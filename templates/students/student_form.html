@@ -202,24 +202,24 @@
                     <!-- Additional Information -->
                     <h6 class="text-primary mb-3 mt-4">Additional Information</h6>
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-6 mb-3">
                             {{ form.aadhaar_card_number.label(class="form-label") }}
                             {{ form.aadhaar_card_number(class="form-control") }}
                         </div>
 
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-6 mb-3">
                             {{ form.apaar_id.label(class="form-label") }}
                             {{ form.apaar_id(class="form-control") }}
                             <small class="text-muted">Automated Permanent Academic Account Registry ID</small>
                         </div>
-
-                        <div class="col-md-4 mb-3">
-                            {{ form.scholarship_status.label(class="form-label") }}
-                            {{ form.scholarship_status(class="form-select") }}
-                        </div>
                     </div>
 
                     <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.scholarship_status.label(class="form-label") }}
+                            {{ form.scholarship_status(class="form-select") }}
+                        </div>
+
                         <div class="col-md-6 mb-3">
                             {{ form.rebate_meera_scholarship_status.label(class="form-label") }}
                             {{ form.rebate_meera_scholarship_status(class="form-select") }}

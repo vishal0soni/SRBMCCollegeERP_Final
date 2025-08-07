@@ -47,8 +47,8 @@ class StudentForm(FlaskForm):
     aadhaar_card_number = StringField('Aadhaar Number', validators=[Optional(), Length(max=20)])
     apaar_id = StringField('APAAR ID', validators=[Optional(), Length(max=20)])
     school_name = StringField('School Name', validators=[Optional(), Length(max=200)])
-    scholarship_status = SelectField('Government Scholarship', choices=[('Applied', 'Applied'), ('Approved', 'Approved'), ('Rejected', 'Rejected')])
-    rebate_meera_scholarship_status = SelectField('Meera Rebate', choices=[('Applied', 'Applied'), ('Approved', 'Approved'), ('Rejected', 'Rejected')])
+    scholarship_status = SelectField('Government Scholarship', choices=[('Applied', 'Applied'), ('Approved', 'Approved'), ('Rejected', 'Rejected'), ('Granted', 'Granted')])
+    rebate_meera_scholarship_status = SelectField('Meera Rebate', choices=[('Applied', 'Applied'), ('Approved', 'Approved'), ('Rejected', 'Rejected'), ('Granted', 'Granted')])
     admission_date = DateField('Admission Date', validators=[DataRequired()])
     submit = SubmitField('Save Student')
 
