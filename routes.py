@@ -1784,6 +1784,13 @@ def edit_student(student_id):
             # Update fee record if fee data is provided
             fee_record = CollegeFees.query.filter_by(student_id=student.id).first()
             if fee_record:
+                # Synchronize total_course_fees from course_details if course has changed
+                if student.current_course:
+                    course_detail = CourseDetails.query.filter_by(course_full_name=student.current_course).first()
+                    if course_detail:
+                        # Update total_course_fees from course_details to ensure consistency
+                        fee_record.total_course_fees = float(course_detail.total_course_fees or 0)
+
                 # Get checkbox states
                 meera_rebate_applied = request.form.get('fee_meera_rebate_applied') == 'true'
                 meera_rebate_approved = request.form.get('fee_meera_rebate_approved') == 'true'
@@ -1829,12 +1836,7 @@ def edit_student(student_id):
                 fee_record.pending_dues_for_hostel = request.form.get('fee_pending_dues_for_hostel') == 'true'
                 fee_record.exam_admit_card_issued = request.form.get('fee_exam_admit_card_issued') == 'true'
 
-                # Update other fee fields if provided
-                if request.form.get('fee_total_course_fees'):
-                    fee_record.total_course_fees = float(request.form.get('fee_total_course_fees', 0) or 0)
-                # Handle course_tuition_fee form data and map it to total_course_fees
-                # if request.form.get('fee_course_tuition_fee'):
-                #    fee_record.total_course_fees = float(request.form.get('fee_course_tuition_fee', 0) or 0)
+                # Update other fee fields if provided - but don't override total_course_fees from form
                 if request.form.get('fee_enrollment_fee'):
                     fee_record.enrollment_fee = float(request.form.get('fee_enrollment_fee', 0) or 0)
                 if request.form.get('fee_eligibility_certificate_fee'):
