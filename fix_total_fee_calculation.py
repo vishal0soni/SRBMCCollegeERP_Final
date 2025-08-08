@@ -32,10 +32,11 @@ def _fix_total_fee_calculation_logic(db, CollegeFees):
             # Calculate total_fee manually using the same formula as frontend
             old_total = float(fee_record.total_fee or 0)
             
-            # Calculate new total using all fee components
+            # Calculate new total using all fee components including eligibility_certificate_fee
             new_total = (
                 float(fee_record.total_course_fees or 0) +
                 float(fee_record.enrollment_fee or 0) +
+                float(fee_record.eligibility_certificate_fee or 0) +
                 float(fee_record.university_affiliation_fee or 0) +
                 float(fee_record.university_sports_fee or 0) +
                 float(fee_record.university_development_fee or 0) +

@@ -575,9 +575,9 @@ function clearFeeDisplays() {
 
 function calculateTotalFees() {
     // Calculate total fee using the same formula as database:
-    // course_tuition_fee + enrollment_fee + university_affiliation_fee +
-    // university_sports_fee + university_development_fee + tc_cc_fee +
-    // miscellaneous_fee_1 + miscellaneous_fee_2 + miscellaneous_fee_3
+    // total_course_fees + enrollment_fee + eligibility_certificate_fee +
+    // university_affiliation_fee + university_sports_fee + university_development_fee + 
+    // tc_cc_fee + miscellaneous_fee_1 + miscellaneous_fee_2 + miscellaneous_fee_3
 
     const courseTuitionFee = parseFloat(document.getElementById('courseTuitionFeeInput')?.value || 0);
     let componentFees = courseTuitionFee;

@@ -387,9 +387,9 @@ def add_student():
 
                 # Note: total_fee is automatically calculated by database formula
                 # No manual calculation needed as database handles:
-                # course_tuition_fee + enrollment_fee + university_affiliation_fee + 
-                # university_sports_fee + university_development_fee + tc_cc_fee + 
-                # miscellaneous_fee_1 + miscellaneous_fee_2 + miscellaneous_fee_3
+                # total_course_fees + enrollment_fee + eligibility_certificate_fee +
+                # university_affiliation_fee + university_sports_fee + university_development_fee + 
+                # tc_cc_fee + miscellaneous_fee_1 + miscellaneous_fee_2 + miscellaneous_fee_3
 
                 # Get new fee management fields from form - don't use form value for total_fees_paid as it's calculated
                 meera_rebate_applied = request.form.get('fee_meera_rebate_applied') == 'true'

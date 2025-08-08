@@ -170,12 +170,12 @@ class CollegeFees(db.Model):
 
     @property
     def calculated_total_fee(self):
-        """Calculate total fee from component fees"""
-        return float((self.course_tuition_fee or 0) + (self.enrollment_fee or 0) + 
-                    (self.university_affiliation_fee or 0) + (self.university_sports_fee or 0) + 
-                    (self.university_development_fee or 0) + (self.tc_cc_fee or 0) + 
-                    (self.miscellaneous_fee_1 or 0) + (self.miscellaneous_fee_2 or 0) + 
-                    (self.miscellaneous_fee_3 or 0))
+        """Calculate total fee from component fees including eligibility_certificate_fee"""
+        return float((self.total_course_fees or 0) + (self.enrollment_fee or 0) + 
+                    (self.eligibility_certificate_fee or 0) + (self.university_affiliation_fee or 0) + 
+                    (self.university_sports_fee or 0) + (self.university_development_fee or 0) + 
+                    (self.tc_cc_fee or 0) + (self.miscellaneous_fee_1 or 0) + 
+                    (self.miscellaneous_fee_2 or 0) + (self.miscellaneous_fee_3 or 0))
 
     def update_total_fees_paid(self):
         """Update total_fees_paid field - now handled by database formula"""
@@ -187,7 +187,9 @@ class CollegeFees(db.Model):
     def update_total_fee(self):
         """Update total_fee field to match sum of component fees - now handled by database formula"""
         # The total_fee is now calculated by the database formula:
-        # ((((((((course_tuition_fee + enrollment_fee) + university_affiliation_fee) + university_sports_fee) + university_development_fee) + tc_cc_fee) + miscellaneous_fee_1) + miscellaneous_fee_2) + miscellaneous_fee_3)
+        # total_course_fees + enrollment_fee + eligibility_certificate_fee + university_affiliation_fee + 
+        # university_sports_fee + university_development_fee + tc_cc_fee + 
+        # miscellaneous_fee_1 + miscellaneous_fee_2 + miscellaneous_fee_3
         # No need to manually calculate as the database handles this automatically
         pass
 
