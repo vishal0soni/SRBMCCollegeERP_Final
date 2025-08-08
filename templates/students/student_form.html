@@ -606,15 +606,25 @@ function calculateTotalFees() {
 
     const totalAmountDue = Math.max(0, adjustedGrandTotal - totalFeesPaid);
 
-    // Update displays
-    document.getElementById('totalAdditionalFees').textContent = `₹${additionalFees.toFixed(2)}`;
-    document.getElementById('grandTotalFees').textContent = `₹${grandTotal.toFixed(2)}`;
+    // Update displays with proper formatting
+    document.getElementById('totalAdditionalFees').textContent = `₹${additionalFees.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    document.getElementById('grandTotalFees').textContent = `₹${grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
     // Update the total amount due field
     const totalAmountDueField = document.getElementById('totalAmountDue');
     if (totalAmountDueField) {
         totalAmountDueField.value = totalAmountDue.toFixed(2);
     }
+
+    // Store calculated values for form submission validation
+    window.calculatedFees = {
+        grandTotal: grandTotal,
+        additionalFees: additionalFees,
+        totalAmountDue: totalAmountDue,
+        courseTuitionFee: courseTuitionFee
+    };
+
+    console.log('Fee calculation updated:', window.calculatedFees);
 }
 
 // Initialize on page load
@@ -831,7 +841,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Manually calculate and update the grand total before submission
         calculateTotalFees();
 
-        // Add hidden inputs for fee data
+        // Validate that calculations are up to date
+        if (!window.calculatedFees) {
+            console.warn('Fee calculations not ready, recalculating...');
+            calculateTotalFees();
+        }
+
+        // Add hidden inputs for fee data using most current values
         const feeData = {
             course_tuition_fee: document.getElementById('courseTuitionFeeInput').value || '0.00',
             enrollment_fee: document.getElementById('enrollmentFee').value || '0.00',
@@ -843,7 +859,8 @@ document.addEventListener('DOMContentLoaded', function() {
             miscellaneous_fee_1: document.getElementById('miscellaneousFee1').value || '0.00',
             miscellaneous_fee_2: document.getElementById('miscellaneousFee2').value || '0.00',
             miscellaneous_fee_3: document.getElementById('miscellaneousFee3').value || '0.00',
-            total_fee: parseFloat(document.getElementById('grandTotalFees').textContent.replace('₹', '').replace(',', '')) || 0.00,
+            total_course_fees: document.getElementById('courseTuitionFeeInput').value || '0.00',
+            total_fee: window.calculatedFees ? window.calculatedFees.grandTotal.toFixed(2) : '0.00',
 
             // New fee management fields
             total_fees_paid: document.getElementById('totalFeesPaid').value || '0.00',
@@ -861,6 +878,10 @@ document.addEventListener('DOMContentLoaded', function() {
             exam_admit_card_issued: document.getElementById('examAdmitCardIssued').checked || false
         };
 
+        // Remove any existing fee hidden inputs to avoid duplicates
+        const existingInputs = form.querySelectorAll('input[name^="fee_"]');
+        existingInputs.forEach(input => input.remove());
+
         // Add hidden inputs for each fee field
         Object.keys(feeData).forEach(key => {
             const hiddenInput = document.createElement('input');
@@ -869,6 +890,8 @@ document.addEventListener('DOMContentLoaded', function() {
             hiddenInput.value = feeData[key];
             form.appendChild(hiddenInput);
         });
+
+        console.log('Form submission with fee data:', feeData);
     });
 
     // Function to setup synchronization between checkboxes and dropdowns

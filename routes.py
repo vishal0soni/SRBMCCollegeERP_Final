@@ -17,6 +17,18 @@ from bulk_operations import (
     get_subjects_export_data, export_to_csv, export_to_excel, export_to_json, process_import_file
 )
 
+# Import the fee calculation function
+def run_fee_calculation_sync():
+    """Run fee calculation synchronization"""
+    try:
+        from fix_total_fee_calculation import fix_total_fee_calculation
+        fix_total_fee_calculation()
+        app.logger.info("Fee calculation sync completed successfully")
+    except Exception as e:
+        app.logger.error(f"Fee calculation sync failed: {str(e)}")
+        # Don't raise the exception to avoid breaking the main flow
+        pass
+
 @app.route('/')
 def index():
     if current_user.is_authenticated:
@@ -448,6 +460,10 @@ def add_student():
                 fee_record.update_total_fees_paid()
 
             db.session.commit()
+            
+            # Run fee calculation synchronization
+            run_fee_calculation_sync()
+            
             flash('Student added successfully with fee record!', 'success')
             return redirect(url_for('students'))
         except Exception as e:
@@ -959,6 +975,10 @@ def payment():
         try:
             db.session.add(invoice)
             db.session.commit()
+            
+            # Run fee calculation synchronization
+            run_fee_calculation_sync()
+            
             flash('Payment processed successfully!', 'success')
             return redirect(url_for('fees'))
         except Exception as e:
@@ -1838,6 +1858,10 @@ def edit_student(student_id):
                 # No manual calculation needed as database formulas handle both
 
             db.session.commit()
+            
+            # Run fee calculation synchronization
+            run_fee_calculation_sync()
+            
             flash('Student and fee details updated successfully!', 'success')
             return redirect(url_for('students'))
         except Exception as e:
@@ -2071,6 +2095,26 @@ def api_student_latest_invoice(student_id):
             return jsonify({'success': False, 'message': 'No invoice found'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/sync-fee-calculations', methods=['POST'])
+@login_required
+def api_sync_fee_calculations():
+    """API endpoint to synchronize fee calculations"""
+    if not can_edit_module(current_user, 'fees') or current_user.role.access_type != 'Edit':
+        return jsonify({'error': 'Permission denied'}), 403
+
+    try:
+        run_fee_calculation_sync()
+        return jsonify({
+            'success': True, 
+            'message': 'Fee calculations synchronized successfully'
+        })
+    except Exception as e:
+        app.logger.error(f"API fee calculation sync failed: {str(e)}")
+        return jsonify({
+            'success': False, 
+            'error': f'Fee calculation sync failed: {str(e)}'
+        }), 500
 
 @app.route('/report-card/<int:exam_id>/pdf')
 @login_required
