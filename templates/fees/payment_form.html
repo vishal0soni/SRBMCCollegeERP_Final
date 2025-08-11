@@ -76,8 +76,8 @@
                                         </div>
                                         <div class="col-md-6">
                                             {% if selected_fee_record %}
-                                                {% set total_paid = (selected_fee_record.installment_1 or 0) + (selected_fee_record.installment_2 or 0) + (selected_fee_record.installment_3 or 0) + (selected_fee_record.installment_4 or 0) + (selected_fee_record.installment_5 or 0) + (selected_fee_record.installment_6 or 0) %}
-                                                {% set total_fee_amount = selected_fee_record.total_amount_after_rebate|float or 0 %}
+                                                {% set total_paid = ((selected_fee_record.installment_1 or 0)|float + (selected_fee_record.installment_2 or 0)|float + (selected_fee_record.installment_3 or 0)|float + (selected_fee_record.installment_4 or 0)|float + (selected_fee_record.installment_5 or 0)|float + (selected_fee_record.installment_6 or 0)|float) %}
+                                                {% set total_fee_amount = (selected_fee_record.total_amount_after_rebate or 0)|float %}
                                                 {% set due_amount = total_fee_amount - total_paid %}
                                                 <p><strong>Total Fees:</strong> ₹<span id="totalFees">{{ "%.2f"|format(total_fee_amount) }}</span></p>
                                                 <p><strong>Paid Amount:</strong> ₹<span id="paidAmount">{{ "%.2f"|format(total_paid) }}</span></p>
@@ -291,7 +291,7 @@ function searchStudents(query) {
         hideSearchResults();
         return;
     }
-    
+
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
         fetch(`/api/search-students?q=${encodeURIComponent(query)}`)
@@ -313,7 +313,7 @@ function searchStudents(query) {
 function displaySearchResults(students) {
     const resultsContainer = document.getElementById('searchResults');
     resultsContainer.innerHTML = '';
-    
+
     if (students.length === 0) {
         resultsContainer.innerHTML = '<div class="dropdown-item text-muted">No students found</div>';
     } else {
@@ -328,23 +328,23 @@ function displaySearchResults(students) {
                     <small class="text-muted">${student.current_course}</small>
                 </div>
             `;
-            
+
             // Use mousedown instead of click to prevent blur event from hiding results first
             item.addEventListener('mousedown', (e) => {
                 e.preventDefault(); // Prevent blur event
                 selectStudent(student);
             });
-            
+
             // Also add click as fallback
             item.addEventListener('click', (e) => {
                 e.preventDefault();
                 selectStudent(student);
             });
-            
+
             resultsContainer.appendChild(item);
         });
     }
-    
+
     resultsContainer.style.display = 'block';
 }
 
@@ -355,21 +355,21 @@ function hideSearchResults() {
 
 function selectStudent(student) {
     console.log('Selected student:', student);
-    
+
     // Set the student data
     document.getElementById('studentSearch').value = `${student.student_unique_id} - ${student.first_name} ${student.last_name}`;
     document.getElementById('{{ form.student_id.id }}').value = student.id;
-    
+
     // Hide search results immediately
     hideSearchResults();
-    
+
     // Show student details section immediately
     const detailsDiv = document.getElementById('studentDetails');
     detailsDiv.style.display = 'block';
-    
+
     // Load student fee details
     loadStudentDetails();
-    
+
     // Remove focus from search input to prevent further searching
     document.getElementById('studentSearch').blur();
 }
@@ -425,11 +425,11 @@ function loadStudentDetails(student = null) {
 
         if (studentId && studentId !== '' && studentId !== '0') {
             console.log('Loading fee details for student ID:', studentId);
-            
+
             // Show loading state and ensure details are visible
             const detailsDiv = document.getElementById('studentDetails');
             detailsDiv.style.display = 'block';
-            
+
             document.getElementById('studentId').textContent = 'Loading...';
             document.getElementById('studentName').textContent = 'Loading...';
             document.getElementById('studentCourse').textContent = 'Loading...';
@@ -601,7 +601,7 @@ document.getElementById('{{ form.student_id.id }}').addEventListener('change', f
         document.getElementById('studentDetails').style.display = 'none';
         document.getElementById('additionalDetails').style.display = 'none';
         document.getElementById('paymentSummary').style.display = 'none';
-        
+
         // Clear search input if student is deselected
         document.getElementById('studentSearch').value = '';
     }

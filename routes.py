@@ -845,7 +845,7 @@ def fees():
     page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '')
     course_filter = request.args.get('course', '')
-    scholarship_filter = request.args.get('scholarship', '')
+    dues_issued_filter = request.args.get('dues_issued', '')
     sort_by = request.args.get('sort', 'student_unique_id')
     sort_order = request.args.get('order', 'asc')
 
@@ -864,8 +864,15 @@ def fees():
     if course_filter:
         query = query.filter(Student.current_course.contains(course_filter))
 
-    if scholarship_filter:
-        query = query.filter(Student.scholarship_status == scholarship_filter)
+    if dues_issued_filter:
+        if dues_issued_filter == 'library_dues':
+            query = query.filter(CollegeFees.pending_dues_for_libraries == True)
+        elif dues_issued_filter == 'hostel_dues':
+            query = query.filter(CollegeFees.pending_dues_for_hostel == True)
+        elif dues_issued_filter == 'admit_card_issued':
+            query = query.filter(CollegeFees.exam_admit_card_issued == True)
+        elif dues_issued_filter == 'admit_card_pending':
+            query = query.filter(CollegeFees.exam_admit_card_issued == False)
 
 
 
@@ -1497,12 +1504,12 @@ def api_student_fee_details(student_id):
 
         # Calculate paid amount and next installment
         installments = [
-            fee_record.installment_1 or 0,
-            fee_record.installment_2 or 0,
-            fee_record.installment_3 or 0,
-            fee_record.installment_4 or 0,
-            fee_record.installment_5 or 0,
-            fee_record.installment_6 or 0
+            float(fee_record.installment_1 or 0),
+            float(fee_record.installment_2 or 0),
+            float(fee_record.installment_3 or 0),
+            float(fee_record.installment_4 or 0),
+            float(fee_record.installment_5 or 0),
+            float(fee_record.installment_6 or 0)
         ]
 
         paid_amount = sum(installments)
@@ -2098,6 +2105,43 @@ def api_sync_fee_calculations():
         return jsonify({
             'success': False, 
             'error': f'Fee calculation sync failed: {str(e)}'
+        }), 500
+
+@app.route('/api/update-fee-field/<int:fee_id>', methods=['POST'])
+@login_required
+def api_update_fee_field(fee_id):
+    """API endpoint to update fee field values"""
+    if not can_edit_module(current_user, 'fees') or current_user.role.access_type != 'Edit':
+        return jsonify({'error': 'Permission denied'}), 403
+
+    try:
+        data = request.get_json()
+        field = data.get('field')
+        value = data.get('value')
+
+        # Validate field name
+        allowed_fields = ['pending_dues_for_libraries', 'pending_dues_for_hostel', 'exam_admit_card_issued']
+        if field not in allowed_fields:
+            return jsonify({'error': 'Invalid field name'}), 400
+
+        # Get the fee record
+        fee_record = CollegeFees.query.get_or_404(fee_id)
+
+        # Update the field
+        setattr(fee_record, field, value)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Field {field} updated successfully'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error updating fee field: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'Error updating field: {str(e)}'
         }), 500
 
 @app.route('/report-card/<int:exam_id>/pdf')
