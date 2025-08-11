@@ -85,6 +85,16 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <div class="col-md-3">
+                        <label for="duesIssuedFilter" class="form-label">Dues & Issued</label>
+                        <select class="form-select" id="duesIssuedFilter" name="dues_issued" onchange="this.form.submit()">
+                            <option value="">All Status</option>
+                            <option value="library_dues" {% if request.args.get('dues_issued') == 'library_dues' %}selected{% endif %}>Library Dues</option>
+                            <option value="hostel_dues" {% if request.args.get('dues_issued') == 'hostel_dues' %}selected{% endif %}>Hostel Dues</option>
+                            <option value="admit_card_issued" {% if request.args.get('dues_issued') == 'admit_card_issued' %}selected{% endif %}>Admit Card Issued</option>
+                            <option value="admit_card_pending" {% if request.args.get('dues_issued') == 'admit_card_pending' %}selected{% endif %}>Admit Card Pending</option>
+                        </select>
+                    </div>
 
                     <div class="col-md-2">
                         <label for="dues_issued" class="form-label">Dues & Issued</label>
@@ -96,7 +106,7 @@
                             <option value="admit_card_pending" {% if request.args.get('dues_issued') == 'admit_card_pending' %}selected{% endif %}>Admit Card Pending</option>
                         </select>
                     </div>
-                    
+
                     <div class="col-md-auto">
                         <button type="submit" class="btn btn-info">
                             <i class="fas fa-search"></i> Search
@@ -123,67 +133,26 @@
                         <thead class="table-light">
                             <tr>
                                 <th>
-                                    <a href="{{ url_for('fees', sort='student_unique_id', order='desc' if request.args.get('sort') == 'student_unique_id' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), dues_issued=request.args.get('dues_issued', '')) }}" class="text-decoration-none text-dark"></a>
-                                <a href="{{ url_for('fees', sort='current_course', order='desc' if request.args.get('sort') == 'current_course' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), dues_issued=request.args.get('dues_issued', '')) }}" class="text-decoration-none text-dark">
-                                        Student
+                                    <a href="?sort=student_unique_id&order={{ 'desc' if request.args.get('sort') == 'student_unique_id' and request.args.get('order') == 'asc' else 'asc' }}{{ '&search=' + request.args.get('search', '') if request.args.get('search') }}{{ '&course=' + request.args.get('course', '') if request.args.get('course') }}{{ '&dues_issued=' + request.args.get('dues_issued', '') if request.args.get('dues_issued') }}">
+                                        Student ID
                                         {% if request.args.get('sort') == 'student_unique_id' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
-                                        {% else %}
-                                            <i class="fas fa-sort"></i>
+                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
                                         {% endif %}
                                     </a>
                                 </th>
                                 <th>
-                                    <a href="{{ url_for('fees', sort='current_course', order='desc' if request.args.get('sort') == 'current_course' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), scholarship=request.args.get('scholarship', '')) }}" class="text-decoration-none text-dark">
-                                        Course
-                                        {% if request.args.get('sort') == 'current_course' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
-                                        {% else %}
-                                            <i class="fas fa-sort"></i>
+                                    <a href="?sort=first_name&order={{ 'desc' if request.args.get('sort') == 'first_name' and request.args.get('order') == 'asc' else 'asc' }}{{ '&search=' + request.args.get('search', '') if request.args.get('search') }}{{ '&course=' + request.args.get('course', '') if request.args.get('course') }}{{ '&dues_issued=' + request.args.get('dues_issued', '') if request.args.get('dues_issued') }}">
+                                        Student Name
+                                        {% if request.args.get('sort') == 'first_name' %}
+                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th>
-                                    <a href="{{ url_for('fees', sort='total_amount_after_rebate', order='desc' if request.args.get('sort') == 'total_amount_after_rebate' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), scholarship=request.args.get('scholarship', '')) }}" class="text-decoration-none text-dark">
-                                        Total Fees
-                                        {% if request.args.get('sort') == 'total_amount_after_rebate' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
-                                        {% else %}
-                                            <i class="fas fa-sort"></i>
-                                        {% endif %}
-                                    </a>
-                                </th>
-                                <th>
-                                    <a href="{{ url_for('fees', sort='paid_amount', order='desc' if request.args.get('sort') == 'paid_amount' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), scholarship=request.args.get('scholarship', '')) }}" class="text-decoration-none text-dark">
-                                        Paid Amount
-                                        {% if request.args.get('sort') == 'paid_amount' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
-                                        {% else %}
-                                            <i class="fas fa-sort"></i>
-                                        {% endif %}
-                                    </a>
-                                </th>
-                                <th>
-                                    <a href="{{ url_for('fees', sort='due_amount', order='desc' if request.args.get('sort') == 'due_amount' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), scholarship=request.args.get('scholarship', '')) }}" class="text-decoration-none text-dark">
-                                        Due Amount
-                                        {% if request.args.get('sort') == 'due_amount' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
-                                        {% else %}
-                                            <i class="fas fa-sort"></i>
-                                        {% endif %}
-                                    </a>
-                                </th>
-                                <th>
-                                    <a href="{{ url_for('fees', sort='installments', order='desc' if request.args.get('sort') == 'installments' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), scholarship=request.args.get('scholarship', '')) }}" class="text-decoration-none text-dark">
-                                        Installments
-                                        {% if request.args.get('sort') == 'installments' %}
-                                            <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
-                                        {% else %}
-                                            <i class="fas fa-sort"></i>
-                                        {% endif %}
-                                    </a>
-                                </th>
-                                <th>Pending Dues & Exam-Card Status</th>
+                                <th>Course</th>
+                                <th>Total Fees</th>
+                                <th>Total Paid</th>
+                                <th>Balance Due</th>
+                                <th>Dues & Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -354,19 +323,19 @@ function generateFeeStatement(studentId) {
 // Handle inline editing of dues and exam card status
 document.addEventListener('DOMContentLoaded', function() {
     const checkboxes = document.querySelectorAll('.dues-checkbox');
-    
+
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function() {
             const feeId = this.dataset.feeId;
             const field = this.dataset.field;
             const value = this.checked;
-            
+
             // Show loading state
             this.disabled = true;
             const label = this.nextElementSibling;
             const originalText = label.innerHTML;
             label.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
-            
+
             // Send AJAX request to update the field
             fetch(`/api/update-fee-field/${feeId}`, {
                 method: 'POST',
@@ -385,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Show success feedback
                     label.innerHTML = originalText;
                     this.disabled = false;
-                    
+
                     // Show brief success indicator
                     const successIcon = document.createElement('i');
                     successIcon.className = 'fas fa-check text-success ms-1';

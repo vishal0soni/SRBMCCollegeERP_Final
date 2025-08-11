@@ -93,12 +93,13 @@
                 <h6 class="m-0 font-weight-bold text-primary">Fee Summary</h6>
             </div>
             <div class="card-body">
-                {% set total_paid = (fee_record.installment_1 or 0) + (fee_record.installment_2 or 0) + (fee_record.installment_3 or 0) + (fee_record.installment_4 or 0) + (fee_record.installment_5 or 0) + (fee_record.installment_6 or 0) %}
-                {% set due_amount = (fee_record.total_fee or 0) - total_paid %}
+                {% set total_paid = ((fee_record.installment_1|float or 0) + (fee_record.installment_2|float or 0) + (fee_record.installment_3|float or 0) + (fee_record.installment_4|float or 0) + (fee_record.installment_5|float or 0) + (fee_record.installment_6|float or 0)) %}
+                {% set total_fee_amount = (fee_record.total_amount_after_rebate|float or 0) %}
+                {% set due_amount = total_fee_amount - total_paid %}
 
                 <div class="mb-3">
-                    <strong>Total Fee:</strong>
-                    <span class="float-end">₹{{ "%.2f"|format(fee_record.total_fee or 0) }}</span>
+                    <strong>Total Fees:</strong>
+                    <span class="float-end">₹{{ "%.2f"|format(total_fee_amount) }}</span>
                 </div>
                 <div class="mb-3">
                     <strong>Total Paid:</strong>
