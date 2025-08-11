@@ -687,7 +687,7 @@ def generate_pdf_fee_statement_print(student, fee_record):
         story.append(Paragraph("Fee Structure", heading_style))
         fee_structure_data = [
             ['Fee Type', 'Amount'],
-            ['Course Tuition Fee', f"₹{float(fee_record.course_tuition_fee or 0):,.2f}"],
+            ['Course Fees', f"₹{float(fee_record.total_course_fees or 0):,.2f}"],
             ['Enrollment Fee', f"₹{float(fee_record.enrollment_fee or 0):,.2f}"],
             ['Eligibility Certificate Fee', f"₹{float(fee_record.eligibility_certificate_fee or 0):,.2f}"],
             ['University Affiliation Fee', f"₹{float(fee_record.university_affiliation_fee or 0):,.2f}"],

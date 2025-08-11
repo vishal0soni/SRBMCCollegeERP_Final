@@ -845,7 +845,6 @@ def fees():
     page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '')
     course_filter = request.args.get('course', '')
-    payment_status_filter = request.args.get('payment_status', '')
     scholarship_filter = request.args.get('scholarship', '')
     sort_by = request.args.get('sort', 'student_unique_id')
     sort_order = request.args.get('order', 'asc')
@@ -868,27 +867,7 @@ def fees():
     if scholarship_filter:
         query = query.filter(Student.scholarship_status == scholarship_filter)
 
-    # Payment status filtering
-    if payment_status_filter:
-        if payment_status_filter == 'paid':
-            query = query.filter(
-                (CollegeFees.installment_1 + CollegeFees.installment_2 + CollegeFees.installment_3 + 
-                 CollegeFees.installment_4 + CollegeFees.installment_5 + CollegeFees.installment_6) >= CollegeFees.total_fee
-            )
-        elif payment_status_filter == 'pending':
-            query = query.filter(
-                (CollegeFees.installment_1 + CollegeFees.installment_2 + CollegeFees.installment_3 + 
-                 CollegeFees.installment_4 + CollegeFees.installment_5 + CollegeFees.installment_6) == 0
-            )
-        elif payment_status_filter == 'partial':
-            query = query.filter(
-                and_(
-                    (CollegeFees.installment_1 + CollegeFees.installment_2 + CollegeFees.installment_3 + 
-                     CollegeFees.installment_4 + CollegeFees.installment_5 + CollegeFees.installment_6) > 0,
-                    (CollegeFees.installment_1 + CollegeFees.installment_2 + CollegeFees.installment_3 + 
-                     CollegeFees.installment_4 + CollegeFees.installment_5 + CollegeFees.installment_6) < CollegeFees.total_fee
-                )
-            )
+
 
     # Sorting
     if hasattr(Student, sort_by):
