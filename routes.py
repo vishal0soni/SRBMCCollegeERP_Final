@@ -1505,7 +1505,7 @@ def api_student_fee_details(student_id):
             fee_record.installment_6 or 0
         ]
 
-        paid_amount = float(fee_record.calculated_total_fees_paid)
+        paid_amount = sum(installments)
         next_installment = 1
 
         # Find next available installment
@@ -1516,7 +1516,7 @@ def api_student_fee_details(student_id):
         else:
             next_installment = 7  # All installments paid
 
-        total_fee = float(fee_record.total_fee or 0)
+        total_fee = float(fee_record.total_amount_after_rebate or 0)
         due_amount = total_fee - paid_amount
 
         # Get payment history

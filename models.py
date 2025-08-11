@@ -178,6 +178,13 @@ class CollegeFees(db.Model):
                     (self.tc_cc_fee or 0) + (self.miscellaneous_fee_1 or 0) + 
                     (self.miscellaneous_fee_2 or 0) + (self.miscellaneous_fee_3 or 0))
 
+    @property
+    def calculated_total_amount_due(self):
+        """Calculate total amount due using the formula: total_amount_after_rebate - (sum of all installments)"""
+        total_paid = self.calculated_total_fees_paid
+        total_after_rebate = float(self.total_amount_after_rebate or 0)
+        return total_after_rebate - total_paid
+
     def update_total_fees_paid(self):
         """Update total_fees_paid field - now handled by database formula"""
         # The total_fees_paid is now calculated by the database formula:
