@@ -404,9 +404,9 @@ function loadStudentDetails(student = null) {
         const studentId = {{ selected_student.id }};
         window.studentFeeData = {
             {% if selected_fee_record %}
-                total_fee: {{ selected_fee_record.total_amount_after_rebate or 0 }},
-                paid_amount: {{ (selected_fee_record.installment_1 or 0) + (selected_fee_record.installment_2 or 0) + (selected_fee_record.installment_3 or 0) + (selected_fee_record.installment_4 or 0) + (selected_fee_record.installment_5 or 0) + (selected_fee_record.installment_6 or 0) }},
-                due_amount: {{ (selected_fee_record.total_amount_after_rebate|float or 0) - ((selected_fee_record.installment_1 or 0) + (selected_fee_record.installment_2 or 0) + (selected_fee_record.installment_3 or 0) + (selected_fee_record.installment_4 or 0) + (selected_fee_record.installment_5 or 0) + (selected_fee_record.installment_6 or 0)) }},
+                total_fee: {{ selected_fee_record.total_amount_after_rebate|float or 0 }},
+                paid_amount: {{ ((selected_fee_record.installment_1|float or 0) + (selected_fee_record.installment_2|float or 0) + (selected_fee_record.installment_3|float or 0) + (selected_fee_record.installment_4|float or 0) + (selected_fee_record.installment_5|float or 0) + (selected_fee_record.installment_6|float or 0)) }},
+                due_amount: {{ (selected_fee_record.total_amount_after_rebate|float or 0) - ((selected_fee_record.installment_1|float or 0) + (selected_fee_record.installment_2|float or 0) + (selected_fee_record.installment_3|float or 0) + (selected_fee_record.installment_4|float or 0) + (selected_fee_record.installment_5|float or 0) + (selected_fee_record.installment_6|float or 0)) }},
                 next_installment: getNextInstallmentForStudent()
             {% else %}
                 total_fee: 0,
@@ -509,12 +509,12 @@ function loadStudentDetails(student = null) {
 {% if selected_student and selected_fee_record %}
 function getNextInstallmentForStudent() {
     const installments = [
-        {{ selected_fee_record.installment_1 or 0 }},
-        {{ selected_fee_record.installment_2 or 0 }},
-        {{ selected_fee_record.installment_3 or 0 }},
-        {{ selected_fee_record.installment_4 or 0 }},
-        {{ selected_fee_record.installment_5 or 0 }},
-        {{ selected_fee_record.installment_6 or 0 }}
+        {{ selected_fee_record.installment_1|float or 0 }},
+        {{ selected_fee_record.installment_2|float or 0 }},
+        {{ selected_fee_record.installment_3|float or 0 }},
+        {{ selected_fee_record.installment_4|float or 0 }},
+        {{ selected_fee_record.installment_5|float or 0 }},
+        {{ selected_fee_record.installment_6|float or 0 }}
     ];
 
     for (let i = 0; i < installments.length; i++) {
