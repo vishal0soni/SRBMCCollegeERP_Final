@@ -126,6 +126,7 @@ class FeeManagementForm(FlaskForm):
     scholarship_granted = BooleanField('Government Scholarship Granted')
     government_scholarship_amount = DecimalField('Government Scholarship Amount', validators=[Optional()], default=0)
     total_amount_due = DecimalField('Total Amount Due', validators=[Optional()], default=0)
+    total_amount_after_rebate = DecimalField('Total Amount after rebate', validators=[Optional()], default=0)
     pending_dues_for_libraries = BooleanField('Pending Dues for Libraries')
     pending_dues_for_hostel = BooleanField('Pending Dues for Hostel')
     exam_admit_card_issued = BooleanField('Exam Admit Card Issued')

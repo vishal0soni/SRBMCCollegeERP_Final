@@ -155,6 +155,7 @@ class CollegeFees(db.Model):
     scholarship_granted = db.Column(db.Boolean, default=False)
     government_scholarship_amount = db.Column(db.Numeric(10, 2), default=0)
     total_amount_due = db.Column(db.Numeric(10, 2), default=0)
+    total_amount_after_rebate = db.Column(db.Numeric(10, 2), default=0)
     pending_dues_for_libraries = db.Column(db.Boolean, default=False)
     pending_dues_for_hostel = db.Column(db.Boolean, default=False)
     exam_admit_card_issued = db.Column(db.Boolean, default=False)

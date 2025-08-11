@@ -422,6 +422,7 @@ def add_student():
                     # If rejected, ensure amount is 0
                     government_scholarship_amount = 0
                 total_amount_due = float(request.form.get('fee_total_amount_due', 0) or 0)
+                total_amount_after_rebate = float(request.form.get('fee_total_amount_after_rebate', 0) or 0)
                 pending_dues_for_libraries = request.form.get('fee_pending_dues_for_libraries') == 'true'
                 pending_dues_for_hostel = request.form.get('fee_pending_dues_for_hostel') == 'true'
                 exam_admit_card_issued = request.form.get('fee_exam_admit_card_issued') == 'true'
@@ -449,6 +450,7 @@ def add_student():
                     scholarship_granted=scholarship_granted,
                     government_scholarship_amount=government_scholarship_amount,
                     total_amount_due=total_amount_due,
+                    total_amount_after_rebate=total_amount_after_rebate,
                     pending_dues_for_libraries=pending_dues_for_libraries,
                     pending_dues_for_hostel=pending_dues_for_hostel,
                     exam_admit_card_issued=exam_admit_card_issued
@@ -1832,6 +1834,7 @@ def edit_student(student_id):
                 fee_record.scholarship_granted = scholarship_granted
                 fee_record.government_scholarship_amount = government_scholarship_amount
                 fee_record.total_amount_due = float(request.form.get('fee_total_amount_due', fee_record.total_amount_due) or 0)
+                fee_record.total_amount_after_rebate = float(request.form.get('fee_total_amount_after_rebate', fee_record.total_amount_after_rebate) or 0)
                 fee_record.pending_dues_for_libraries = request.form.get('fee_pending_dues_for_libraries') == 'true'
                 fee_record.pending_dues_for_hostel = request.form.get('fee_pending_dues_for_hostel') == 'true'
                 fee_record.exam_admit_card_issued = request.form.get('fee_exam_admit_card_issued') == 'true'

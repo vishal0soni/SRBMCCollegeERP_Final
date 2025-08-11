@@ -427,6 +427,15 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
+                                        <label class="form-label"><strong>Total Amount after rebate</strong></label>
+                                        <input type="number" class="form-control" id="totalAmountAfterRebate" step="0.01" value="0" data-fee="total_amount_after_rebate" readonly style="background-color: #e8f5e8;">
+                                        <small class="text-muted">Grand Total - Meera Rebate (if granted)</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
                                         <label class="form-label"><strong>Total Amount Due</strong></label>
                                         <input type="number" class="form-control" id="totalAmountDue" step="0.01" value="0" data-fee="total_amount_due" readonly style="background-color: #f8f9fa;">
                                     </div>
@@ -615,18 +624,19 @@ function calculateTotalFees() {
     // university_affiliation_fee + university_sports_fee + university_development_fee + 
     // tc_cc_fee + miscellaneous_fee_1 + miscellaneous_fee_2 + miscellaneous_fee_3
 
-    const courseTuitionFee = parseFloat(document.getElementById('courseTuitionFeeInput')?.value || 0);
-    let componentFees = courseTuitionFee;
-
+    // Get the complete total course fees (including tuition + misc fees)
+    const totalCourseFeesElement = document.getElementById('totalCourseFees');
+    const totalCourseFeesText = totalCourseFeesElement?.textContent || '₹0.00';
+    const totalCourseFees = parseFloat(totalCourseFeesText.replace('₹', '').replace(/,/g, '') || 0);
+    
     // Add all additional fee components
     let additionalFees = 0;
     document.querySelectorAll('.additional-fee-input').forEach(input => {
         const feeValue = parseFloat(input.value || 0);
-        componentFees += feeValue;
         additionalFees += feeValue;
     });
 
-    const grandTotal = componentFees;
+    const grandTotal = totalCourseFees + additionalFees;
 
     // Calculate amount due with Meera rebate affecting total due
     // Note: totalFeesPaid is now auto-calculated by database, so we use the displayed value
@@ -634,17 +644,28 @@ function calculateTotalFees() {
     const meeraRebateGranted = document.getElementById('meeraRebateGranted')?.checked || false;
     const meeraRebateAmount = parseFloat(document.getElementById('meeraRebateAmount').value || 0);
 
-    // Meera scholarship affects total due calculation
-    let adjustedGrandTotal = grandTotal;
+    // Calculate Total Amount after rebate (deduct Meera rebate only if granted)
+    let totalAmountAfterRebate = grandTotal;
     if (meeraRebateGranted && meeraRebateAmount > 0) {
-        adjustedGrandTotal = grandTotal - meeraRebateAmount;
+        totalAmountAfterRebate = grandTotal - meeraRebateAmount;
     }
 
-    const totalAmountDue = Math.max(0, adjustedGrandTotal - totalFeesPaid);
+    const totalAmountDue = Math.max(0, totalAmountAfterRebate - totalFeesPaid);
 
     // Update displays with proper formatting
     document.getElementById('totalAdditionalFees').textContent = `₹${additionalFees.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     document.getElementById('grandTotalFees').textContent = `₹${grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+    // Update the total amount after rebate field
+    const totalAmountAfterRebateField = document.getElementById('totalAmountAfterRebate');
+    if (totalAmountAfterRebateField) {
+        totalAmountAfterRebateField.value = totalAmountAfterRebate.toFixed(2);
+        // Also update display if there's a display element
+        const totalAmountAfterRebateDisplay = document.getElementById('totalAmountAfterRebateDisplay');
+        if (totalAmountAfterRebateDisplay) {
+            totalAmountAfterRebateDisplay.textContent = `₹${totalAmountAfterRebate.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+    }
 
     // Update the total amount due field
     const totalAmountDueField = document.getElementById('totalAmountDue');
@@ -657,7 +678,8 @@ function calculateTotalFees() {
         grandTotal: grandTotal,
         additionalFees: additionalFees,
         totalAmountDue: totalAmountDue,
-        courseTuitionFee: courseTuitionFee
+        totalAmountAfterRebate: totalAmountAfterRebate,
+        totalCourseFees: totalCourseFees
     };
 
     console.log('Fee calculation updated:', window.calculatedFees);
@@ -736,6 +758,7 @@ document.addEventListener('DOMContentLoaded', function() {
         scholarship_granted: {{ fee_record.scholarship_granted|tojson }},
         government_scholarship_amount: {{ fee_record.government_scholarship_amount or 0 }},
         total_amount_due: {{ fee_record.total_amount_due or 0 }},
+        total_amount_after_rebate: {{ fee_record.total_amount_after_rebate or 0 }},
         pending_dues_for_libraries: {{ fee_record.pending_dues_for_libraries|tojson }},
         pending_dues_for_hostel: {{ fee_record.pending_dues_for_hostel|tojson }},
         exam_admit_card_issued: {{ fee_record.exam_admit_card_issued|tojson }}
@@ -802,6 +825,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('scholarshipGranted').checked = existingFeeData.scholarship_granted;
         document.getElementById('governmentScholarshipAmount').value = parseFloat(existingFeeData.government_scholarship_amount).toFixed(2);
         document.getElementById('totalAmountDue').value = parseFloat(existingFeeData.total_amount_due).toFixed(2);
+        document.getElementById('totalAmountAfterRebate').value = parseFloat(existingFeeData.total_amount_after_rebate).toFixed(2);
         document.getElementById('pendingDuesLibraries').checked = existingFeeData.pending_dues_for_libraries;
         document.getElementById('pendingDuesHostel').checked = existingFeeData.pending_dues_for_hostel;
         document.getElementById('examAdmitCardIssued').checked = existingFeeData.exam_admit_card_issued;
@@ -909,6 +933,7 @@ document.addEventListener('DOMContentLoaded', function() {
             scholarship_granted: document.getElementById('scholarshipGranted').checked || false,
             government_scholarship_amount: document.getElementById('governmentScholarshipAmount').value || '0.00',
             total_amount_due: document.getElementById('totalAmountDue').value || '0.00',
+            total_amount_after_rebate: document.getElementById('totalAmountAfterRebate').value || '0.00',
             pending_dues_for_libraries: document.getElementById('pendingDuesLibraries').checked || false,
             pending_dues_for_hostel: document.getElementById('pendingDuesHostel').checked || false,
             exam_admit_card_issued: document.getElementById('examAdmitCardIssued').checked || false
