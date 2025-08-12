@@ -467,7 +467,7 @@ function createNotificationContainer() {
 }
 
 // Show notification
-function showNotification(message, type = 'info', duration = 5000) {
+function showNotification(message, type = 'info', duration = 8000) {
     const container = document.querySelector('.notification-container');
     if (!container) return;
     

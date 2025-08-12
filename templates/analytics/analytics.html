@@ -497,8 +497,10 @@ function updateAnalytics() {
 
         hideLoadingState();
 
-        // Show success message in status area
-        showInlineNotification('Analytics updated successfully!', 'success');
+        // Show success message using main app notification
+        if (window.SRBMCApp && window.SRBMCApp.showNotification) {
+            window.SRBMCApp.showNotification('Analytics updated successfully!', 'success');
+        }
     }, 1500);
 }
 
@@ -522,27 +524,31 @@ function refreshAllCharts() {
 }
 
 function exportAnalytics(format) {
-    showInlineNotification(`Exporting analytics in ${format.toUpperCase()} format...`, 'info');
-
-    // Simulate export process
-    setTimeout(() => {
-        showInlineNotification(`Analytics exported successfully as ${format.toUpperCase()}!`, 'success');
-    }, 2000);
+    if (window.SRBMCApp && window.SRBMCApp.showNotification) {
+        window.SRBMCApp.showNotification(`Exporting analytics in ${format.toUpperCase()} format...`, 'info');
+        
+        // Simulate export process
+        setTimeout(() => {
+            window.SRBMCApp.showNotification(`Analytics exported successfully as ${format.toUpperCase()}!`, 'success');
+        }, 2000);
+    }
 }
 
 function generateReport() {
-    showInlineNotification('Generating comprehensive analytics report...', 'info');
+    if (window.SRBMCApp && window.SRBMCApp.showNotification) {
+        window.SRBMCApp.showNotification('Generating comprehensive analytics report...', 'info');
 
-    setTimeout(() => {
-        showInlineNotification('Analytics report generated successfully!', 'success');
-    }, 3000);
+        setTimeout(() => {
+            window.SRBMCApp.showNotification('Analytics report generated successfully!', 'success');
+        }, 3000);
+    }
 }
 
 function scheduleReport() {
-    const frequency = document.createElement('select');
-    frequency.innerHTML = '<option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option>';
-    const selectedFreq = frequency.value || 'weekly';
-    showInlineNotification(`Scheduled ${selectedFreq} analytics reports!`, 'success');
+    const selectedFreq = 'weekly';
+    if (window.SRBMCApp && window.SRBMCApp.showNotification) {
+        window.SRBMCApp.showNotification(`Scheduled ${selectedFreq} analytics reports!`, 'success');
+    }
 }
 
 function shareAnalytics() {
@@ -556,7 +562,9 @@ function shareAnalytics() {
         // Fallback for browsers that don't support Web Share API
         const url = window.location.href;
         navigator.clipboard.writeText(url).then(() => {
-            showInlineNotification('Dashboard URL copied to clipboard!', 'success');
+            if (window.SRBMCApp && window.SRBMCApp.showNotification) {
+                window.SRBMCApp.showNotification('Dashboard URL copied to clipboard!', 'success');
+            }
         });
     }
 }
@@ -566,7 +574,9 @@ function changeChartType(chartId, newType) {
         const chart = window.analyticsCharts[chartId];
         chart.config.type = newType;
         chart.update();
-        showInlineNotification(`Chart type changed to ${newType}!`, 'info');
+        if (window.SRBMCApp && window.SRBMCApp.showNotification) {
+            window.SRBMCApp.showNotification(`Chart type changed to ${newType}!`, 'info');
+        }
     }
 }
 
@@ -578,7 +588,9 @@ function exportChart(chartId) {
         link.download = `${chartId}_chart.png`;
         link.href = url;
         link.click();
-        showInlineNotification('Chart exported successfully!', 'success');
+        if (window.SRBMCApp && window.SRBMCApp.showNotification) {
+            window.SRBMCApp.showNotification('Chart exported successfully!', 'success');
+        }
     }
 }
 

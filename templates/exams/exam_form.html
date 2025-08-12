@@ -314,7 +314,7 @@
                             <i class="fas fa-arrow-left"></i> Back to Examinations
                         </a>
                         <div>
-                            {{ form.submit(class="btn btn-primary") }}
+                            {{ form.submit(class="btn btn-primary", id="submitExamForm") }}
                         </div>
                     </div>
                 </form>
@@ -462,12 +462,19 @@ function validateAndCalculate(obtainedField) {
         const obtainedValue = parseInt(obtainedField.value) || 0;
         const maxValue = parseInt(maxField.value) || 0;
         
-        if (obtainedValue > maxValue && maxValue > 0) {
+        // Reset previous validation state
+        obtainedField.classList.remove('is-invalid');
+        errorDiv.style.display = 'none';
+        
+        // Validate obtained marks
+        if (maxValue > 0 && obtainedValue > maxValue) {
+            errorDiv.textContent = `Obtained marks (${obtainedValue}) cannot exceed maximum marks (${maxValue})`;
             errorDiv.style.display = 'block';
             obtainedField.classList.add('is-invalid');
-        } else {
-            errorDiv.style.display = 'none';
-            obtainedField.classList.remove('is-invalid');
+        } else if (obtainedValue < 0) {
+            errorDiv.textContent = 'Obtained marks cannot be negative';
+            errorDiv.style.display = 'block';
+            obtainedField.classList.add('is-invalid');
         }
     }
     
@@ -562,6 +569,131 @@ function getGradeBadgeClass(grade) {
 // Initialize calculations on page load
 document.addEventListener('DOMContentLoaded', function() {
     calculateTotals();
+    
+    // Add form submission validation
+    const examForm = document.getElementById('examForm');
+    const submitBtn = document.getElementById('submitExamForm');
+    
+    if (examForm && submitBtn) {
+        examForm.addEventListener('submit', function(event) {
+            if (!validateExamForm()) {
+                event.preventDefault();
+                event.stopPropagation();
+                return false;
+            }
+        });
+    }
 });
+
+function validateExamForm() {
+    let isValid = true;
+    let errorMessages = [];
+    
+    // Check if student is selected (for add mode)
+    const selectedStudentId = document.getElementById('selectedStudentId');
+    if (selectedStudentId && !selectedStudentId.value) {
+        errorMessages.push('Please select a student');
+        isValid = false;
+    }
+    
+    // Validate all subjects
+    const subjects = [
+        { name: 'subject1', label: 'Subject 1' },
+        { name: 'subject2', label: 'Subject 2' },
+        { name: 'subject3', label: 'Subject 3' },
+        { name: 'subject4', label: 'Subject 4' },
+        { name: 'subject5', label: 'Subject 5' },
+        { name: 'subject6', label: 'Subject 6' }
+    ];
+    
+    subjects.forEach(subject => {
+        const maxField = document.getElementsByName(`${subject.name}_max_marks`)[0];
+        const obtainedField = document.getElementsByName(`${subject.name}_obtained_marks`)[0];
+        const nameField = document.getElementsByName(`${subject.name}_name`)[0];
+        
+        if (maxField && obtainedField && nameField) {
+            const maxValue = parseInt(maxField.value) || 0;
+            const obtainedValue = parseInt(obtainedField.value) || 0;
+            const subjectName = nameField.value || '';
+            
+            // Only validate if subject has a name and max marks > 0
+            if (subjectName.trim() && maxValue > 0) {
+                if (obtainedValue > maxValue) {
+                    errorMessages.push(`${subject.label}: Obtained marks (${obtainedValue}) cannot exceed maximum marks (${maxValue})`);
+                    isValid = false;
+                    
+                    // Highlight the field
+                    obtainedField.classList.add('is-invalid');
+                } else {
+                    obtainedField.classList.remove('is-invalid');
+                }
+                
+                // Validate that obtained marks is not negative
+                if (obtainedValue < 0) {
+                    errorMessages.push(`${subject.label}: Obtained marks cannot be negative`);
+                    isValid = false;
+                    obtainedField.classList.add('is-invalid');
+                }
+            }
+        }
+    });
+    
+    // Check that at least one subject has valid data
+    let hasValidSubject = false;
+    subjects.slice(0, 3).forEach(subject => { // Check first 3 subjects (required)
+        const maxField = document.getElementsByName(`${subject.name}_max_marks`)[0];
+        const obtainedField = document.getElementsByName(`${subject.name}_obtained_marks`)[0];
+        const nameField = document.getElementsByName(`${subject.name}_name`)[0];
+        
+        if (maxField && obtainedField && nameField) {
+            const maxValue = parseInt(maxField.value) || 0;
+            const subjectName = nameField.value || '';
+            
+            if (subjectName.trim() && maxValue > 0) {
+                hasValidSubject = true;
+            }
+        }
+    });
+    
+    if (!hasValidSubject) {
+        errorMessages.push('At least one subject must have a name and maximum marks greater than 0');
+        isValid = false;
+    }
+    
+    // Show validation errors
+    if (!isValid) {
+        let errorHtml = '<div class="alert alert-danger alert-dismissible fade show" role="alert">';
+        errorHtml += '<h6><i class="fas fa-exclamation-triangle"></i> Please correct the following errors:</h6>';
+        errorHtml += '<ul class="mb-0">';
+        errorMessages.forEach(msg => {
+            errorHtml += `<li>${msg}</li>`;
+        });
+        errorHtml += '</ul>';
+        errorHtml += '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+        errorHtml += '</div>';
+        
+        // Remove existing error alerts
+        const existingAlerts = document.querySelectorAll('.alert-danger');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Insert error message at top of form
+        const form = document.getElementById('examForm');
+        form.insertAdjacentHTML('afterbegin', errorHtml);
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Use notification system if available
+        if (window.SRBMCApp && window.SRBMCApp.showNotification) {
+            window.SRBMCApp.showNotification('Please correct the validation errors before submitting', 'error');
+        }
+    } else {
+        // Remove any existing error alerts
+        const existingAlerts = document.querySelectorAll('.alert-danger');
+        existingAlerts.forEach(alert => alert.remove());
+    }
+    
+    return isValid;
+}
 </script>
 {% endblock %}
