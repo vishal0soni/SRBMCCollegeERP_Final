@@ -470,8 +470,8 @@ function updateAnalytics() {
         
         hideLoadingState();
         
-        // Show success message
-        showAlert('Analytics updated successfully!', 'success');
+        // Show success message in status area
+        showInlineNotification('Analytics updated successfully!', 'success');
     }, 1500);
 }
 
@@ -495,27 +495,27 @@ function refreshAllCharts() {
 }
 
 function exportAnalytics(format) {
-    showAlert(`Exporting analytics in ${format.toUpperCase()} format...`, 'info');
+    showInlineNotification(`Exporting analytics in ${format.toUpperCase()} format...`, 'info');
     
     // Simulate export process
     setTimeout(() => {
-        showAlert(`Analytics exported successfully as ${format.toUpperCase()}!`, 'success');
+        showInlineNotification(`Analytics exported successfully as ${format.toUpperCase()}!`, 'success');
     }, 2000);
 }
 
 function generateReport() {
-    showAlert('Generating comprehensive analytics report...', 'info');
+    showInlineNotification('Generating comprehensive analytics report...', 'info');
     
     setTimeout(() => {
-        showAlert('Analytics report generated successfully!', 'success');
+        showInlineNotification('Analytics report generated successfully!', 'success');
     }, 3000);
 }
 
 function scheduleReport() {
-    const frequency = prompt('Enter report frequency (daily/weekly/monthly):');
-    if (frequency) {
-        showAlert(`Scheduled ${frequency} analytics reports!`, 'success');
-    }
+    const frequency = document.createElement('select');
+    frequency.innerHTML = '<option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option>';
+    const selectedFreq = frequency.value || 'weekly';
+    showInlineNotification(`Scheduled ${selectedFreq} analytics reports!`, 'success');
 }
 
 function shareAnalytics() {
@@ -529,7 +529,7 @@ function shareAnalytics() {
         // Fallback for browsers that don't support Web Share API
         const url = window.location.href;
         navigator.clipboard.writeText(url).then(() => {
-            showAlert('Dashboard URL copied to clipboard!', 'success');
+            showInlineNotification('Dashboard URL copied to clipboard!', 'success');
         });
     }
 }
@@ -539,7 +539,7 @@ function changeChartType(chartId, newType) {
         const chart = window.analyticsCharts[chartId];
         chart.config.type = newType;
         chart.update();
-        showAlert(`Chart type changed to ${newType}!`, 'info');
+        showInlineNotification(`Chart type changed to ${newType}!`, 'info');
     }
 }
 
@@ -551,7 +551,7 @@ function exportChart(chartId) {
         link.download = `${chartId}_chart.png`;
         link.href = url;
         link.click();
-        showAlert('Chart exported successfully!', 'success');
+        showInlineNotification('Chart exported successfully!', 'success');
     }
 }
 
@@ -577,21 +577,30 @@ function hideLoadingState() {
     }
 }
 
-function showAlert(message, type) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    alertDiv.innerHTML = `
+function showInlineNotification(message, type) {
+    // Find or create notification area
+    let notificationArea = document.getElementById('notificationArea');
+    if (!notificationArea) {
+        notificationArea = document.createElement('div');
+        notificationArea.id = 'notificationArea';
+        notificationArea.className = 'notification-area';
+        document.querySelector('.row').prepend(notificationArea);
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'info' ? 'info-circle' : 'exclamation-triangle'}"></i>
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
     
-    document.body.appendChild(alertDiv);
+    notificationArea.appendChild(notification);
     
     // Auto remove after 3 seconds
     setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
+        if (notification.parentNode) {
+            notification.remove();
         }
     }, 3000);
 }
@@ -610,6 +619,19 @@ function showAlert(message, type) {
     align-items: center;
     z-index: 9999;
     color: white;
+}
+
+.notification-area {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    max-width: 350px;
+}
+
+.notification-area .alert {
+    margin-bottom: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .border-left-primary {

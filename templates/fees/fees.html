@@ -85,17 +85,6 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label for="duesIssuedFilter" class="form-label">Dues & Issued</label>
-                        <select class="form-select" id="duesIssuedFilter" name="dues_issued" onchange="this.form.submit()">
-                            <option value="">All Status</option>
-                            <option value="library_dues" {% if request.args.get('dues_issued') == 'library_dues' %}selected{% endif %}>Library Dues</option>
-                            <option value="hostel_dues" {% if request.args.get('dues_issued') == 'hostel_dues' %}selected{% endif %}>Hostel Dues</option>
-                            <option value="admit_card_issued" {% if request.args.get('dues_issued') == 'admit_card_issued' %}selected{% endif %}>Admit Card Issued</option>
-                            <option value="admit_card_pending" {% if request.args.get('dues_issued') == 'admit_card_pending' %}selected{% endif %}>Admit Card Pending</option>
-                        </select>
-                    </div>
-
                     <div class="col-md-2">
                         <label for="dues_issued" class="form-label">Dues & Issued</label>
                         <select name="dues_issued" id="dues_issued" class="form-select">
@@ -107,7 +96,7 @@
                         </select>
                     </div>
 
-                    <div class="col-md-auto">
+                    <div class="col-md-auto d-flex align-items-end">
                         <button type="submit" class="btn btn-info">
                             <i class="fas fa-search"></i> Search
                         </button>
@@ -141,17 +130,31 @@
                                     </a>
                                 </th>
                                 <th>
-                                    <a href="?sort=first_name&order={{ 'desc' if request.args.get('sort') == 'first_name' and request.args.get('order') == 'asc' else 'asc' }}{{ '&search=' + request.args.get('search', '') if request.args.get('search') }}{{ '&course=' + request.args.get('course', '') if request.args.get('course') }}{{ '&dues_issued=' + request.args.get('dues_issued', '') if request.args.get('dues_issued') }}">
-                                        Student Name
-                                        {% if request.args.get('sort') == 'first_name' %}
+                                    <a href="?sort=current_course&order={{ 'desc' if request.args.get('sort') == 'current_course' and request.args.get('order') == 'asc' else 'asc' }}{{ '&search=' + request.args.get('search', '') if request.args.get('search') }}{{ '&course=' + request.args.get('course', '') if request.args.get('course') }}{{ '&dues_issued=' + request.args.get('dues_issued', '') if request.args.get('dues_issued') }}">
+                                        Course Name
+                                        {% if request.args.get('sort') == 'current_course' %}
                                             <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
                                         {% endif %}
                                     </a>
                                 </th>
-                                <th>Course</th>
-                                <th>Total Fees</th>
-                                <th>Total Paid</th>
+                                <th>
+                                    <a href="?sort=total_amount_after_rebate&order={{ 'desc' if request.args.get('sort') == 'total_amount_after_rebate' and request.args.get('order') == 'asc' else 'asc' }}{{ '&search=' + request.args.get('search', '') if request.args.get('search') }}{{ '&course=' + request.args.get('course', '') if request.args.get('course') }}{{ '&dues_issued=' + request.args.get('dues_issued', '') if request.args.get('dues_issued') }}">
+                                        Total Fees
+                                        {% if request.args.get('sort') == 'total_amount_after_rebate' %}
+                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="?sort=total_fees_paid&order={{ 'desc' if request.args.get('sort') == 'total_fees_paid' and request.args.get('order') == 'asc' else 'asc' }}{{ '&search=' + request.args.get('search', '') if request.args.get('search') }}{{ '&course=' + request.args.get('course', '') if request.args.get('course') }}{{ '&dues_issued=' + request.args.get('dues_issued', '') if request.args.get('dues_issued') }}">
+                                        Total Paid
+                                        {% if request.args.get('sort') == 'total_fees_paid' %}
+                                            <i class="fas fa-sort-{{ 'down' if request.args.get('order') == 'desc' else 'up' }}"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
                                 <th>Balance Due</th>
+                                <th>Installments</th>
                                 <th>Dues & Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -163,7 +166,7 @@
                             <tr>
                                 <td>
                                     <strong>{{ student.student_unique_id }}</strong><br>
-                                    <small>{{ student.first_name }} {{ student.last_name }}</small>
+                                    <small class="text-muted">{{ student.first_name }} {{ student.last_name }}</small>
                                 </td>
                                 <td>{{ student.current_course }}</td>
                                 <td>
