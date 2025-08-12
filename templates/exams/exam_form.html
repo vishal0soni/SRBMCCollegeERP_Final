@@ -33,14 +33,30 @@
                     <h6 class="text-primary mb-3">Basic Information</h6>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            {{ form.student_id.label(class="form-label") }}
-                            {{ form.student_id(class="form-select", onchange="loadStudentInfo()") }}
+                            <label class="form-label">Search Student</label>
+                            {% if exam %}
+                            <!-- Edit mode - show fixed student info -->
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Selected Student (Fixed)</h6>
+                                    <p><strong>Student ID:</strong> {{ exam.student.student_unique_id }}</p>
+                                    <p><strong>Name:</strong> {{ exam.student.first_name }} {{ exam.student.last_name }}</p>
+                                    <p><strong>Course:</strong> {{ exam.student.current_course }}</p>
+                                </div>
+                            </div>
+                            <input type="hidden" name="student_id" value="{{ exam.student_id }}">
+                            {% else %}
+                            <!-- Add mode - show search functionality -->
+                            <input type="text" class="form-control mb-2" id="studentSearch" placeholder="Search by Student Name or ID..." onkeyup="searchStudents()">
+                            <div id="studentResults" class="list-group" style="display: none; max-height: 200px; overflow-y: auto;"></div>
+                            <input type="hidden" name="student_id" id="selectedStudentId" required>
                             {% if form.student_id.errors %}
                                 <div class="text-danger">
                                     {% for error in form.student_id.errors %}
                                         <small>{{ error }}</small>
                                     {% endfor %}
                                 </div>
+                            {% endif %}
                             {% endif %}
                         </div>
                         
@@ -96,6 +112,7 @@
                     </div>
                     
                     <!-- Student Info Display -->
+                    {% if not exam %}
                     <div id="studentInfo" class="card bg-light mb-4" style="display: none;">
                         <div class="card-body">
                             <h6>Selected Student Information</h6>
@@ -111,6 +128,7 @@
                             </div>
                         </div>
                     </div>
+                    {% endif %}
                     
                     <!-- Subject Marks -->
                     <h6 class="text-primary mb-3">Subject-wise Marks</h6>
@@ -123,8 +141,9 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    {{ form.subject1_name.label(class="form-label") }}
-                                    {{ form.subject1_name(class="form-control") }}
+                                    <label class="form-label">Subject 1 Name</label>
+                                    <input type="text" class="form-control" name="subject1_name" id="subject1_name" 
+                                           value="{{ form.subject1_name.data or '' }}" readonly>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     {{ form.subject1_max_marks.label(class="form-label") }}
@@ -146,8 +165,9 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    {{ form.subject2_name.label(class="form-label") }}
-                                    {{ form.subject2_name(class="form-control") }}
+                                    <label class="form-label">Subject 2 Name</label>
+                                    <input type="text" class="form-control" name="subject2_name" id="subject2_name" 
+                                           value="{{ form.subject2_name.data or '' }}" readonly>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     {{ form.subject2_max_marks.label(class="form-label") }}
@@ -169,8 +189,9 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    {{ form.subject3_name.label(class="form-label") }}
-                                    {{ form.subject3_name(class="form-control") }}
+                                    <label class="form-label">Subject 3 Name</label>
+                                    <input type="text" class="form-control" name="subject3_name" id="subject3_name" 
+                                           value="{{ form.subject3_name.data or '' }}" readonly>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     {{ form.subject3_max_marks.label(class="form-label") }}
@@ -356,23 +377,91 @@
 
 {% block scripts %}
 <script>
-function loadStudentInfo() {
-    const studentSelect = document.getElementById('{{ form.student_id.id }}');
-    const studentId = studentSelect.value;
+let searchTimeout;
+
+function searchStudents() {
+    const searchTerm = document.getElementById('studentSearch').value;
     
-    if (studentId) {
-        // In a real implementation, fetch student details from API
-        const selectedOption = studentSelect.options[studentSelect.selectedIndex];
-        const studentText = selectedOption.text;
-        
-        document.getElementById('studentInfo').style.display = 'block';
-        document.getElementById('displayStudentId').textContent = studentText.split(' - ')[0];
-        document.getElementById('displayStudentName').textContent = studentText.split(' - ')[1];
-        document.getElementById('displayStudentCourse').textContent = 'Bachelor of Arts'; // Mock data
-        document.getElementById('displayStudentSubjects').textContent = 'English, Hindi, Political Science'; // Mock data
-    } else {
-        document.getElementById('studentInfo').style.display = 'none';
+    clearTimeout(searchTimeout);
+    
+    if (searchTerm.length < 2) {
+        document.getElementById('studentResults').style.display = 'none';
+        return;
     }
+    
+    searchTimeout = setTimeout(() => {
+        fetch(`/api/search-students?q=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(data => {
+                const resultsContainer = document.getElementById('studentResults');
+                resultsContainer.innerHTML = '';
+                
+                if (data.success && data.students.length > 0) {
+                    data.students.forEach(student => {
+                        const item = document.createElement('button');
+                        item.type = 'button';
+                        item.className = 'list-group-item list-group-item-action';
+                        item.innerHTML = `
+                            <div>
+                                <strong>${student.student_unique_id}</strong> - ${student.first_name} ${student.last_name}
+                                <br><small class="text-muted">${student.current_course}</small>
+                            </div>
+                        `;
+                        item.onclick = () => selectStudent(student);
+                        resultsContainer.appendChild(item);
+                    });
+                    resultsContainer.style.display = 'block';
+                } else {
+                    resultsContainer.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error searching students:', error);
+                document.getElementById('studentResults').style.display = 'none';
+            });
+    }, 300);
+}
+
+function selectStudent(student) {
+    // Hide search results
+    document.getElementById('studentResults').style.display = 'none';
+    
+    // Set hidden field value
+    document.getElementById('selectedStudentId').value = student.id;
+    
+    // Update search input
+    document.getElementById('studentSearch').value = `${student.student_unique_id} - ${student.first_name} ${student.last_name}`;
+    
+    // Show student info
+    document.getElementById('displayStudentId').textContent = student.student_unique_id;
+    document.getElementById('displayStudentName').textContent = `${student.first_name} ${student.last_name}`;
+    document.getElementById('displayStudentCourse').textContent = student.current_course;
+    
+    // Fetch and populate subject names
+    fetch(`/api/student-subjects/${student.id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Populate subject name fields
+                document.getElementById('subject1_name').value = data.subject_1_name || '';
+                document.getElementById('subject2_name').value = data.subject_2_name || '';
+                document.getElementById('subject3_name').value = data.subject_3_name || '';
+                
+                // Update display
+                const subjectsList = [data.subject_1_name, data.subject_2_name, data.subject_3_name]
+                    .filter(s => s).join(', ');
+                document.getElementById('displayStudentSubjects').textContent = subjectsList || 'No subjects assigned';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching student subjects:', error);
+        });
+    
+    document.getElementById('studentInfo').style.display = 'block';
+}
+
+function loadStudentInfo() {
+    // This function is kept for backward compatibility but is now handled by selectStudent
 }
 
 function showAdditionalSubjects() {

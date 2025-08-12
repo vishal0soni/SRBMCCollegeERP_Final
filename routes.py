@@ -1149,38 +1149,57 @@ def add_exam():
         return redirect(url_for('dashboard'))
 
     form = ExamForm()
-    form.student_id.choices = [(s.id, f"{s.student_unique_id} - {s.first_name} {s.last_name}") for s in Student.query.all()]
     form.course_id.choices = [(c.course_id, c.course_full_name) for c in Course.query.all()]
 
-    if form.validate_on_submit():
+    if request.method == 'POST':
+        # Get data from form
+        student_id = request.form.get('student_id')
+        course_id = form.course_id.data
+        semester = form.semester.data
+        exam_name = form.exam_name.data
+        exam_date = form.exam_date.data
+        
+        # Get subject data
+        subject1_name = request.form.get('subject1_name')
+        subject1_max_marks = int(request.form.get('subject1_max_marks') or 0)
+        subject1_obtained_marks = int(request.form.get('subject1_obtained_marks') or 0)
+        
+        subject2_name = request.form.get('subject2_name')
+        subject2_max_marks = int(request.form.get('subject2_max_marks') or 0)
+        subject2_obtained_marks = int(request.form.get('subject2_obtained_marks') or 0)
+        
+        subject3_name = request.form.get('subject3_name')
+        subject3_max_marks = int(request.form.get('subject3_max_marks') or 0)
+        subject3_obtained_marks = int(request.form.get('subject3_obtained_marks') or 0)
+
         # Calculate totals and grade
         subjects_data = [
-            (form.subject1_name.data, form.subject1_max_marks.data, form.subject1_obtained_marks.data),
-            (form.subject2_name.data, form.subject2_max_marks.data, form.subject2_obtained_marks.data),
-            (form.subject3_name.data, form.subject3_max_marks.data, form.subject3_obtained_marks.data),
+            (subject1_name, subject1_max_marks, subject1_obtained_marks),
+            (subject2_name, subject2_max_marks, subject2_obtained_marks),
+            (subject3_name, subject3_max_marks, subject3_obtained_marks),
         ]
 
-        total_max = sum(max_marks for name, max_marks, obtained in subjects_data if name)
-        total_obtained = sum(obtained for name, max_marks, obtained in subjects_data if name)
+        total_max = sum(max_marks for name, max_marks, obtained in subjects_data if name and max_marks > 0)
+        total_obtained = sum(obtained for name, max_marks, obtained in subjects_data if name and max_marks > 0)
         percentage = (total_obtained / total_max * 100) if total_max > 0 else 0
         grade = calculate_grade(percentage)
         status = 'Pass' if percentage >= 40 else 'Fail'
 
         exam = Exam(
-            student_id=form.student_id.data,
-            course_id=form.course_id.data,
-            semester=form.semester.data,
-            exam_name=form.exam_name.data,
-            exam_date=form.exam_date.data,
-            subject1_name=form.subject1_name.data,
-            subject1_max_marks=form.subject1_max_marks.data,
-            subject1_obtained_marks=form.subject1_obtained_marks.data,
-            subject2_name=form.subject2_name.data,
-            subject2_max_marks=form.subject2_max_marks.data,
-            subject2_obtained_marks=form.subject2_obtained_marks.data,
-            subject3_name=form.subject3_name.data,
-            subject3_max_marks=form.subject3_max_marks.data,
-            subject3_obtained_marks=form.subject3_obtained_marks.data,
+            student_id=student_id,
+            course_id=course_id,
+            semester=semester,
+            exam_name=exam_name,
+            exam_date=exam_date,
+            subject1_name=subject1_name,
+            subject1_max_marks=subject1_max_marks,
+            subject1_obtained_marks=subject1_obtained_marks,
+            subject2_name=subject2_name,
+            subject2_max_marks=subject2_max_marks,
+            subject2_obtained_marks=subject2_obtained_marks,
+            subject3_name=subject3_name,
+            subject3_max_marks=subject3_max_marks,
+            subject3_obtained_marks=subject3_obtained_marks,
             total_max_marks=total_max,
             total_obtained_marks=total_obtained,
             percentage=percentage,
@@ -1218,36 +1237,49 @@ def edit_exam(exam_id):
 
     exam = Exam.query.get_or_404(exam_id)
     form = ExamForm(obj=exam)
-    form.student_id.choices = [(s.id, f"{s.student_unique_id} - {s.first_name} {s.last_name}") for s in Student.query.all()]
     form.course_id.choices = [(c.course_id, c.course_full_name) for c in Course.query.all()]
 
-    if form.validate_on_submit():
+    if request.method == 'POST':
+        # Get subject data (student info remains fixed in edit mode)
+        subject1_name = request.form.get('subject1_name')
+        subject1_max_marks = int(request.form.get('subject1_max_marks') or 0)
+        subject1_obtained_marks = int(request.form.get('subject1_obtained_marks') or 0)
+        
+        subject2_name = request.form.get('subject2_name')
+        subject2_max_marks = int(request.form.get('subject2_max_marks') or 0)
+        subject2_obtained_marks = int(request.form.get('subject2_obtained_marks') or 0)
+        
+        subject3_name = request.form.get('subject3_name')
+        subject3_max_marks = int(request.form.get('subject3_max_marks') or 0)
+        subject3_obtained_marks = int(request.form.get('subject3_obtained_marks') or 0)
+
         # Calculate totals and grade
         subjects_data = [
-            (form.subject1_name.data, form.subject1_max_marks.data, form.subject1_obtained_marks.data),
-            (form.subject2_name.data, form.subject2_max_marks.data, form.subject2_obtained_marks.data),
-            (form.subject3_name.data, form.subject3_max_marks.data, form.subject3_obtained_marks.data),
+            (subject1_name, subject1_max_marks, subject1_obtained_marks),
+            (subject2_name, subject2_max_marks, subject2_obtained_marks),
+            (subject3_name, subject3_max_marks, subject3_obtained_marks),
         ]
 
-        total_max = sum(max_marks for name, max_marks, obtained in subjects_data if name)
-        total_obtained = sum(obtained for name, max_marks, obtained in subjects_data if name)
+        total_max = sum(max_marks for name, max_marks, obtained in subjects_data if name and max_marks > 0)
+        total_obtained = sum(obtained for name, max_marks, obtained in subjects_data if name and max_marks > 0)
         percentage = (total_obtained / total_max * 100) if total_max > 0 else 0
         grade = calculate_grade(percentage)
         status = 'Pass' if percentage >= 40 else 'Fail'
 
-        exam.student_id = form.student_id.data
+        # Update exam (student info remains unchanged)
         exam.course_id = form.course_id.data
         exam.semester = form.semester.data
         exam.exam_name = form.exam_name.data
-        exam.subject1_name = form.subject1_name.data
-        exam.subject1_max_marks = form.subject1_max_marks.data
-        exam.subject1_obtained_marks = form.subject1_obtained_marks.data
-        exam.subject2_name = form.subject2_name.data
-        exam.subject2_max_marks = form.subject2_max_marks.data
-        exam.subject2_obtained_marks = form.subject2_obtained_marks.data
-        exam.subject3_name = form.subject3_name.data
-        exam.subject3_max_marks = form.subject3_max_marks.data
-        exam.subject3_obtained_marks = form.subject3_obtained_marks.data
+        exam.exam_date = form.exam_date.data
+        exam.subject1_name = subject1_name
+        exam.subject1_max_marks = subject1_max_marks
+        exam.subject1_obtained_marks = subject1_obtained_marks
+        exam.subject2_name = subject2_name
+        exam.subject2_max_marks = subject2_max_marks
+        exam.subject2_obtained_marks = subject2_obtained_marks
+        exam.subject3_name = subject3_name
+        exam.subject3_max_marks = subject3_max_marks
+        exam.subject3_obtained_marks = subject3_obtained_marks
         exam.total_max_marks = total_max
         exam.total_obtained_marks = total_obtained
         exam.percentage = percentage
@@ -2092,6 +2124,23 @@ def api_student_latest_invoice(student_id):
             return jsonify({'success': True, 'invoice_id': latest_invoice.id})
         else:
             return jsonify({'success': False, 'message': 'No invoice found'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/student-subjects/<int:student_id>')
+@login_required
+def api_student_subjects(student_id):
+    try:
+        student = Student.query.get(student_id)
+        if not student:
+            return jsonify({'success': False, 'error': 'Student not found'})
+        
+        return jsonify({
+            'success': True,
+            'subject_1_name': student.subject_1_name,
+            'subject_2_name': student.subject_2_name,
+            'subject_3_name': student.subject_3_name
+        })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
