@@ -112,67 +112,73 @@ def send_email(to_email, subject, body):
 
 def generate_pdf_invoice(invoice):
     """Generate PDF invoice"""
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
-    styles = getSampleStyleSheet()
+    try:
+        # Ensure proper UTF-8 encoding for rupee symbol
+        import codecs
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        styles = getSampleStyleSheet()
 
-    # Create custom styles
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=18,
-        spaceAfter=30,
-        alignment=TA_CENTER
-    )
+        # Create custom styles
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            spaceAfter=30,
+            alignment=TA_CENTER
+        )
 
-    header_style = ParagraphStyle(
-        'CustomHeader',
-        parent=styles['Heading2'],
-        fontSize=14,
-        spaceAfter=12,
-        alignment=TA_CENTER
-    )
+        header_style = ParagraphStyle(
+            'CustomHeader',
+            parent=styles['Heading2'],
+            fontSize=14,
+            spaceAfter=12,
+            alignment=TA_CENTER
+        )
 
-    story = []
+        story = []
 
-    # College Header
-    story.append(Paragraph("Shri Raghunath Bishnoi Memorial College (SRBMC), Raniwara", title_style))
-    story.append(Spacer(1, 12))
-    story.append(Paragraph("FEE RECEIPT", header_style))
-    story.append(Spacer(1, 20))
+        # College Header
+        story.append(Paragraph("Shri Raghunath Bishnoi Memorial College (SRBMC), Raniwara", title_style))
+        story.append(Spacer(1, 12))
+        story.append(Paragraph("FEE RECEIPT", header_style))
+        story.append(Spacer(1, 20))
 
-    # Invoice details
-    invoice_data = [
-        ['Invoice Number:', invoice.invoice_number],
-        ['Date:', invoice.date_time.strftime('%d/%m/%Y')],
-        ['Student ID:', invoice.student.student_unique_id],
-        ['Student Name:', f"{invoice.student.first_name} {invoice.student.last_name}"],
-        ['Course:', invoice.student.current_course],
-        ['Amount Paid:', f"₹{invoice.invoice_amount}"],
-        ['Payment Mode:', 'Cash'],  # You can add this field to the model
-    ]
+        # Invoice details
+        invoice_data = [
+            ['Invoice Number:', invoice.invoice_number],
+            ['Date:', invoice.date_time.strftime('%d/%m/%Y')],
+            ['Student ID:', invoice.student.student_unique_id],
+            ['Student Name:', f"{invoice.student.first_name} {invoice.student.last_name}"],
+            ['Course:', invoice.student.current_course],
+            ['Amount Paid:', f"₹{invoice.invoice_amount}"],
+            ['Payment Mode:', 'Cash'],  # You can add this field to the model
+        ]
 
-    table = Table(invoice_data, colWidths=[2*inch, 3*inch])
-    table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ]))
+        table = Table(invoice_data, colWidths=[2*inch, 3*inch])
+        table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
 
-    story.append(table)
-    story.append(Spacer(1, 30))
+        story.append(table)
+        story.append(Spacer(1, 30))
 
-    # Footer
-    story.append(Paragraph("Thank you for your payment!", styles['Normal']))
-    story.append(Spacer(1, 20))
-    story.append(Paragraph("This is a computer-generated receipt.", styles['Italic']))
+        # Footer
+        story.append(Paragraph("Thank you for your payment!", styles['Normal']))
+        story.append(Spacer(1, 20))
+        story.append(Paragraph("This is a computer-generated receipt.", styles['Italic']))
 
-    doc.build(story)
-    buffer.seek(0)
-    return buffer.getvalue()
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()
+    except Exception as e:
+        current_app.logger.error(f"Error generating PDF invoice: {str(e)}")
+        return None
 
 def generate_pdf_report_card(exam):
     """Generate PDF report card"""

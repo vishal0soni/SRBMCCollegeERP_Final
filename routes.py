@@ -3,6 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy import func, and_, or_
 from datetime import datetime, date
+import datetime as dt
 import io
 import csv
 import pandas as pd
@@ -10,6 +11,11 @@ import pandas as pd
 from app import app, db
 from models import *
 from forms import *
+
+# Template function to get current datetime
+@app.template_global()
+def moment():
+    return datetime.now()
 from utils import generate_student_id, generate_invoice_number, calculate_grade, can_edit_module, send_email, generate_pdf_invoice, generate_pdf_report_card, generate_pdf_student_report, generate_pdf_fee_statement, generate_pdf_fee_statement_print
 from bulk_operations import (
     get_students_export_data, get_courses_export_data, get_course_details_export_data,

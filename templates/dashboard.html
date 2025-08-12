@@ -379,32 +379,38 @@
                 document.getElementById("totalStudentsCount").textContent =
                     totalStudents;
 
-                courseChart = new Chart(ctx, {
-                    type: "doughnut",
-                    data: {
-                        labels: data.courses,
-                        datasets: [
-                            {
-                                data: data.counts,
-                                backgroundColor: [
-                                    "#4e73df",
-                                    "#1cc88a",
-                                    "#36b9cc",
-                                    "#f6c23e",
-                                    "#e74a3b",
-                                    "#858796",
-                                    "#5a5c69",
-                                    "#2c5282",
-                                    "#1a365d",
-                                    "#3182ce",
-                                    "#fd7e14",
-                                    "#6f42c1",
+                // Calculate percentages
+                        const totalStudents = data.counts.reduce((a, b) => a + b, 0);
+                        const percentages = data.counts.map(count => 
+                            totalStudents > 0 ? ((count / totalStudents) * 100).toFixed(1) : 0
+                        );
+
+                        courseChart = new Chart(ctx, {
+                            type: "doughnut",
+                            data: {
+                                labels: data.courses,
+                                datasets: [
+                                    {
+                                        data: percentages,
+                                        backgroundColor: [
+                                            "#4e73df",
+                                            "#1cc88a",
+                                            "#36b9cc",
+                                            "#f6c23e",
+                                            "#e74a3b",
+                                            "#858796",
+                                            "#5a5c69",
+                                            "#2c5282",
+                                            "#1a365d",
+                                            "#3182ce",
+                                            "#fd7e14",
+                                            "#6f42c1",
+                                        ],
+                                        borderWidth: 2,
+                                        borderColor: "#fff",
+                                    },
                                 ],
-                                borderWidth: 2,
-                                borderColor: "#fff",
                             },
-                        ],
-                    },
                     plugins: [ChartDataLabels],
                     options: {
                         responsive: true,
@@ -426,34 +432,15 @@
                                             this,
                                             chart,
                                         );
-                                        const total =
-                                            chart.data.datasets[0].data.reduce(
-                                                (a, b) => a + b,
-                                                0,
-                                            );
 
                                         labels.forEach((label, index) => {
-                                            const value =
-                                                chart.data.datasets[0].data[
-                                                    index
-                                                ];
-                                            const percentage =
-                                                total > 0
-                                                    ? (
-                                                          (value / total) *
-                                                          100
-                                                      ).toFixed(1)
-                                                    : 0;
-                                            const courseName =
-                                                chart.data.labels[index];
+                                            const percentage = chart.data.datasets[0].data[index];
+                                            const courseName = chart.data.labels[index];
 
                                             // Truncate long course names for legend
                                             const displayName =
                                                 courseName.length > 20
-                                                    ? courseName.substring(
-                                                          0,
-                                                          17,
-                                                      ) + "..."
+                                                    ? courseName.substring(0, 17) + "..."
                                                     : courseName;
 
                                             label.text = `${displayName} (${percentage}%)`;
@@ -469,26 +456,18 @@
                                         return `Course: ${context[0].label}`;
                                     },
                                     label: function (context) {
-                                        const total =
-                                            context.dataset.data.reduce(
-                                                (a, b) => a + b,
-                                                0,
-                                            );
-                                        const percentage =
-                                            total > 0
-                                                ? (
-                                                      (context.parsed / total) *
-                                                      100
-                                                  ).toFixed(1)
-                                                : 0;
+                                        const courseIndex = context.dataIndex;
+                                        const studentCount = data.counts[courseIndex];
+                                        const percentage = context.parsed;
                                         return [
-                                            `Students: ${context.parsed}`,
+                                            `Students: ${studentCount}`,
                                             `Percentage: ${percentage}%`,
-                                            `Total Students: ${total}`,
+                                            `Total Students: ${totalStudents}`,
                                         ];
                                     },
                                     afterLabel: function (context) {
-                                        const studentCount = context.parsed;
+                                        const courseIndex = context.dataIndex;
+                                        const studentCount = data.counts[courseIndex];
                                         if (studentCount === 1) {
                                             return "1 student enrolled";
                                         } else if (studentCount === 0) {
@@ -520,16 +499,11 @@
                                     size: 14
                                 },
                                 formatter: function(value, context) {
-                                    const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                    if (total === 0) return '0%';
-                                    const percentage = ((value / total) * 100).toFixed(1);
-                                    return percentage + '%';
+                                    return value + '%';
                                 },
                                 display: function(context) {
-                                    const value = context.dataset.data[context.dataIndex];
-                                    const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                    const percentage = (value / total) * 100;
-                                    return percentage > 5; // Only show percentages for slices larger than 5%
+                                    const value = parseFloat(context.dataset.data[context.dataIndex]);
+                                    return value > 5; // Only show percentages for slices larger than 5%
                                 }
                             }
                         },

@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block title %}Fee Summary - SRBMC ERP{% endblock %}
@@ -87,10 +86,10 @@
     <div class="col-lg-6 mb-4">
         <div class="card shadow">
             <div class="card-header">
-                <h6 class="m-0 font-weight-bold text-primary">Monthly Fee Collection</h6>
+                <h6 class="m-0 font-weight-bold text-primary">Monthly Fee Collections</h6>
             </div>
-            <div class="card-body">
-                <canvas id="monthlyCollectionChart" height="300"></canvas>
+            <div class="card-body" style="height: 250px;">
+                <canvas id="monthlyCollectionChart" height="200"></canvas>
             </div>
         </div>
     </div>
@@ -101,8 +100,8 @@
             <div class="card-header">
                 <h6 class="m-0 font-weight-bold text-primary">Payment Mode Distribution</h6>
             </div>
-            <div class="card-body">
-                <canvas id="paymentModeChart" height="300"></canvas>
+            <div class="card-body" style="height: 250px;">
+                <canvas id="paymentModeChart" height="200"></canvas>
             </div>
         </div>
     </div>
