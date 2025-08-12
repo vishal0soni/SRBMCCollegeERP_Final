@@ -1149,12 +1149,21 @@ def add_exam():
         return redirect(url_for('dashboard'))
 
     form = ExamForm()
-    form.course_id.choices = [(c.course_id, c.course_full_name) for c in Course.query.all()]
 
     if request.method == 'POST':
         # Get data from form
         student_id = request.form.get('student_id')
-        course_id = form.course_id.data
+        student = Student.query.get(student_id)
+        
+        # Get course_id from student's course
+        course_id = None
+        if student and student.current_course:
+            course_detail = CourseDetails.query.filter_by(course_full_name=student.current_course).first()
+            if course_detail:
+                course = Course.query.filter_by(course_short_name=course_detail.course_short_name).first()
+                if course:
+                    course_id = course.course_id
+        
         semester = form.semester.data
         exam_name = form.exam_name.data
         exam_date = form.exam_date.data
@@ -1237,7 +1246,6 @@ def edit_exam(exam_id):
 
     exam = Exam.query.get_or_404(exam_id)
     form = ExamForm(obj=exam)
-    form.course_id.choices = [(c.course_id, c.course_full_name) for c in Course.query.all()]
 
     if request.method == 'POST':
         # Get subject data (student info remains fixed in edit mode)
@@ -1266,8 +1274,18 @@ def edit_exam(exam_id):
         grade = calculate_grade(percentage)
         status = 'Pass' if percentage >= 40 else 'Fail'
 
+        # Get course_id from student's course (student info remains unchanged)
+        student = exam.student
+        course_id = None
+        if student and student.current_course:
+            course_detail = CourseDetails.query.filter_by(course_full_name=student.current_course).first()
+            if course_detail:
+                course = Course.query.filter_by(course_short_name=course_detail.course_short_name).first()
+                if course:
+                    course_id = course.course_id
+        
         # Update exam (student info remains unchanged)
-        exam.course_id = form.course_id.data
+        exam.course_id = course_id
         exam.semester = form.semester.data
         exam.exam_name = form.exam_name.data
         exam.exam_date = form.exam_date.data

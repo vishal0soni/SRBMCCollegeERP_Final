@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block title %}{{ title }} - SRBMC ERP{% endblock %}
@@ -31,47 +32,55 @@
                     
                     <!-- Basic Information -->
                     <h6 class="text-primary mb-3">Basic Information</h6>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Search Student</label>
-                            {% if exam %}
-                            <!-- Edit mode - show fixed student info -->
-                            <div class="card bg-light">
-                                <div class="card-body">
-                                    <h6>Selected Student (Fixed)</h6>
+                    
+                    {% if exam %}
+                    <!-- Edit mode - show student info in card -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6>Student Information</h6>
+                            <div class="row">
+                                <div class="col-md-6">
                                     <p><strong>Student ID:</strong> {{ exam.student.student_unique_id }}</p>
                                     <p><strong>Name:</strong> {{ exam.student.first_name }} {{ exam.student.last_name }}</p>
+                                </div>
+                                <div class="col-md-6">
                                     <p><strong>Course:</strong> {{ exam.student.current_course }}</p>
                                 </div>
                             </div>
-                            <input type="hidden" name="student_id" value="{{ exam.student_id }}">
-                            {% else %}
-                            <!-- Add mode - show search functionality -->
-                            <input type="text" class="form-control mb-2" id="studentSearch" placeholder="Search by Student Name or ID..." onkeyup="searchStudents()">
-                            <div id="studentResults" class="list-group" style="display: none; max-height: 200px; overflow-y: auto;"></div>
-                            <input type="hidden" name="student_id" id="selectedStudentId" required>
-                            {% if form.student_id.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.student_id.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                            {% endif %}
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            {{ form.course_id.label(class="form-label") }}
-                            {{ form.course_id(class="form-select") }}
-                            {% if form.course_id.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.course_id.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
                         </div>
                     </div>
+                    <input type="hidden" name="student_id" value="{{ exam.student_id }}">
+                    {% else %}
+                    <!-- Add mode - show search functionality -->
+                    <div class="col-md-6 mb-3">
+                        <input type="text" class="form-control mb-2" id="studentSearch" placeholder="Search by Student Name or ID..." onkeyup="searchStudents()">
+                        <div id="studentResults" class="list-group" style="display: none; max-height: 200px; overflow-y: auto;"></div>
+                        <input type="hidden" name="student_id" id="selectedStudentId" required>
+                        {% if form.student_id.errors %}
+                            <div class="text-danger">
+                                {% for error in form.student_id.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Student Info Display -->
+                    <div id="studentInfo" class="card bg-light mb-4" style="display: none;">
+                        <div class="card-body">
+                            <h6>Student Information</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Student ID:</strong> <span id="displayStudentId">-</span></p>
+                                    <p><strong>Name:</strong> <span id="displayStudentName">-</span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Course:</strong> <span id="displayStudentCourse">-</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                     
                     <div class="row">
                         <div class="col-md-4 mb-3">
@@ -111,25 +120,6 @@
                         </div>
                     </div>
                     
-                    <!-- Student Info Display -->
-                    {% if not exam %}
-                    <div id="studentInfo" class="card bg-light mb-4" style="display: none;">
-                        <div class="card-body">
-                            <h6>Selected Student Information</h6>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong>Student ID:</strong> <span id="displayStudentId">-</span></p>
-                                    <p><strong>Name:</strong> <span id="displayStudentName">-</span></p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p><strong>Course:</strong> <span id="displayStudentCourse">-</span></p>
-                                    <p><strong>Current Subjects:</strong> <span id="displayStudentSubjects">-</span></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-                    
                     <!-- Subject Marks -->
                     <h6 class="text-primary mb-3">Subject-wise Marks</h6>
                     
@@ -143,7 +133,7 @@
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Subject 1 Name</label>
                                     <input type="text" class="form-control" name="subject1_name" id="subject1_name" 
-                                           value="{{ form.subject1_name.data or '' }}" readonly>
+                                           value="{{ form.subject1_name.data or '' }}" {% if not exam %}readonly{% endif %}>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     {{ form.subject1_max_marks.label(class="form-label") }}
@@ -151,7 +141,8 @@
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     {{ form.subject1_obtained_marks.label(class="form-label") }}
-                                    {{ form.subject1_obtained_marks(class="form-control", onchange="calculateTotals()") }}
+                                    {{ form.subject1_obtained_marks(class="form-control", onchange="validateAndCalculate(this)", oninput="validateAndCalculate(this)") }}
+                                    <div id="subject1_error" class="text-danger small" style="display: none;">Obtained marks cannot exceed max marks</div>
                                 </div>
                             </div>
                         </div>
@@ -167,7 +158,7 @@
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Subject 2 Name</label>
                                     <input type="text" class="form-control" name="subject2_name" id="subject2_name" 
-                                           value="{{ form.subject2_name.data or '' }}" readonly>
+                                           value="{{ form.subject2_name.data or '' }}" {% if not exam %}readonly{% endif %}>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     {{ form.subject2_max_marks.label(class="form-label") }}
@@ -175,7 +166,8 @@
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     {{ form.subject2_obtained_marks.label(class="form-label") }}
-                                    {{ form.subject2_obtained_marks(class="form-control", onchange="calculateTotals()") }}
+                                    {{ form.subject2_obtained_marks(class="form-control", onchange="validateAndCalculate(this)", oninput="validateAndCalculate(this)") }}
+                                    <div id="subject2_error" class="text-danger small" style="display: none;">Obtained marks cannot exceed max marks</div>
                                 </div>
                             </div>
                         </div>
@@ -191,7 +183,7 @@
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Subject 3 Name</label>
                                     <input type="text" class="form-control" name="subject3_name" id="subject3_name" 
-                                           value="{{ form.subject3_name.data or '' }}" readonly>
+                                           value="{{ form.subject3_name.data or '' }}" {% if not exam %}readonly{% endif %}>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     {{ form.subject3_max_marks.label(class="form-label") }}
@@ -199,7 +191,8 @@
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     {{ form.subject3_obtained_marks.label(class="form-label") }}
-                                    {{ form.subject3_obtained_marks(class="form-control", onchange="calculateTotals()") }}
+                                    {{ form.subject3_obtained_marks(class="form-control", onchange="validateAndCalculate(this)", oninput="validateAndCalculate(this)") }}
+                                    <div id="subject3_error" class="text-danger small" style="display: none;">Obtained marks cannot exceed max marks</div>
                                 </div>
                             </div>
                         </div>
@@ -231,7 +224,8 @@
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Obtained Marks</label>
-                                        <input type="number" class="form-control" name="subject4_obtained_marks" value="0" onchange="calculateTotals()">
+                                        <input type="number" class="form-control" name="subject4_obtained_marks" value="0" onchange="validateAndCalculate(this)" oninput="validateAndCalculate(this)">
+                                        <div id="subject4_error" class="text-danger small" style="display: none;">Obtained marks cannot exceed max marks</div>
                                     </div>
                                 </div>
                             </div>
@@ -254,7 +248,8 @@
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Obtained Marks</label>
-                                        <input type="number" class="form-control" name="subject5_obtained_marks" value="0" onchange="calculateTotals()">
+                                        <input type="number" class="form-control" name="subject5_obtained_marks" value="0" onchange="validateAndCalculate(this)" oninput="validateAndCalculate(this)">
+                                        <div id="subject5_error" class="text-danger small" style="display: none;">Obtained marks cannot exceed max marks</div>
                                     </div>
                                 </div>
                             </div>
@@ -277,7 +272,8 @@
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Obtained Marks</label>
-                                        <input type="number" class="form-control" name="subject6_obtained_marks" value="0" onchange="calculateTotals()">
+                                        <input type="number" class="form-control" name="subject6_obtained_marks" value="0" onchange="validateAndCalculate(this)" oninput="validateAndCalculate(this)">
+                                        <div id="subject6_error" class="text-danger small" style="display: none;">Obtained marks cannot exceed max marks</div>
                                     </div>
                                 </div>
                             </div>
@@ -446,11 +442,6 @@ function selectStudent(student) {
                 document.getElementById('subject1_name').value = data.subject_1_name || '';
                 document.getElementById('subject2_name').value = data.subject_2_name || '';
                 document.getElementById('subject3_name').value = data.subject_3_name || '';
-                
-                // Update display
-                const subjectsList = [data.subject_1_name, data.subject_2_name, data.subject_3_name]
-                    .filter(s => s).join(', ');
-                document.getElementById('displayStudentSubjects').textContent = subjectsList || 'No subjects assigned';
             }
         })
         .catch(error => {
@@ -460,8 +451,27 @@ function selectStudent(student) {
     document.getElementById('studentInfo').style.display = 'block';
 }
 
-function loadStudentInfo() {
-    // This function is kept for backward compatibility but is now handled by selectStudent
+function validateAndCalculate(obtainedField) {
+    // Get the corresponding max marks field
+    const fieldName = obtainedField.name;
+    const subjectNum = fieldName.replace('obtained_marks', '').replace('subject', '');
+    const maxField = document.getElementsByName(`subject${subjectNum}_max_marks`)[0];
+    const errorDiv = document.getElementById(`subject${subjectNum}_error`);
+    
+    if (maxField && errorDiv) {
+        const obtainedValue = parseInt(obtainedField.value) || 0;
+        const maxValue = parseInt(maxField.value) || 0;
+        
+        if (obtainedValue > maxValue && maxValue > 0) {
+            errorDiv.style.display = 'block';
+            obtainedField.classList.add('is-invalid');
+        } else {
+            errorDiv.style.display = 'none';
+            obtainedField.classList.remove('is-invalid');
+        }
+    }
+    
+    calculateTotals();
 }
 
 function showAdditionalSubjects() {
@@ -548,8 +558,6 @@ function getGradeBadgeClass(grade) {
             return 'bg-danger';
     }
 }
-
-
 
 // Initialize calculations on page load
 document.addEventListener('DOMContentLoaded', function() {

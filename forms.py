@@ -144,7 +144,7 @@ class FeeManagementForm(FlaskForm):
 
 class ExamForm(FlaskForm):
     student_id = SelectField('Student', coerce=int, validators=[DataRequired()])
-    course_id = SelectField('Course', coerce=int, validators=[DataRequired()])
+    course_id = SelectField('Course', coerce=int, validators=[Optional()])
     semester = StringField('Semester', validators=[DataRequired(), Length(max=20)])
     exam_name = StringField('Exam Name', validators=[DataRequired(), Length(max=100)])
     exam_date = DateField('Exam Date', validators=[DataRequired()])
