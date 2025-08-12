@@ -361,24 +361,46 @@
                 <h6 class="m-0 font-weight-bold text-primary">Key Insights & Recommendations</h6>
             </div>
             <div class="card-body">
-                <div class="alert alert-success">
-                    <i class="fas fa-thumbs-up"></i>
-                    <strong>Excellent Performance:</strong> BA students showing 15% improvement in average scores compared to last semester.
-                </div>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item border-0 px-0">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-thumbs-up text-success me-3"></i>
+                            <div>
+                                <h6 class="mb-1 text-success">Excellent Performance</h6>
+                                <p class="mb-0 text-muted">BA students showing 15% improvement in average scores compared to last semester.</p>
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i>
-                    <strong>Fee Collection:</strong> 92.7% collection rate is above target. Focus on remaining 7.3% for complete collection.
-                </div>
+                    <div class="list-group-item border-0 px-0">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-info-circle text-info me-3"></i>
+                            <div>
+                                <h6 class="mb-1 text-info">Fee Collection</h6>
+                                <p class="mb-0 text-muted">92.7% collection rate is above target. Focus on remaining 7.3% for complete collection.</p>
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <strong>Attention Required:</strong> Mathematics subject showing lower average scores. Consider additional support classes.
-                </div>
+                    <div class="list-group-item border-0 px-0">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle text-warning me-3"></i>
+                            <div>
+                                <h6 class="mb-1 text-warning">Attention Required</h6>
+                                <p class="mb-0 text-muted">Mathematics subject showing lower average scores. Consider additional support classes.</p>
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="alert alert-primary">
-                    <i class="fas fa-lightbulb"></i>
-                    <strong>Recommendation:</strong> Implement peer tutoring program for subjects with lower performance rates.
+                    <div class="list-group-item border-0 px-0">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-lightbulb text-primary me-3"></i>
+                            <div>
+                                <h6 class="mb-1 text-primary">Recommendation</h6>
+                                <p class="mb-0 text-muted">Implement peer tutoring program for subjects with lower performance rates.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -583,31 +605,12 @@ function hideLoadingState() {
 }
 
 function showInlineNotification(message, type) {
-    // Find or create notification area
-    let notificationArea = document.getElementById('notificationArea');
-    if (!notificationArea) {
-        notificationArea = document.createElement('div');
-        notificationArea.id = 'notificationArea';
-        notificationArea.className = 'notification-area';
-        document.querySelector('.row').prepend(notificationArea);
+    // Use the main app notification system instead of inline notifications
+    if (window.SRBMCApp && window.SRBMCApp.showNotification) {
+        window.SRBMCApp.showNotification(message, type, 3000);
+    } else {
+        console.log(`${type.toUpperCase()}: ${message}`);
     }
-
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type} alert-dismissible fade show`;
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'info' ? 'info-circle' : 'exclamation-triangle'}"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-
-    notificationArea.appendChild(notification);
-
-    // Auto remove after 3 seconds
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
-    }, 3000);
 }
 </script>
 
