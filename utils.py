@@ -114,36 +114,32 @@ def send_email(to_email, subject, body):
 def generate_pdf_invoice(invoice):
     """Generate PDF invoice"""
     try:
-        # Ensure proper UTF-8 encoding for rupee symbol
-        import codecs
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from reportlab.lib import colors
+        from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
+        import io
+
+        # Create PDF buffer
         buffer = io.BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.5*inch)
+
+        # Get styles
         styles = getSampleStyleSheet()
+        title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=18, spaceAfter=30, alignment=TA_CENTER)
+        heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontSize=14, spaceAfter=12, alignment=TA_LEFT)
+        normal_style = styles['Normal']
 
-        # Create custom styles
-        title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
-            fontSize=18,
-            spaceAfter=30,
-            alignment=TA_CENTER
-        )
+        # Build PDF content
+        content = []
 
-        header_style = ParagraphStyle(
-            'CustomHeader',
-            parent=styles['Heading2'],
-            fontSize=14,
-            spaceAfter=12,
-            alignment=TA_CENTER
-        )
-
-        story = []
-
-        # College Header
-        story.append(Paragraph("Shri Raghunath Bishnoi Memorial College (SRBMC), Raniwara", title_style))
-        story.append(Spacer(1, 12))
-        story.append(Paragraph("FEE RECEIPT", header_style))
-        story.append(Spacer(1, 20))
+        # College header
+        content.append(Paragraph("SHRI RAGHUNATH BISHNOI MEMORIAL COLLEGE", title_style))
+        content.append(Paragraph("Raniwara, Jalore, Rajasthan", styles['Normal']))
+        content.append(Paragraph("FEE RECEIPT", heading_style))
+        content.append(Spacer(1, 20))
 
         # Invoice details
         invoice_data = [
@@ -151,34 +147,32 @@ def generate_pdf_invoice(invoice):
             ['Date:', invoice.date_time.strftime('%d/%m/%Y')],
             ['Student ID:', invoice.student.student_unique_id],
             ['Student Name:', f"{invoice.student.first_name} {invoice.student.last_name}"],
-            ['Course:', invoice.student.current_course],
-            ['Amount Paid:', f"₹ {invoice.invoice_amount}"],
-            ['Payment Mode:', 'Cash'],  # You can add this field to the model
+            ['Course:', invoice.student.current_course or 'N/A'],
+            ['Amount Paid:', f"₹ {invoice.invoice_amount:.2f}"]
         ]
 
-        table = Table(invoice_data, colWidths=[2*inch, 3*inch])
-        table.setStyle(TableStyle([
+        invoice_table = Table(invoice_data, colWidths=[2*inch, 4*inch])
+        invoice_table.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ]))
 
-        story.append(table)
-        story.append(Spacer(1, 30))
+        content.append(invoice_table)
+        content.append(Spacer(1, 30))
 
         # Footer
-        story.append(Paragraph("Thank you for your payment!", styles['Normal']))
-        story.append(Spacer(1, 20))
-        story.append(Paragraph("This is a computer-generated receipt.", styles['Italic']))
+        content.append(Paragraph("Thank you for your payment!", styles['Normal']))
+        content.append(Paragraph("This is a computer-generated receipt.", styles['Normal']))
 
-        doc.build(story)
+        # Build PDF
+        doc.build(content)
         buffer.seek(0)
         return buffer.getvalue()
+
     except Exception as e:
-        current_app.logger.error(f"Error generating PDF invoice: {str(e)}")
+        print(f"Error generating PDF: {e}")
         return None
 
 def generate_pdf_report_card(exam):
@@ -466,51 +460,45 @@ Generated on: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
         return buffer.getvalue()
 
 def generate_pdf_fee_statement(student, fee_record, invoices):
-    """Generate PDF fee statement"""
+    """Generate comprehensive PDF fee statement with payment history"""
     try:
         from reportlab.lib.pagesizes import letter, A4
         from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
         from reportlab.lib.units import inch
         from reportlab.lib import colors
-        from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+        from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
+        import io
 
+        # Create PDF buffer
         buffer = io.BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.5*inch)
 
         # Get styles
         styles = getSampleStyleSheet()
+        title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=18, spaceAfter=30, alignment=TA_CENTER)
+        heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontSize=14, spaceAfter=12, alignment=TA_LEFT)
+        normal_style = styles['Normal']
 
-        # Custom styles
-        title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
-            fontSize=18,
-            spaceAfter=30,
-            alignment=TA_CENTER,
-            textColor=colors.darkblue
-        )
+        # Build PDF content
+        content = []
 
-        heading_style = ParagraphStyle(
-            'CustomHeading',
-            parent=styles['Heading2'],
-            fontSize=14,
-            spaceAfter=12,
-            textColor=colors.darkblue
-        )
+        # College header
+        content.append(Paragraph("SHRI RAGHUNATH BISHNOI MEMORIAL COLLEGE", title_style))
+        content.append(Paragraph("Raniwara, Jalore, Rajasthan", styles['Normal']))
+        content.append(Paragraph("FEE STATEMENT", heading_style))
+        content.append(Spacer(1, 20))
 
-        story = []
+        if not fee_record:
+            content.append(Paragraph("No fee record found for this student.", normal_style))
+            doc.build(content)
+            buffer.seek(0)
+            return buffer.getvalue()
 
-        # Title
-        story.append(Paragraph("SHRI RAGHUNATH BISHNOI MEMORIAL COLLEGE", title_style))
-        story.append(Paragraph("Fee Statement", styles['Heading2']))
-        story.append(Spacer(1, 20))
-
-        # Student Information
-        story.append(Paragraph("Student Information", heading_style))
+        # Student details
         student_data = [
             ['Student ID:', student.student_unique_id],
-            ['Name:', f"{student.first_name} {student.last_name}"],
+            ['Student Name:', f"{student.first_name} {student.last_name}"],
             ['Father Name:', student.father_name or 'N/A'],
             ['Course:', student.current_course or 'N/A'],
             ['Phone:', student.phone or 'N/A'],
@@ -525,181 +513,175 @@ def generate_pdf_fee_statement(student, fee_record, invoices):
             ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ]))
 
-        story.append(student_table)
-        story.append(Spacer(1, 20))
+        content.append(student_table)
+        content.append(Spacer(1, 20))
 
-        # Fee Summary
-        if fee_record:
-            total_paid = sum([
-                float(fee_record.installment_1 or 0),
-                float(fee_record.installment_2 or 0),
-                float(fee_record.installment_3 or 0),
-                float(fee_record.installment_4 or 0),
-                float(fee_record.installment_5 or 0),
-                float(fee_record.installment_6 or 0)
-            ])
-            total_fee = float(fee_record.total_fee or 0)
-            due_amount = total_fee - total_paid
+        # Fee summary
+        total_paid = (
+            (fee_record.installment_1 or 0) +
+            (fee_record.installment_2 or 0) +
+            (fee_record.installment_3 or 0) +
+            (fee_record.installment_4 or 0) +
+            (fee_record.installment_5 or 0) +
+            (fee_record.installment_6 or 0)
+        )
 
-            story.append(Paragraph("Fee Summary", heading_style))
-            fee_summary_data = [
-                ['Total Fee:', f"₹ {total_fee:,.2f}"],
-                ['Total Paid:', f"₹ {total_paid:,.2f}"],
-                ['Balance Due:', f"₹ {due_amount:,.2f}"],
-            ]
+        balance_due = (fee_record.total_fee or 0) - total_paid
 
-            fee_summary_table = Table(fee_summary_data, colWidths=[2*inch, 2*inch])
-            fee_summary_table.setStyle(TableStyle([
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ]))
+        fee_summary_data = [
+            ['Total Fee:', f"₹ {fee_record.total_fee or 0:.2f}"],
+            ['Total Paid:', f"₹ {total_paid:.2f}"],
+            ['Balance Due:', f"₹ {balance_due:.2f}"],
+        ]
 
-            story.append(fee_summary_table)
-            story.append(Spacer(1, 20))
+        fee_summary_table = Table(fee_summary_data, colWidths=[2*inch, 4*inch])
+        fee_summary_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
 
-        # Payment History
+        content.append(Paragraph("Fee Summary", heading_style))
+        content.append(fee_summary_table)
+        content.append(Spacer(1, 20))
+
+        # Payment history
         if invoices:
-            story.append(Spacer(1, 20))
-            story.append(Paragraph("Payment History", heading_style))
+            content.append(Paragraph("Payment History", heading_style))
 
-            payment_data = [['Date', 'Invoice No.', 'Amount (₹)', 'Installment']]
-            for invoice in invoices[:10]:  # Show last 10 payments
+            payment_data = [['Date', 'Invoice Number', 'Amount', 'Installment']]
+            for invoice in invoices:
                 payment_data.append([
-                    invoice.date_time.strftime('%d-%m-%Y'),
+                    invoice.date_time.strftime('%d/%m/%Y'),
                     invoice.invoice_number,
-                    f"₹ {float(invoice.invoice_amount):,.2f}",
-                    f"Installment {invoice.installment_number}"
+                    f"₹ {invoice.invoice_amount:.2f}",
+                    f"Installment {invoice.installment_number or 'N/A'}"
                 ])
 
-            payment_table = Table(payment_data, colWidths=[1.5*inch, 2*inch, 1.5*inch, 1.5*inch])
+            payment_table = Table(payment_data, colWidths=[1.2*inch, 2*inch, 1.5*inch, 1.3*inch])
             payment_table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
                 ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ]))
 
-            story.append(payment_table)
-            story.append(Spacer(1, 20))
+            content.append(payment_table)
+
+        content.append(Spacer(1, 30))
 
         # Footer
-        story.append(Spacer(1, 30))
-        story.append(Paragraph("Generated on: " + datetime.now().strftime('%d/%m/%Y %H:%M'), styles['Normal']))
-        story.append(Paragraph("This is a computer-generated statement.", styles['Italic']))
+        content.append(Paragraph("Generated on: " + datetime.now().strftime('%d/%m/%Y %H:%M'), normal_style))
 
-        doc.build(story)
+        # Build PDF
+        doc.build(content)
         buffer.seek(0)
         return buffer.getvalue()
+
     except Exception as e:
-        current_app.logger.error(f"Error generating PDF fee statement: {str(e)}")
+        print(f"Error generating fee statement PDF: {e}")
         return None
 
 def generate_pdf_fee_statement_print(student, fee_record):
-    """Generate fee statement PDF for printing without payment history"""
+    """Generate PDF fee statement for printing"""
     try:
         from reportlab.lib.pagesizes import letter, A4
-        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
         from reportlab.lib.units import inch
         from reportlab.lib import colors
-        from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+        from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
         import io
 
+        # Create PDF buffer
         buffer = io.BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.5*inch)
 
-        # Container for the 'Flowable' objects
-        elements = []
+        # Get styles
         styles = getSampleStyleSheet()
+        title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=18, spaceAfter=30, alignment=TA_CENTER)
+        heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontSize=14, spaceAfter=12, alignment=TA_LEFT)
+        normal_style = styles['Normal']
 
-        # Title style
-        title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
-            fontSize=16,
-            spaceAfter=30,
-            alignment=TA_CENTER
-        )
+        # Build PDF content
+        content = []
 
-        # Add title
-        title = Paragraph("SRBMC College Fee Statement", title_style)
-        elements.append(title)
-        elements.append(Spacer(1, 12))
+        # College header
+        content.append(Paragraph("SHRI RAGHUNATH BISHNOI MEMORIAL COLLEGE", title_style))
+        content.append(Paragraph("Raniwara, Jalore, Rajasthan", styles['Normal']))
+        content.append(Paragraph("FEE STATEMENT", heading_style))
+        content.append(Spacer(1, 20))
 
-        # Student information
+        if not fee_record:
+            content.append(Paragraph("No fee record found for this student.", normal_style))
+            doc.build(content)
+            buffer.seek(0)
+            return buffer.getvalue()
+
+        # Student details
         student_data = [
-            ['Student Details', ''],
             ['Student ID:', student.student_unique_id],
-            ['Name:', f"{student.first_name} {student.last_name}"],
-            ['Course:', student.current_course or 'N/A'],
+            ['Student Name:', f"{student.first_name} {student.last_name}"],
             ['Father Name:', student.father_name or 'N/A'],
-            ['Phone:', student.phone or 'N/A']
+            ['Course:', student.current_course or 'N/A'],
+            ['Phone:', student.phone or 'N/A'],
         ]
 
-        student_table = Table(student_data, colWidths=[2*inch, 3*inch])
+        student_table = Table(student_data, colWidths=[2*inch, 4*inch])
         student_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (1, 0), colors.whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ]))
 
-        elements.append(student_table)
-        elements.append(Spacer(1, 20))
+        content.append(student_table)
+        content.append(Spacer(1, 20))
 
-        if fee_record:
-            # Fee breakdown
-            fee_data = [
-                ['Fee Breakdown', 'Amount (₹)'],
-                ['Course Tuition Fee', f"{fee_record.total_course_fees or 0:.2f}"],
-                ['Enrollment Fee', f"{fee_record.enrollment_fee or 0:.2f}"],
-                ['Eligibility Certificate Fee', f"{fee_record.eligibility_certificate_fee or 0:.2f}"],
-                ['University Affiliation Fee', f"{fee_record.university_affiliation_fee or 0:.2f}"],
-                ['University Sports Fee', f"{fee_record.university_sports_fee or 0:.2f}"],
-                ['University Development Fee', f"{fee_record.university_development_fee or 0:.2f}"],
-                ['TC/CC Fee', f"{fee_record.tc_cc_fee or 0:.2f}"],
-                ['Miscellaneous Fees', f"{(fee_record.miscellaneous_fee_1 or 0) + (fee_record.miscellaneous_fee_2 or 0) + (fee_record.miscellaneous_fee_3 or 0):.2f}"],
-                ['', ''],
-                ['Total Fee', f"{fee_record.total_fee or 0:.2f}"],
-                ['Amount Paid', f"{fee_record.total_fees_paid or 0:.2f}"],
-                ['Balance Due', f"{(fee_record.total_fee or 0) - (fee_record.total_fees_paid or 0):.2f}"]
-            ]
+        # Fee summary
+        total_paid = (
+            (fee_record.installment_1 or 0) +
+            (fee_record.installment_2 or 0) +
+            (fee_record.installment_3 or 0) +
+            (fee_record.installment_4 or 0) +
+            (fee_record.installment_5 or 0) +
+            (fee_record.installment_6 or 0)
+        )
 
-            fee_table = Table(fee_data, colWidths=[3*inch, 2*inch])
-            fee_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 12),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -3), colors.beige),
-                ('BACKGROUND', (0, -3), (-1, -1), colors.lightgrey),
-                ('FONTNAME', (0, -3), (-1, -1), 'Helvetica-Bold'),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
+        balance_due = (fee_record.total_fee or 0) - total_paid
 
-            elements.append(fee_table)
-        else:
-            elements.append(Paragraph("No fee record found for this student.", styles['Normal']))
+        fee_summary_data = [
+            ['Total Fee:', f"₹ {fee_record.total_fee or 0:.2f}"],
+            ['Total Paid:', f"₹ {total_paid:.2f}"],
+            ['Balance Due:', f"₹ {balance_due:.2f}"],
+        ]
+
+        fee_summary_table = Table(fee_summary_data, colWidths=[2*inch, 4*inch])
+        fee_summary_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+
+        content.append(Paragraph("Fee Summary", heading_style))
+        content.append(fee_summary_table)
+        content.append(Spacer(1, 30))
+
+        # Footer
+        content.append(Paragraph("Generated on: " + datetime.now().strftime('%d/%m/%Y %H:%M'), normal_style))
 
         # Build PDF
-        doc.build(elements)
+        doc.build(content)
         buffer.seek(0)
         return buffer.getvalue()
 
     except Exception as e:
-        from flask import current_app
-        current_app.logger.error(f"Error generating PDF fee statement print: {str(e)}")
+        print(f"Error generating fee statement PDF: {e}")
         return None
