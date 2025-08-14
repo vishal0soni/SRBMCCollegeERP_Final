@@ -70,8 +70,8 @@
                 <form method="GET" class="row g-3">
                     <div class="col-md-3">
                         <label for="search" class="form-label">Search</label>
-                        <input type="text" name="search" id="search" class="form-control" 
-                               placeholder="Search by name, ID, course..." 
+                        <input type="text" name="search" id="search" class="form-control"
+                               placeholder="Search by name, ID, course..."
                                value="{{ request.args.get('search', '') }}">
                     </div>
                     <div class="col-md-2">
@@ -229,22 +229,22 @@
                                     <div class="d-flex flex-column gap-1">
                                         {% if current_user.role.access_type == 'Edit' %}
                                             <div class="form-check form-check-inline">
-                                                <input class="form-check-input dues-checkbox" type="checkbox" 
-                                                       data-fee-id="{{ fee_record.id }}" 
+                                                <input class="form-check-input dues-checkbox" type="checkbox"
+                                                       data-fee-id="{{ fee_record.id }}"
                                                        data-field="pending_dues_for_libraries"
                                                        {% if fee_record.pending_dues_for_libraries %}checked{% endif %}>
                                                 <label class="form-check-label"><i class="fas fa-book"></i> Library Dues</label>
                                             </div>
                                             <div class="form-check form-check-inline">
-                                                <input class="form-check-input dues-checkbox" type="checkbox" 
-                                                       data-fee-id="{{ fee_record.id }}" 
+                                                <input class="form-check-input dues-checkbox" type="checkbox"
+                                                       data-fee-id="{{ fee_record.id }}"
                                                        data-field="pending_dues_for_hostel"
                                                        {% if fee_record.pending_dues_for_hostel %}checked{% endif %}>
                                                 <label class="form-check-label"><i class="fas fa-bed"></i> Hostel Dues</label>
                                             </div>
                                             <div class="form-check form-check-inline">
-                                                <input class="form-check-input dues-checkbox" type="checkbox" 
-                                                       data-fee-id="{{ fee_record.id }}" 
+                                                <input class="form-check-input dues-checkbox" type="checkbox"
+                                                       data-fee-id="{{ fee_record.id }}"
                                                        data-field="exam_admit_card_issued"
                                                        {% if fee_record.exam_admit_card_issued %}checked{% endif %}>
                                                 <label class="form-check-label"><i class="fas fa-id-card"></i> Admit Card Issued</label>
@@ -277,9 +277,9 @@
                                             <i class="fas fa-plus"></i> Pay
                                         </a>
                                         {% endif %}
-                                        <button onclick="printFeeStatement({{ student.id }})" class="btn btn-outline-secondary">
+                                        <a href="{{ url_for('student_fee_statement_print', student_id=fee_record.student_id) }}" target="_blank" class="btn btn-sm btn-info" title="Print Fee Statement">
                                             <i class="fas fa-print"></i>
-                                        </button>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
@@ -334,82 +334,54 @@
 
 {% block scripts %}
 <script>
-function viewFeeDetails(feeId) {
-    // Open fee details modal
-    alert('View fee details for ID: ' + feeId);
-}
+// Fee management scripts
+$(document).ready(function() {
+    // Initialize tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip();
 
-function printFeeStatement(studentId) {
-    // Generate and print fee statement
-    window.open(`/student/${studentId}/fee-statement/print`, '_blank');
-}
+    // Fee status update
+    $('.dues-checkbox').change(function() { // Changed from .fee-status-checkbox to .dues-checkbox to match the actual class name
+        const feeId = $(this).data('fee-id');
+        const field = $(this).data('field');
+        const value = this.checked;
 
-function generateFeeStatement(studentId) {
-    // Generate fee statement PDF
-    window.open(`/student/${studentId}/fee-statement/pdf`, '_blank');
-}
-
-// Handle inline editing of dues and exam card status
-document.addEventListener('DOMContentLoaded', function() {
-    const checkboxes = document.querySelectorAll('.dues-checkbox');
-
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            const feeId = this.dataset.feeId;
-            const field = this.dataset.field;
-            const value = this.checked;
-
-            // Show loading state
-            this.disabled = true;
-            const label = this.nextElementSibling;
-            const originalText = label.innerHTML;
-            label.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
-
-            // Send AJAX request to update the field
-            fetch(`/api/update-fee-field/${feeId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || ''
-                },
-                body: JSON.stringify({
-                    field: field,
-                    value: value
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success feedback
-                    label.innerHTML = originalText;
-                    this.disabled = false;
-
-                    // Show brief success indicator
-                    const successIcon = document.createElement('i');
-                    successIcon.className = 'fas fa-check text-success ms-1';
-                    label.appendChild(successIcon);
-                    setTimeout(() => {
-                        if (successIcon.parentNode) {
-                            successIcon.remove();
-                        }
-                    }, 2000);
+        // Update via AJAX
+        $.ajax({
+            url: `/api/update-fee-field/${feeId}`,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                field: field,
+                value: value
+            }),
+            success: function(response) {
+                if (response.success) {
+                    showAlert('Field updated successfully', 'success');
                 } else {
-                    // Revert checkbox and show error
-                    this.checked = !value;
-                    label.innerHTML = originalText;
-                    this.disabled = false;
-                    alert('Error updating field: ' + (data.error || 'Unknown error'));
+                    showAlert('Error updating field: ' + response.error, 'error');
                 }
-            })
-            .catch(error => {
-                // Revert checkbox and show error
-                this.checked = !value;
-                label.innerHTML = originalText;
-                this.disabled = false;
-                alert('Error updating field: ' + error.message);
-            });
+            },
+            error: function() {
+                showAlert('Error updating field', 'error');
+            }
         });
     });
 });
+
+function showAlert(message, type) {
+    const alert = $(`
+        <div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `);
+
+    // Prepend to the container-fluid element as it's likely a wrapper for the whole page content
+    $('.container-fluid').prepend(alert);
+
+    setTimeout(() => {
+        alert.alert('close');
+    }, 5000);
+}
 </script>
 {% endblock %}
