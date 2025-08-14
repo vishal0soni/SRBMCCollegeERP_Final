@@ -1477,19 +1477,19 @@ def api_dashboard_stats():
         # Get students admitted in the year and sum their fee collections
         student_ids_in_year = db.session.query(Student.id).filter(
             func.extract('year', Student.admission_date) == year
-        ).subquery()
+        )
 
         total_collected_fees = db.session.query(
             func.sum(func.coalesce(Invoice.invoice_amount, 0))
         ).filter(
-            Invoice.student_id.in_(student_ids_in_year)
+            Invoice.student_id.in_([s.id for s in student_ids_in_year.all()])
         ).scalar() or 0
 
         # Calculate pending fees for students admitted in the selected year
         total_fees_due = db.session.query(
             func.sum(func.coalesce(CollegeFees.total_fee, 0))
         ).filter(
-            CollegeFees.student_id.in_(student_ids_in_year)
+            CollegeFees.student_id.in_([s.id for s in student_ids_in_year.all()])
         ).scalar() or 0
 
         pending_fees = max(0, total_fees_due - total_collected_fees)

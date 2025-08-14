@@ -1,3 +1,40 @@
+
+<style>
+.updated {
+    background-color: #d4edda !important;
+    border: 1px solid #c3e6cb !important;
+    color: #155724 !important;
+    border-radius: 4px;
+    transition: all 0.5s ease;
+}
+
+.card-body .h5.updated {
+    padding: 2px 6px;
+    margin: -2px -6px;
+}
+
+#yearFilter:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.loading-indicator {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+
 {% extends "base.html" %} {% block title %}Dashboard - SRBMC ERP{% endblock %}
 {% block content %}
 <div class="row">
@@ -305,38 +342,75 @@
         const selectedYear = parseInt(document.getElementById("yearFilter").value);
         currentYear = selectedYear;
         
+        console.log('Year filter changed to:', currentYear);
+        
+        // Show loading indicator
+        const yearFilter = document.getElementById("yearFilter");
+        yearFilter.disabled = true;
+        
         // Update all dashboard components
-        loadDashboardStats();
-        loadStudentDistributionChart();
-        loadFeeChart();
+        Promise.all([
+            loadDashboardStats(),
+            loadStudentDistributionChart(),
+            loadFeeChart()
+        ]).then(() => {
+            yearFilter.disabled = false;
+            console.log('Dashboard updated for year:', currentYear);
+        }).catch((error) => {
+            console.error('Error updating dashboard:', error);
+            yearFilter.disabled = false;
+        });
     }
 
     function loadDashboardStats() {
-        fetch(`/api/dashboard-stats?year=${currentYear}`)
+        return fetch(`/api/dashboard-stats?year=${currentYear}`)
             .then((response) => response.json())
             .then((data) => {
                 if (data.success) {
+                    console.log('Dashboard stats loaded:', data.stats);
+                    
                     // Update dashboard statistics cards
                     const totalStudentsElement = document.querySelector('.border-left-primary .h5');
                     const activeStudentsElement = document.querySelector('.border-left-success .h5');
                     const totalFeesElement = document.querySelector('.border-left-info .h5');
                     const pendingFeesElement = document.querySelector('.border-left-warning .h5');
                     
-                    if (totalStudentsElement) totalStudentsElement.textContent = data.stats.total_students;
-                    if (activeStudentsElement) activeStudentsElement.textContent = data.stats.active_students;
-                    if (totalFeesElement) totalFeesElement.textContent = `₹${parseFloat(data.stats.total_collected_fees).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-                    if (pendingFeesElement) pendingFeesElement.textContent = `₹${parseFloat(data.stats.pending_fees).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                    if (totalStudentsElement) {
+                        totalStudentsElement.textContent = data.stats.total_students;
+                        totalStudentsElement.classList.add('updated');
+                        setTimeout(() => totalStudentsElement.classList.remove('updated'), 1000);
+                    }
+                    if (activeStudentsElement) {
+                        activeStudentsElement.textContent = data.stats.active_students;
+                        activeStudentsElement.classList.add('updated');
+                        setTimeout(() => activeStudentsElement.classList.remove('updated'), 1000);
+                    }
+                    if (totalFeesElement) {
+                        totalFeesElement.textContent = `₹${parseFloat(data.stats.total_collected_fees).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                        totalFeesElement.classList.add('updated');
+                        setTimeout(() => totalFeesElement.classList.remove('updated'), 1000);
+                    }
+                    if (pendingFeesElement) {
+                        pendingFeesElement.textContent = `₹${parseFloat(data.stats.pending_fees).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                        pendingFeesElement.classList.add('updated');
+                        setTimeout(() => pendingFeesElement.classList.remove('updated'), 1000);
+                    }
+                } else {
+                    console.error('Dashboard stats API returned error:', data.error);
                 }
             })
             .catch((error) => {
                 console.error("Error loading dashboard stats:", error);
+                throw error;
             });
     }
 
     function loadStudentDistributionChart() {
-        fetch(`/api/student-stats?year=${currentYear}`)
+        return fetch(`/api/student-stats?year=${currentYear}`)
             .then((response) => response.json())
             .then((data) => {
+                console.log('Student distribution data loaded:', data);
+                
                 const ctx = document
                     .getElementById("courseChart")
                     .getContext("2d");
@@ -354,8 +428,12 @@
 
                 // Update total students count
                 const totalStudents = data.counts.reduce((a, b) => a + b, 0);
-                document.getElementById("totalStudentsCount").textContent =
-                    totalStudents;
+                const totalStudentsCountElement = document.getElementById("totalStudentsCount");
+                if (totalStudentsCountElement) {
+                    totalStudentsCountElement.textContent = totalStudents;
+                    totalStudentsCountElement.classList.add('updated');
+                    setTimeout(() => totalStudentsCountElement.classList.remove('updated'), 1000);
+                }
 
                 // Calculate percentages
                 const percentages = data.counts.map(count => 
@@ -520,13 +598,15 @@
                         },
                     },
                 });
+                throw error;
             });
     }
 
     function loadFeeChart() {
-        fetch(`/api/fee-stats?year=${currentYear}`)
+        return fetch(`/api/fee-stats?year=${currentYear}`)
             .then((response) => response.json())
             .then((data) => {
+                console.log('Fee chart data loaded:', data);
                 const ctx = document
                     .getElementById("feeChart")
                     .getContext("2d");
@@ -708,6 +788,7 @@
                         },
                     },
                 });
+                throw error;
             });
     }
 </script>
