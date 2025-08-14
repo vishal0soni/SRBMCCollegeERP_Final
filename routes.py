@@ -2154,6 +2154,10 @@ def student_fee_statement_print(student_id):
     # Generate PDF without payment history for printing
     pdf_data = generate_pdf_fee_statement_print(student, fee_record)
 
+    if pdf_data is None:
+        flash('Error generating fee statement PDF.', 'error')
+        return redirect(url_for('fees'))
+
     response = make_response(pdf_data)
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = f'inline; filename=fee_statement_print_{student.student_unique_id}.pdf'

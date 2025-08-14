@@ -82,9 +82,7 @@
                     {% endif %}
 
                     <div class="row">
-                        {# Removed Semester field #}
-                        <div class="col-md-4 mb-3"></div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-6 mb-3">
                             {{ form.exam_name.label(class="form-label") }}
                             {{ form.exam_name(class="form-control") }}
                             {% if form.exam_name.errors %}
@@ -95,10 +93,7 @@
                                 </div>
                             {% endif %}
                         </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
+                        <div class="col-md-6 mb-3">
                             {{ form.exam_date.label(class="form-label") }}
                             {{ form.exam_date(class="form-control") }}
                             {% if form.exam_date.errors %}

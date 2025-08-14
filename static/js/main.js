@@ -15,28 +15,28 @@ document.addEventListener('DOMContentLoaded', function() {
 // Application initialization
 function initializeApp() {
     console.log('Initializing SRBMC ERP Application...');
-    
+
     // Initialize tooltips
     initializeTooltips();
-    
+
     // Initialize modals
     initializeModals();
-    
+
     // Setup form validation
     setupFormValidation();
-    
+
     // Initialize data tables
     initializeDataTables();
-    
+
     // Setup notification system
     initializeNotifications();
-    
+
     // Apply fade-in animation to main content
     const mainContent = document.querySelector('main');
     if (mainContent) {
         mainContent.classList.add('fade-in');
     }
-    
+
     console.log('Application initialized successfully');
 }
 
@@ -44,19 +44,19 @@ function initializeApp() {
 function setupEventListeners() {
     // Navbar dropdown enhancements
     setupNavbarDropdowns();
-    
+
     // Search functionality
     setupSearchFunctionality();
-    
+
     // Form auto-save
     setupAutoSave();
-    
+
     // Keyboard shortcuts
     setupKeyboardShortcuts();
-    
+
     // Window resize handler
     window.addEventListener('resize', handleWindowResize);
-    
+
     // Before unload handler for unsaved changes
     window.addEventListener('beforeunload', handleBeforeUnload);
 }
@@ -87,32 +87,32 @@ function initializeModals() {
 // Form validation setup
 function setupFormValidation() {
     const forms = document.querySelectorAll('form[novalidate]');
-    
+
     forms.forEach(form => {
         form.addEventListener('submit', function(event) {
             event.preventDefault();
             event.stopPropagation();
-            
+
             if (validateForm(form)) {
                 // Show loading state
                 showFormLoading(form);
-                
+
                 // Submit form (let default behavior handle actual submission)
                 setTimeout(() => {
                     form.submit();
                 }, 500);
             }
-            
+
             form.classList.add('was-validated');
         });
-        
+
         // Real-time validation
         const inputs = form.querySelectorAll('input, select, textarea');
         inputs.forEach(input => {
             input.addEventListener('blur', function() {
                 validateField(this);
             });
-            
+
             input.addEventListener('input', function() {
                 clearFieldError(this);
             });
@@ -124,7 +124,7 @@ function setupFormValidation() {
 function validateForm(form) {
     let isValid = true;
     const requiredFields = form.querySelectorAll('[required]');
-    
+
     requiredFields.forEach(field => {
         if (!field.value.trim()) {
             showFieldError(field, 'This field is required');
@@ -133,7 +133,7 @@ function validateForm(form) {
             isValid = false;
         }
     });
-    
+
     return isValid;
 }
 
@@ -142,7 +142,7 @@ function validateField(field) {
     const value = field.value.trim();
     let isValid = true;
     let errorMessage = '';
-    
+
     // Email validation
     if (field.type === 'email' && value) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -151,7 +151,7 @@ function validateField(field) {
             isValid = false;
         }
     }
-    
+
     // Phone validation
     if (field.type === 'tel' && value) {
         const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
@@ -160,13 +160,13 @@ function validateField(field) {
             isValid = false;
         }
     }
-    
+
     // Number validation
     if (field.type === 'number' && value) {
         const min = field.getAttribute('min');
         const max = field.getAttribute('max');
         const numValue = parseFloat(value);
-        
+
         if (min && numValue < parseFloat(min)) {
             errorMessage = `Value must be at least ${min}`;
             isValid = false;
@@ -175,33 +175,33 @@ function validateField(field) {
             isValid = false;
         }
     }
-    
+
     if (!isValid) {
         showFieldError(field, errorMessage);
     } else {
         clearFieldError(field);
     }
-    
+
     return isValid;
 }
 
 // Show field error
 function showFieldError(field, message) {
     clearFieldError(field);
-    
+
     field.classList.add('is-invalid');
-    
+
     const errorDiv = document.createElement('div');
     errorDiv.className = 'invalid-feedback';
     errorDiv.textContent = message;
-    
+
     field.parentNode.appendChild(errorDiv);
 }
 
 // Clear field error
 function clearFieldError(field) {
     field.classList.remove('is-invalid');
-    
+
     const errorDiv = field.parentNode.querySelector('.invalid-feedback');
     if (errorDiv) {
         errorDiv.remove();
@@ -214,7 +214,7 @@ function clearFormErrors(form) {
     errorFields.forEach(field => {
         clearFieldError(field);
     });
-    
+
     form.classList.remove('was-validated');
 }
 
@@ -225,7 +225,7 @@ function showFormLoading(form) {
         submitBtn.disabled = true;
         const originalText = submitBtn.textContent;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
-        
+
         // Store original text to restore later
         submitBtn.dataset.originalText = originalText;
     }
@@ -234,7 +234,7 @@ function showFormLoading(form) {
 // Initialize data tables
 function initializeDataTables() {
     const tables = document.querySelectorAll('.table-sortable');
-    
+
     tables.forEach(table => {
         setupTableSorting(table);
         setupTableSearch(table);
@@ -244,11 +244,11 @@ function initializeDataTables() {
 // Table sorting functionality
 function setupTableSorting(table) {
     const headers = table.querySelectorAll('th[data-sortable]');
-    
+
     headers.forEach(header => {
         header.style.cursor = 'pointer';
         header.innerHTML += ' <i class="fas fa-sort text-muted"></i>';
-        
+
         header.addEventListener('click', function() {
             sortTable(table, this);
         });
@@ -262,26 +262,26 @@ function sortTable(table, header) {
     const columnIndex = Array.from(header.parentNode.children).indexOf(header);
     const currentOrder = header.dataset.order || 'asc';
     const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
-    
+
     // Clear all sort indicators
     table.querySelectorAll('th i').forEach(icon => {
         icon.className = 'fas fa-sort text-muted';
     });
-    
+
     // Set new sort indicator
     const icon = header.querySelector('i');
     icon.className = `fas fa-sort-${newOrder === 'asc' ? 'up' : 'down'} text-primary`;
     header.dataset.order = newOrder;
-    
+
     // Sort rows
     rows.sort((a, b) => {
         const aValue = a.cells[columnIndex].textContent.trim();
         const bValue = b.cells[columnIndex].textContent.trim();
-        
+
         // Try to parse as numbers
         const aNum = parseFloat(aValue);
         const bNum = parseFloat(bValue);
-        
+
         if (!isNaN(aNum) && !isNaN(bNum)) {
             return newOrder === 'asc' ? aNum - bNum : bNum - aNum;
         } else {
@@ -290,10 +290,10 @@ function sortTable(table, header) {
                 : bValue.localeCompare(aValue);
         }
     });
-    
+
     // Reorder table rows
     rows.forEach(row => tbody.appendChild(row));
-    
+
     // Add animation
     tbody.style.opacity = '0.7';
     setTimeout(() => {
@@ -305,11 +305,11 @@ function sortTable(table, header) {
 function setupTableSearch(table) {
     const searchInput = document.querySelector(`input[data-table-search="${table.id}"]`);
     if (!searchInput) return;
-    
+
     searchInput.addEventListener('input', function() {
         const searchTerm = this.value.toLowerCase();
         const rows = table.querySelectorAll('tbody tr');
-        
+
         rows.forEach(row => {
             const text = row.textContent.toLowerCase();
             if (text.includes(searchTerm)) {
@@ -326,18 +326,18 @@ function setupTableSearch(table) {
 // Navbar dropdown enhancements
 function setupNavbarDropdowns() {
     const dropdowns = document.querySelectorAll('.navbar-nav .dropdown');
-    
+
     dropdowns.forEach(dropdown => {
         const toggle = dropdown.querySelector('.dropdown-toggle');
         const menu = dropdown.querySelector('.dropdown-menu');
-        
+
         if (toggle && menu) {
             toggle.addEventListener('mouseenter', function() {
                 if (window.innerWidth > 768) {
                     bootstrap.Dropdown.getOrCreateInstance(this).show();
                 }
             });
-            
+
             dropdown.addEventListener('mouseleave', function() {
                 if (window.innerWidth > 768) {
                     bootstrap.Dropdown.getOrCreateInstance(toggle).hide();
@@ -358,15 +358,15 @@ function setupSearchFunctionality() {
 // Global search handler
 function handleGlobalSearch(event) {
     const searchTerm = event.target.value.trim();
-    
+
     if (searchTerm.length < 2) {
         hideSearchResults();
         return;
     }
-    
+
     // Show loading indicator
     showSearchLoading();
-    
+
     // Simulate search API call
     setTimeout(() => {
         const mockResults = generateMockSearchResults(searchTerm);
@@ -377,10 +377,10 @@ function handleGlobalSearch(event) {
 // Auto-save functionality
 function setupAutoSave() {
     const forms = document.querySelectorAll('form[data-auto-save]');
-    
+
     forms.forEach(form => {
         const inputs = form.querySelectorAll('input, select, textarea');
-        
+
         inputs.forEach(input => {
             input.addEventListener('change', debounce(() => {
                 autoSaveForm(form);
@@ -393,11 +393,11 @@ function setupAutoSave() {
 function autoSaveForm(form) {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
-    
+
     // Save to localStorage
     const saveKey = `autosave_${form.id || 'form'}_${Date.now()}`;
     localStorage.setItem(saveKey, JSON.stringify(data));
-    
+
     showNotification('Draft saved automatically', 'info', 2000);
 }
 
@@ -415,7 +415,7 @@ function setupKeyboardShortcuts() {
                 }
             }
         }
-        
+
         // Escape key to close modals
         if (event.key === 'Escape') {
             const openModal = document.querySelector('.modal.show');
@@ -423,7 +423,7 @@ function setupKeyboardShortcuts() {
                 bootstrap.Modal.getInstance(openModal).hide();
             }
         }
-        
+
         // Ctrl/Cmd + F for search
         if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
             const searchInput = document.querySelector('#globalSearch');
@@ -438,14 +438,14 @@ function setupKeyboardShortcuts() {
 // Notification system
 function initializeNotifications() {
     createNotificationContainer();
-    
+
     // Check for flash messages and convert to notifications
     const flashMessages = document.querySelectorAll('.alert');
     flashMessages.forEach(alert => {
         const type = alert.classList.contains('alert-success') ? 'success' :
                     alert.classList.contains('alert-danger') ? 'error' :
                     alert.classList.contains('alert-warning') ? 'warning' : 'info';
-        
+
         const message = alert.textContent.trim();
         if (message) {
             setTimeout(() => {
@@ -459,7 +459,7 @@ function initializeNotifications() {
 // Create notification container
 function createNotificationContainer() {
     if (document.querySelector('.notification-container')) return;
-    
+
     const container = document.createElement('div');
     container.className = 'notification-container position-fixed';
     container.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 350px;';
@@ -470,11 +470,11 @@ function createNotificationContainer() {
 function showNotification(message, type = 'info', duration = 8000) {
     const container = document.querySelector('.notification-container');
     if (!container) return;
-    
+
     const notification = document.createElement('div');
     notification.className = `alert alert-${type} alert-dismissible fade show mb-2 notification-item`;
     notification.style.cssText = 'box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15); border: none;';
-    
+
     const icon = getNotificationIcon(type);
     notification.innerHTML = `
         <div class="d-flex align-items-center">
@@ -483,9 +483,9 @@ function showNotification(message, type = 'info', duration = 8000) {
             <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
         </div>
     `;
-    
+
     container.appendChild(notification);
-    
+
     // Auto remove after duration
     if (duration > 0) {
         setTimeout(() => {
@@ -494,7 +494,7 @@ function showNotification(message, type = 'info', duration = 8000) {
             }
         }, duration);
     }
-    
+
     // Add to notifications array
     notifications.push({
         message,
@@ -557,7 +557,7 @@ function toggleTheme() {
 
 function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
-    
+
     // Update theme toggle button
     const themeToggle = document.querySelector('#themeToggle');
     if (themeToggle) {
@@ -587,7 +587,7 @@ function saveUserPreferences() {
         theme: currentTheme,
         lastLogin: new Date().toISOString()
     };
-    
+
     localStorage.setItem('srbmc_preferences', JSON.stringify(preferences));
 }
 
@@ -599,7 +599,7 @@ function handleWindowResize() {
             chart.resize();
         });
     }
-    
+
     // Adjust table responsiveness
     const tables = document.querySelectorAll('.table-responsive');
     tables.forEach(table => {
@@ -645,7 +645,7 @@ function printElement(elementId) {
         showNotification('Element not found for printing', 'error');
         return;
     }
-    
+
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
         <!DOCTYPE html>
@@ -666,7 +666,7 @@ function printElement(elementId) {
         </body>
         </html>
     `);
-    
+
     printWindow.document.close();
     printWindow.onload = function() {
         printWindow.print();
@@ -681,10 +681,10 @@ function exportTableToCSV(tableId, filename = 'data.csv') {
         showNotification('Table not found for export', 'error');
         return;
     }
-    
+
     const rows = table.querySelectorAll('tr');
     const csvContent = [];
-    
+
     rows.forEach(row => {
         const cols = row.querySelectorAll('td, th');
         const csvRow = Array.from(cols).map(col => {
@@ -697,7 +697,7 @@ function exportTableToCSV(tableId, filename = 'data.csv') {
         });
         csvContent.push(csvRow.join(','));
     });
-    
+
     const blob = new Blob([csvContent.join('\n')], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -705,7 +705,7 @@ function exportTableToCSV(tableId, filename = 'data.csv') {
     link.download = filename;
     link.click();
     window.URL.revokeObjectURL(url);
-    
+
     showNotification('Data exported successfully', 'success');
 }
 
