@@ -1164,7 +1164,6 @@ def add_exam():
                 if course:
                     course_id = course.course_id
         
-        semester = form.semester.data
         exam_name = form.exam_name.data
         exam_date = form.exam_date.data
         
@@ -1197,7 +1196,6 @@ def add_exam():
         exam = Exam(
             student_id=student_id,
             course_id=course_id,
-            semester=semester,
             exam_name=exam_name,
             exam_date=exam_date,
             subject1_name=subject1_name,
@@ -1286,7 +1284,6 @@ def edit_exam(exam_id):
         
         # Update exam (student info remains unchanged)
         exam.course_id = course_id
-        exam.semester = form.semester.data
         exam.exam_name = form.exam_name.data
         exam.exam_date = form.exam_date.data
         exam.subject1_name = subject1_name

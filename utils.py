@@ -152,7 +152,7 @@ def generate_pdf_invoice(invoice):
             ['Student ID:', invoice.student.student_unique_id],
             ['Student Name:', f"{invoice.student.first_name} {invoice.student.last_name}"],
             ['Course:', invoice.student.current_course],
-            ['Amount Paid:', f"Rs. {invoice.invoice_amount}"],
+            ['Amount Paid:', f"₹ {invoice.invoice_amount}"],
             ['Payment Mode:', 'Cash'],  # You can add this field to the model
         ]
 
@@ -218,7 +218,6 @@ def generate_pdf_report_card(exam):
         ['Student Name:', f"{exam.student.first_name} {exam.student.last_name}"],
         ['Course:', exam.student.current_course],
         ['Exam:', exam.exam_name],
-        ['Semester:', exam.semester],
         ['Exam Date:', exam.exam_date.strftime('%d/%m/%Y') if exam.exam_date else 'N/A'],
     ]
 
@@ -464,7 +463,7 @@ Generated on: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
 """
         buffer.write(content.encode('utf-8'))
         buffer.seek(0)
-        return buffer.getvalue()()
+        return buffer.getvalue()
 
 def generate_pdf_fee_statement(student, fee_record, invoices):
     """Generate PDF fee statement"""
@@ -544,9 +543,9 @@ def generate_pdf_fee_statement(student, fee_record, invoices):
 
             story.append(Paragraph("Fee Summary", heading_style))
             fee_summary_data = [
-                ['Total Fee:', f"Rs. {total_fee:,.2f}"],
-                ['Total Paid:', f"Rs. {total_paid:,.2f}"],
-                ['Balance Due:', f"Rs. {due_amount:,.2f}"],
+                ['Total Fee:', f"₹ {total_fee:,.2f}"],
+                ['Total Paid:', f"₹ {total_paid:,.2f}"],
+                ['Balance Due:', f"₹ {due_amount:,.2f}"],
             ]
 
             fee_summary_table = Table(fee_summary_data, colWidths=[2*inch, 2*inch])
@@ -563,14 +562,15 @@ def generate_pdf_fee_statement(student, fee_record, invoices):
 
         # Payment History
         if invoices:
+            story.append(Spacer(1, 20))
             story.append(Paragraph("Payment History", heading_style))
-            payment_data = [['Date', 'Invoice Number', 'Amount', 'Installment']]
 
-            for invoice in invoices:
+            payment_data = [['Date', 'Invoice No.', 'Amount (₹)', 'Installment']]
+            for invoice in invoices[:10]:  # Show last 10 payments
                 payment_data.append([
-                    invoice.date_time.strftime('%d/%m/%Y'),
+                    invoice.date_time.strftime('%d-%m-%Y'),
                     invoice.invoice_number,
-                    f"Rs. {float(invoice.invoice_amount):,.2f}",
+                    f"₹ {float(invoice.invoice_amount):,.2f}",
                     f"Installment {invoice.installment_number}"
                 ])
 
@@ -678,9 +678,9 @@ def generate_pdf_fee_statement_print(student, fee_record):
 
             story.append(Paragraph("Fee Summary", heading_style))
             fee_summary_data = [
-                ['Total Fee:', f"Rs. {total_fee:,.2f}"],
-                ['Total Paid:', f"Rs. {total_paid:,.2f}"],
-                ['Balance Due:', f"Rs. {due_amount:,.2f}"],
+                ['Total Fee:', f"₹ {total_fee:,.2f}"],
+                ['Total Paid:', f"₹ {total_paid:,.2f}"],
+                ['Balance Due:', f"₹ {due_amount:,.2f}"],
             ]
 
             fee_summary_table = Table(fee_summary_data, colWidths=[2*inch, 2*inch])
@@ -700,16 +700,20 @@ def generate_pdf_fee_statement_print(student, fee_record):
             story.append(Paragraph("Fee Structure", heading_style))
             fee_structure_data = [
                 ['Fee Type', 'Amount'],
-                ['Course Fees', f"Rs. {float(fee_record.total_course_fees or 0):,.2f}"],
-                ['Enrollment Fee', f"Rs. {float(fee_record.enrollment_fee or 0):,.2f}"],
-                ['Eligibility Certificate Fee', f"Rs. {float(fee_record.eligibility_certificate_fee or 0):,.2f}"],
-                ['University Affiliation Fee', f"Rs. {float(fee_record.university_affiliation_fee or 0):,.2f}"],
-                ['University Sports Fee', f"Rs. {float(fee_record.university_sports_fee or 0):,.2f}"],
-                ['University Development Fee', f"Rs. {float(fee_record.university_development_fee or 0):,.2f}"],
-                ['TC/CC Fee', f"Rs. {float(fee_record.tc_cc_fee or 0):,.2f}"],
-                ['Miscellaneous Fee 1', f"Rs. {float(fee_record.miscellaneous_fee_1 or 0):,.2f}"],
-                ['Miscellaneous Fee 2', f"Rs. {float(fee_record.miscellaneous_fee_2 or 0):,.2f}"],
-                ['Miscellaneous Fee 3', f"Rs. {float(fee_record.miscellaneous_fee_3 or 0):,.2f}"],
+                ['Course Fees', f"₹ {float(fee_record.total_course_fees or 0):,.2f}"],
+                ['Enrollment Fee', f"₹ {float(fee_record.enrollment_fee or 0):,.2f}"],
+                ['Eligibility Certificate Fee', f"₹ {float(fee_record.eligibility_certificate_fee or 0):,.2f}"],
+                ['University Affiliation Fee', f"₹ {float(fee_record.university_affiliation_fee or 0):,.2f}"],
+                ['University Sports Fee', f"₹ {float(fee_record.university_sports_fee or 0):,.2f}"],
+                ['University Development Fee', f"₹ {float(fee_record.university_development_fee or 0):,.2f}"],
+                ['TC/CC Fee', f"₹ {float(fee_record.tc_cc_fee or 0):,.2f}"],
+                ['Miscellaneous Fee 1', f"₹ {float(fee_record.miscellaneous_fee_1 or 0):,.2f}"],
+                ['Miscellaneous Fee 2', f"₹ {float(fee_record.miscellaneous_fee_2 or 0):,.2f}"],
+                ['Miscellaneous Fee 3', f"₹ {float(fee_record.miscellaneous_fee_3 or 0):,.2f}"],
+                ['', ''],
+                ['Total Fee', f"₹ {float(fee_record.total_fee or 0):,.2f}"],
+                ['Total Paid', f"₹ {float(fee_record.total_paid or 0):,.2f}"], # Corrected from total_fees_paid
+                ['Balance Due', f"₹ {float(fee_record.total_fee or 0) - float(fee_record.total_paid or 0):,.2f}"] # Corrected from total_fees_paid
             ]
 
             fee_structure_table = Table(fee_structure_data, colWidths=[3*inch, 2*inch])
@@ -748,7 +752,7 @@ def generate_pdf_fee_statement_print(student, fee_record):
                     installment_data.append([
                         f"Installment {num}",
                         invoice_num or 'N/A',
-                        f"Rs. {float(amount):,.2f}"
+                        f"₹ {float(amount):,.2f}"
                     ])
 
                 installment_table = Table(installment_data, colWidths=[1.5*inch, 2*inch, 1.5*inch])

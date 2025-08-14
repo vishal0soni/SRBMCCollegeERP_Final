@@ -82,7 +82,8 @@
                     {% endif %}
 
                     <div class="row">
-                        {% comment %} Removed Semester field {% endcomment %}
+                        {# Removed Semester field #}
+                        <div class="col-md-4 mb-3"></div>
                         <div class="col-md-4 mb-3">
                             {{ form.exam_name.label(class="form-label") }}
                             {{ form.exam_name(class="form-control") }}
