@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block title %}{{ title }} - SRBMC ERP{% endblock %}
@@ -13,7 +12,7 @@
                 <li class="breadcrumb-item active">{{ title }}</li>
             </ol>
         </nav>
-        
+
         <h1 class="h3 mb-4">
             <i class="fas fa-edit"></i> {{ title }}
         </h1>
@@ -29,10 +28,10 @@
             <div class="card-body">
                 <form method="POST" id="examForm">
                     {{ form.hidden_tag() }}
-                    
+
                     <!-- Basic Information -->
                     <h6 class="text-primary mb-3">Basic Information</h6>
-                    
+
                     {% if exam %}
                     <!-- Edit mode - show student info in card -->
                     <div class="card bg-light mb-4">
@@ -64,7 +63,7 @@
                             </div>
                         {% endif %}
                     </div>
-                    
+
                     <!-- Student Info Display -->
                     <div id="studentInfo" class="card bg-light mb-4" style="display: none;">
                         <div class="card-body">
@@ -81,20 +80,9 @@
                         </div>
                     </div>
                     {% endif %}
-                    
+
                     <div class="row">
-                        <div class="col-md-4 mb-3">
-                            {{ form.semester.label(class="form-label") }}
-                            {{ form.semester(class="form-control") }}
-                            {% if form.semester.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.semester.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        
+                        {% comment %} Removed Semester field {% endcomment %}
                         <div class="col-md-4 mb-3">
                             {{ form.exam_name.label(class="form-label") }}
                             {{ form.exam_name(class="form-control") }}
@@ -106,8 +94,10 @@
                                 </div>
                             {% endif %}
                         </div>
-                        
-                        <div class="col-md-4 mb-3">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
                             {{ form.exam_date.label(class="form-label") }}
                             {{ form.exam_date(class="form-control") }}
                             {% if form.exam_date.errors %}
@@ -119,10 +109,10 @@
                             {% endif %}
                         </div>
                     </div>
-                    
+
                     <!-- Subject Marks -->
                     <h6 class="text-primary mb-3">Subject-wise Marks</h6>
-                    
+
                     <!-- Subject 1 -->
                     <div class="card mb-3">
                         <div class="card-header bg-light">
@@ -147,7 +137,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Subject 2 -->
                     <div class="card mb-3">
                         <div class="card-header bg-light">
@@ -172,7 +162,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Subject 3 -->
                     <div class="card mb-3">
                         <div class="card-header bg-light">
@@ -197,14 +187,14 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Additional Subjects Button -->
                     <div class="text-center mb-4">
                         <button type="button" class="btn btn-outline-primary" onclick="showAdditionalSubjects()">
                             <i class="fas fa-plus"></i> Add More Subjects (Optional)
                         </button>
                     </div>
-                    
+
                     <!-- Additional Subjects (Hidden by default) -->
                     <div id="additionalSubjects" style="display: none;">
                         <!-- Subject 4 -->
@@ -230,7 +220,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Subject 5 -->
                         <div class="card mb-3">
                             <div class="card-header bg-light">
@@ -254,7 +244,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Subject 6 -->
                         <div class="card mb-3">
                             <div class="card-header bg-light">
@@ -279,7 +269,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Result Summary -->
                     <div class="card bg-light mb-4">
                         <div class="card-body">
@@ -308,7 +298,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="d-flex justify-content-between">
                         <a href="{{ url_for('exams') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Back to Examinations
@@ -321,7 +311,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-lg-2">
         <div class="card shadow">
             <div class="card-header">
@@ -353,7 +343,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="card shadow mt-3">
             <div class="card-header">
                 <h6 class="m-0 font-weight-bold text-primary">Guidelines</h6>
@@ -377,21 +367,21 @@ let searchTimeout;
 
 function searchStudents() {
     const searchTerm = document.getElementById('studentSearch').value;
-    
+
     clearTimeout(searchTimeout);
-    
+
     if (searchTerm.length < 2) {
         document.getElementById('studentResults').style.display = 'none';
         return;
     }
-    
+
     searchTimeout = setTimeout(() => {
         fetch(`/api/search-students?q=${encodeURIComponent(searchTerm)}`)
             .then(response => response.json())
             .then(data => {
                 const resultsContainer = document.getElementById('studentResults');
                 resultsContainer.innerHTML = '';
-                
+
                 if (data.success && data.students.length > 0) {
                     data.students.forEach(student => {
                         const item = document.createElement('button');
@@ -421,18 +411,18 @@ function searchStudents() {
 function selectStudent(student) {
     // Hide search results
     document.getElementById('studentResults').style.display = 'none';
-    
+
     // Set hidden field value
     document.getElementById('selectedStudentId').value = student.id;
-    
+
     // Update search input
     document.getElementById('studentSearch').value = `${student.student_unique_id} - ${student.first_name} ${student.last_name}`;
-    
+
     // Show student info
     document.getElementById('displayStudentId').textContent = student.student_unique_id;
     document.getElementById('displayStudentName').textContent = `${student.first_name} ${student.last_name}`;
     document.getElementById('displayStudentCourse').textContent = student.current_course;
-    
+
     // Fetch and populate subject names
     fetch(`/api/student-subjects/${student.id}`)
         .then(response => response.json())
@@ -447,7 +437,7 @@ function selectStudent(student) {
         .catch(error => {
             console.error('Error fetching student subjects:', error);
         });
-    
+
     document.getElementById('studentInfo').style.display = 'block';
 }
 
@@ -457,15 +447,15 @@ function validateAndCalculate(obtainedField) {
     const subjectNum = fieldName.replace('obtained_marks', '').replace('subject', '');
     const maxField = document.getElementsByName(`subject${subjectNum}_max_marks`)[0];
     const errorDiv = document.getElementById(`subject${subjectNum}_error`);
-    
+
     if (maxField && errorDiv) {
         const obtainedValue = parseInt(obtainedField.value) || 0;
         const maxValue = parseInt(maxField.value) || 0;
-        
+
         // Reset previous validation state
         obtainedField.classList.remove('is-invalid');
         errorDiv.style.display = 'none';
-        
+
         // Validate obtained marks
         if (maxValue > 0 && obtainedValue > maxValue) {
             errorDiv.textContent = `Obtained marks (${obtainedValue}) cannot exceed maximum marks (${maxValue})`;
@@ -477,7 +467,7 @@ function validateAndCalculate(obtainedField) {
             obtainedField.classList.add('is-invalid');
         }
     }
-    
+
     calculateTotals();
 }
 
@@ -489,14 +479,14 @@ function showAdditionalSubjects() {
 function calculateTotals() {
     let totalMax = 0;
     let totalObtained = 0;
-    
+
     // Get values from all subject fields
     const subjects = [
         { max: '{{ form.subject1_max_marks.id }}', obtained: '{{ form.subject1_obtained_marks.id }}' },
         { max: '{{ form.subject2_max_marks.id }}', obtained: '{{ form.subject2_obtained_marks.id }}' },
         { max: '{{ form.subject3_max_marks.id }}', obtained: '{{ form.subject3_obtained_marks.id }}' }
     ];
-    
+
     // Add additional subjects if visible
     if (document.getElementById('additionalSubjects').style.display !== 'none') {
         subjects.push(
@@ -505,36 +495,36 @@ function calculateTotals() {
             { max: 'subject6_max_marks', obtained: 'subject6_obtained_marks' }
         );
     }
-    
+
     subjects.forEach(subject => {
         const maxField = document.getElementsByName(subject.max)[0] || document.getElementById(subject.max);
         const obtainedField = document.getElementsByName(subject.obtained)[0] || document.getElementById(subject.obtained);
-        
+
         if (maxField && obtainedField) {
             const maxValue = parseInt(maxField.value) || 0;
             const obtainedValue = parseInt(obtainedField.value) || 0;
-            
+
             if (maxValue > 0) {
                 totalMax += maxValue;
                 totalObtained += obtainedValue;
             }
         }
     });
-    
+
     // Calculate percentage and grade
     const percentage = totalMax > 0 ? (totalObtained / totalMax * 100) : 0;
     const grade = calculateGrade(percentage);
     const status = percentage >= 40 ? 'Pass' : 'Fail';
-    
+
     // Update display
     document.getElementById('totalMaxMarks').textContent = totalMax;
     document.getElementById('totalObtainedMarks').textContent = totalObtained;
     document.getElementById('calculatedPercentage').textContent = percentage.toFixed(2) + '%';
-    
+
     const gradeElement = document.getElementById('calculatedGrade');
     gradeElement.textContent = grade;
     gradeElement.className = 'badge ' + getGradeBadgeClass(grade);
-    
+
     const statusElement = document.getElementById('overallStatus');
     statusElement.textContent = status;
     statusElement.className = 'badge ' + (status === 'Pass' ? 'bg-success' : 'bg-danger');
@@ -569,11 +559,11 @@ function getGradeBadgeClass(grade) {
 // Initialize calculations on page load
 document.addEventListener('DOMContentLoaded', function() {
     calculateTotals();
-    
+
     // Add form submission validation
     const examForm = document.getElementById('examForm');
     const submitBtn = document.getElementById('submitExamForm');
-    
+
     if (examForm && submitBtn) {
         examForm.addEventListener('submit', function(event) {
             if (!validateExamForm()) {
@@ -588,14 +578,14 @@ document.addEventListener('DOMContentLoaded', function() {
 function validateExamForm() {
     let isValid = true;
     let errorMessages = [];
-    
+
     // Check if student is selected (for add mode)
     const selectedStudentId = document.getElementById('selectedStudentId');
     if (selectedStudentId && !selectedStudentId.value) {
         errorMessages.push('Please select a student');
         isValid = false;
     }
-    
+
     // Validate all subjects
     const subjects = [
         { name: 'subject1', label: 'Subject 1' },
@@ -605,29 +595,29 @@ function validateExamForm() {
         { name: 'subject5', label: 'Subject 5' },
         { name: 'subject6', label: 'Subject 6' }
     ];
-    
+
     subjects.forEach(subject => {
         const maxField = document.getElementsByName(`${subject.name}_max_marks`)[0];
         const obtainedField = document.getElementsByName(`${subject.name}_obtained_marks`)[0];
         const nameField = document.getElementsByName(`${subject.name}_name`)[0];
-        
+
         if (maxField && obtainedField && nameField) {
             const maxValue = parseInt(maxField.value) || 0;
             const obtainedValue = parseInt(obtainedField.value) || 0;
             const subjectName = nameField.value || '';
-            
+
             // Only validate if subject has a name and max marks > 0
             if (subjectName.trim() && maxValue > 0) {
                 if (obtainedValue > maxValue) {
                     errorMessages.push(`${subject.label}: Obtained marks (${obtainedValue}) cannot exceed maximum marks (${maxValue})`);
                     isValid = false;
-                    
+
                     // Highlight the field
                     obtainedField.classList.add('is-invalid');
                 } else {
                     obtainedField.classList.remove('is-invalid');
                 }
-                
+
                 // Validate that obtained marks is not negative
                 if (obtainedValue < 0) {
                     errorMessages.push(`${subject.label}: Obtained marks cannot be negative`);
@@ -637,29 +627,29 @@ function validateExamForm() {
             }
         }
     });
-    
+
     // Check that at least one subject has valid data
     let hasValidSubject = false;
     subjects.slice(0, 3).forEach(subject => { // Check first 3 subjects (required)
         const maxField = document.getElementsByName(`${subject.name}_max_marks`)[0];
         const obtainedField = document.getElementsByName(`${subject.name}_obtained_marks`)[0];
         const nameField = document.getElementsByName(`${subject.name}_name`)[0];
-        
+
         if (maxField && obtainedField && nameField) {
             const maxValue = parseInt(maxField.value) || 0;
             const subjectName = nameField.value || '';
-            
+
             if (subjectName.trim() && maxValue > 0) {
                 hasValidSubject = true;
             }
         }
     });
-    
+
     if (!hasValidSubject) {
         errorMessages.push('At least one subject must have a name and maximum marks greater than 0');
         isValid = false;
     }
-    
+
     // Show validation errors
     if (!isValid) {
         let errorHtml = '<div class="alert alert-danger alert-dismissible fade show" role="alert">';
@@ -671,18 +661,18 @@ function validateExamForm() {
         errorHtml += '</ul>';
         errorHtml += '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
         errorHtml += '</div>';
-        
+
         // Remove existing error alerts
         const existingAlerts = document.querySelectorAll('.alert-danger');
         existingAlerts.forEach(alert => alert.remove());
-        
+
         // Insert error message at top of form
         const form = document.getElementById('examForm');
         form.insertAdjacentHTML('afterbegin', errorHtml);
-        
+
         // Scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        
+
         // Use notification system if available
         if (window.SRBMCApp && window.SRBMCApp.showNotification) {
             window.SRBMCApp.showNotification('Please correct the validation errors before submitting', 'error');
@@ -692,7 +682,7 @@ function validateExamForm() {
         const existingAlerts = document.querySelectorAll('.alert-danger');
         existingAlerts.forEach(alert => alert.remove());
     }
-    
+
     return isValid;
 }
 </script>

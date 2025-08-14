@@ -114,7 +114,7 @@ class FeeManagementForm(FlaskForm):
     miscellaneous_fee_1 = DecimalField('Miscellaneous Fee 1', validators=[Optional()], default=0)
     miscellaneous_fee_2 = DecimalField('Miscellaneous Fee 2', validators=[Optional()], default=0)
     miscellaneous_fee_3 = DecimalField('Miscellaneous Fee 3', validators=[Optional()], default=0)
-    
+
     # New fields requested by user
     total_fees_paid = DecimalField('Total Fees Paid', validators=[Optional()], default=0)
     meera_rebate_applied = BooleanField('Meera Rebate Applied')
@@ -130,7 +130,7 @@ class FeeManagementForm(FlaskForm):
     pending_dues_for_libraries = BooleanField('Pending Dues for Libraries')
     pending_dues_for_hostel = BooleanField('Pending Dues for Hostel')
     exam_admit_card_issued = BooleanField('Exam Admit Card Issued')
-    
+
     # Installments
     installment_1 = DecimalField('Installment 1', validators=[Optional()], default=0)
     installment_2 = DecimalField('Installment 2', validators=[Optional()], default=0)
@@ -138,14 +138,13 @@ class FeeManagementForm(FlaskForm):
     installment_4 = DecimalField('Installment 4', validators=[Optional()], default=0)
     installment_5 = DecimalField('Installment 5', validators=[Optional()], default=0)
     installment_6 = DecimalField('Installment 6', validators=[Optional()], default=0)
-    
+
     payment_mode = SelectField('Payment Mode', choices=[('Cash', 'Cash'), ('Online', 'Online'), ('Cheque', 'Cheque'), ('DD', 'DD')])
     submit = SubmitField('Save Fee Details')
 
 class ExamForm(FlaskForm):
     student_id = SelectField('Student', coerce=int, validators=[DataRequired()])
     course_id = SelectField('Course', coerce=int, validators=[Optional()])
-    semester = StringField('Semester', validators=[DataRequired(), Length(max=20)])
     exam_name = StringField('Exam Name', validators=[DataRequired(), Length(max=100)])
     exam_date = DateField('Exam Date', validators=[DataRequired()])
 
