@@ -105,73 +105,36 @@
     </div>
 </div>
 
-<!-- Global Filter Row -->
+<!-- Global Year Filter Row -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">
-                    Dashboard Filters
+                    <i class="fas fa-calendar-alt"></i> Academic Year Filter
                 </h6>
             </div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3">
-                        <label for="courseFilter" class="form-label"
-                            >Filter by Course:</label
-                        >
-                        <select
-                            id="courseFilter"
-                            class="form-select"
-                            onchange="applyGlobalFilter()"
-                        >
-                            <option value="">All Courses</option>
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <label for="yearFilter" class="form-label">Select Academic Year:</label>
+                        <select id="yearFilter" class="form-select" onchange="applyYearFilter()">
+                            <!-- Years will be populated dynamically -->
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label for="statusFilter" class="form-label"
-                            >Filter by Status:</label
-                        >
-                        <select
-                            id="statusFilter"
-                            class="form-select"
-                            onchange="applyGlobalFilter()"
-                        >
-                            <option value="">All Status</option>
-                            <option value="Active">Active</option>
-                            <option value="Dropout">Dropout</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="genderFilter" class="form-label"
-                            >Filter by Gender:</label
-                        >
-                        <select
-                            id="genderFilter"
-                            class="form-select"
-                            onchange="applyGlobalFilter()"
-                        >
-                            <option value="">All Genders</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="mt-4">
-                            <button
-                                class="btn btn-secondary"
-                                onclick="resetFilters()"
-                            >
-                                Reset Filters
-                            </button>
+                    <div class="col-md-8">
+                        <div class="text-muted">
+                            <small>
+                                <i class="fas fa-info-circle"></i>
+                                All charts and statistics will update automatically when you change the year.
+                            </small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</div></div>
 
 <!-- Charts Row - Both charts in balanced layout -->
 <div class="row mb-4">
@@ -309,54 +272,69 @@
 <script>
     let courseChart;
     let feeChart;
-    let globalFilters = {
-        course: "",
-        status: "",
-        gender: "",
-    };
+    let currentYear = new Date().getFullYear();
 
     // Load dashboard charts with dynamic data
     document.addEventListener("DOMContentLoaded", function () {
-        loadCourseOptions();
+        loadYearOptions();
+        loadDashboardStats();
         loadStudentDistributionChart();
         loadFeeChart();
     });
 
-    function loadCourseOptions() {
-        fetch("/api/course-list")
+    function loadYearOptions() {
+        const yearFilter = document.getElementById("yearFilter");
+        const startYear = 2020; // Earliest year to show
+        const endYear = new Date().getFullYear() + 1; // Current year + 1
+
+        for (let year = endYear; year >= startYear; year--) {
+            const option = document.createElement("option");
+            option.value = year;
+            option.textContent = `${year}-${(year + 1).toString().slice(-2)}`;
+            
+            // Set current year as default
+            if (year === currentYear) {
+                option.selected = true;
+            }
+            
+            yearFilter.appendChild(option);
+        }
+    }
+
+    function applyYearFilter() {
+        const selectedYear = parseInt(document.getElementById("yearFilter").value);
+        currentYear = selectedYear;
+        
+        // Update all dashboard components
+        loadDashboardStats();
+        loadStudentDistributionChart();
+        loadFeeChart();
+    }
+
+    function loadDashboardStats() {
+        fetch(`/api/dashboard-stats?year=${currentYear}`)
             .then((response) => response.json())
             .then((data) => {
-                const courseFilter = document.getElementById("courseFilter");
-                data.courses.forEach((course) => {
-                    const option = document.createElement("option");
-                    option.value = course;
-                    option.textContent = course;
-                    courseFilter.appendChild(option);
-                });
+                if (data.success) {
+                    // Update dashboard statistics cards
+                    const totalStudentsElement = document.querySelector('.border-left-primary .h5');
+                    const activeStudentsElement = document.querySelector('.border-left-success .h5');
+                    const totalFeesElement = document.querySelector('.border-left-info .h5');
+                    const pendingFeesElement = document.querySelector('.border-left-warning .h5');
+                    
+                    if (totalStudentsElement) totalStudentsElement.textContent = data.stats.total_students;
+                    if (activeStudentsElement) activeStudentsElement.textContent = data.stats.active_students;
+                    if (totalFeesElement) totalFeesElement.textContent = `₹${parseFloat(data.stats.total_collected_fees).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                    if (pendingFeesElement) pendingFeesElement.textContent = `₹${parseFloat(data.stats.pending_fees).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                }
             })
-            .catch((error) => console.error("Error loading courses:", error));
-    }
-
-    function applyGlobalFilter() {
-        globalFilters.course = document.getElementById("courseFilter").value;
-        globalFilters.status = document.getElementById("statusFilter").value;
-        globalFilters.gender = document.getElementById("genderFilter").value;
-
-        loadStudentDistributionChart();
-    }
-
-    function resetFilters() {
-        document.getElementById("courseFilter").value = "";
-        document.getElementById("statusFilter").value = "";
-        document.getElementById("genderFilter").value = "";
-        globalFilters = { course: "", status: "", gender: "" };
-        loadStudentDistributionChart();
+            .catch((error) => {
+                console.error("Error loading dashboard stats:", error);
+            });
     }
 
     function loadStudentDistributionChart() {
-        const params = new URLSearchParams(globalFilters);
-
-        fetch(`/api/student-stats?${params}`)
+        fetch(`/api/student-stats?year=${currentYear}`)
             .then((response) => response.json())
             .then((data) => {
                 const ctx = document
@@ -380,37 +358,36 @@
                     totalStudents;
 
                 // Calculate percentages
-                        const totalStudents = data.counts.reduce((a, b) => a + b, 0);
-                        const percentages = data.counts.map(count => 
-                            totalStudents > 0 ? ((count / totalStudents) * 100).toFixed(1) : 0
-                        );
+                const percentages = data.counts.map(count => 
+                    totalStudents > 0 ? ((count / totalStudents) * 100).toFixed(1) : 0
+                );
 
-                        courseChart = new Chart(ctx, {
-                            type: "doughnut",
-                            data: {
-                                labels: data.courses,
-                                datasets: [
-                                    {
-                                        data: percentages,
-                                        backgroundColor: [
-                                            "#4e73df",
-                                            "#1cc88a",
-                                            "#36b9cc",
-                                            "#f6c23e",
-                                            "#e74a3b",
-                                            "#858796",
-                                            "#5a5c69",
-                                            "#2c5282",
-                                            "#1a365d",
-                                            "#3182ce",
-                                            "#fd7e14",
-                                            "#6f42c1",
-                                        ],
-                                        borderWidth: 2,
-                                        borderColor: "#fff",
-                                    },
+                courseChart = new Chart(ctx, {
+                    type: "doughnut",
+                    data: {
+                        labels: data.courses,
+                        datasets: [
+                            {
+                                data: percentages,
+                                backgroundColor: [
+                                    "#4e73df",
+                                    "#1cc88a",
+                                    "#36b9cc",
+                                    "#f6c23e",
+                                    "#e74a3b",
+                                    "#858796",
+                                    "#5a5c69",
+                                    "#2c5282",
+                                    "#1a365d",
+                                    "#3182ce",
+                                    "#fd7e14",
+                                    "#6f42c1",
                                 ],
+                                borderWidth: 2,
+                                borderColor: "#fff",
                             },
+                        ],
+                    },
                     plugins: [ChartDataLabels],
                     options: {
                         responsive: true,
@@ -459,7 +436,9 @@
                                         const courseIndex = context.dataIndex;
                                         const studentCount = data.counts[courseIndex];
                                         const percentage = context.parsed;
+                                        const courseName = context.label;
                                         return [
+                                            `Course: ${courseName}`,
                                             `Students: ${studentCount}`,
                                             `Percentage: ${percentage}%`,
                                             `Total Students: ${totalStudents}`,
@@ -545,7 +524,7 @@
     }
 
     function loadFeeChart() {
-        fetch("/api/fee-stats")
+        fetch(`/api/fee-stats?year=${currentYear}`)
             .then((response) => response.json())
             .then((data) => {
                 const ctx = document
@@ -576,7 +555,7 @@
                         labels: monthNames,
                         datasets: [
                             {
-                                label: `Fee Collections ${new Date().getFullYear()}`,
+                                label: `Fee Collections ${currentYear}-${(currentYear + 1).toString().slice(-2)}`,
                                 data: data.amounts,
                                 borderColor: "#1cc88a",
                                 backgroundColor: "rgba(28, 200, 138, 0.3)",

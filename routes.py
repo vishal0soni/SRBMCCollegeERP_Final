@@ -1385,21 +1385,18 @@ def api_get_course_fees(course_name):
 @login_required
 def api_student_stats():
     try:
-        query = Student.query
+        year = request.args.get('year', datetime.now().year, type=int)
+        
+        # Filter students by admission year
+        query = Student.query.filter(
+            func.extract('year', Student.admission_date) == year
+        )
 
-        # Apply filters based on query parameters
-        course_filter = request.args.get('course', '')
-        status_filter = request.args.get('status', '')
-        gender_filter = request.args.get('gender', '')
-
-        if course_filter:
-            query = query.filter(Student.current_course == course_filter)
-        if status_filter:
-            query = query.filter(Student.dropout_status == status_filter)
-        if gender_filter:
-            query = query.filter(Student.gender == gender_filter)
-
-        # Get course distribution - filter out null/empty courses
+        # Get all available courses from Course table
+        all_courses = db.session.query(Course.course_full_name).all()
+        all_course_names = [course[0] for course in all_courses if course[0]]
+        
+        # Get course distribution for students admitted in the selected year
         course_counts = query.with_entities(
             Student.current_course, 
             func.count(Student.id)
@@ -1410,24 +1407,21 @@ def api_student_stats():
             )
         ).group_by(Student.current_course).all()
 
+        # Create a dictionary for easy lookup
+        course_count_dict = {course: count for course, count in course_counts}
+
+        # Ensure all courses are included, even with 0 students
+        final_courses = []
+        final_counts = []
+
+        for course_name in all_course_names:
+            count = course_count_dict.get(course_name, 0)
+            if count > 0 or len(all_course_names) <= 10:  # Show all if few courses, or only non-zero
+                final_courses.append(course_name)
+                final_counts.append(int(count))
+
         # Handle case where no data exists
-        if not course_counts:
-            return jsonify({
-                'success': True,
-                'courses': ['No Students Enrolled'],
-                'counts': [1]
-            })
-
-        # Filter out any invalid entries
-        valid_courses = []
-        valid_counts = []
-
-        for course, count in course_counts:
-            if course and course.strip() and count > 0:
-                valid_courses.append(course.strip())
-                valid_counts.append(int(count))
-
-        if not valid_courses:
+        if not final_courses:
             return jsonify({
                 'success': True,
                 'courses': ['No Students Enrolled'],
@@ -1436,8 +1430,8 @@ def api_student_stats():
 
         return jsonify({
             'success': True,
-            'courses': valid_courses,
-            'counts': valid_counts
+            'courses': final_courses,
+            'counts': final_counts
         })
     except Exception as e:
         app.logger.error(f"Error in api_student_stats: {e}")
@@ -1461,17 +1455,79 @@ def api_course_list():
         print(f"Error in api_course_list: {e}")
         return jsonify({'courses': []})
 
+@app.route('/api/dashboard-stats')
+@login_required
+def api_dashboard_stats():
+    try:
+        year = request.args.get('year', datetime.now().year, type=int)
+        
+        # Filter students by admission year
+        total_students = Student.query.filter(
+            func.extract('year', Student.admission_date) == year
+        ).count()
+        
+        active_students = Student.query.filter(
+            and_(
+                func.extract('year', Student.admission_date) == year,
+                Student.dropout_status == 'Active'
+            )
+        ).count()
+
+        # Calculate total collected fees for the selected year
+        # Get students admitted in the year and sum their fee collections
+        student_ids_in_year = db.session.query(Student.id).filter(
+            func.extract('year', Student.admission_date) == year
+        ).subquery()
+
+        total_collected_fees = db.session.query(
+            func.sum(func.coalesce(Invoice.invoice_amount, 0))
+        ).filter(
+            Invoice.student_id.in_(student_ids_in_year)
+        ).scalar() or 0
+
+        # Calculate pending fees for students admitted in the selected year
+        total_fees_due = db.session.query(
+            func.sum(func.coalesce(CollegeFees.total_fee, 0))
+        ).filter(
+            CollegeFees.student_id.in_(student_ids_in_year)
+        ).scalar() or 0
+
+        pending_fees = max(0, total_fees_due - total_collected_fees)
+
+        return jsonify({
+            'success': True,
+            'stats': {
+                'total_students': total_students,
+                'active_students': active_students,
+                'total_collected_fees': float(total_collected_fees),
+                'pending_fees': float(pending_fees)
+            }
+        })
+    except Exception as e:
+        app.logger.error(f"Error in api_dashboard_stats: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'stats': {
+                'total_students': 0,
+                'active_students': 0,
+                'total_collected_fees': 0.0,
+                'pending_fees': 0.0
+            }
+        })
+
 @app.route('/api/fee-stats')
 @login_required
 def api_fee_stats():
     try:
-        # Get monthly fee collections from invoices for current year
-        current_year = datetime.now().year
+        year = request.args.get('year', datetime.now().year, type=int)
+        
+        # Get monthly fee collections from invoices for selected year
         monthly_collections = db.session.query(
             func.extract('month', Invoice.date_time),
             func.sum(func.coalesce(Invoice.invoice_amount, 0))
         ).filter(
-            func.extract('year', Invoice.date_time) == current_year
+            func.extract('year', Invoice.date_time) == year
         ).group_by(func.extract('month', Invoice.date_time)).order_by(func.extract('month', Invoice.date_time)).all()
 
         # Initialize all 12 months with 0
@@ -1489,7 +1545,7 @@ def api_fee_stats():
         })
     except Exception as e:
         app.logger.error(f"Error in api_fee_stats: {e}")
-        # Return default data for current year
+        # Return default data for selected year
         return jsonify({
             'success': True,
             'months': list(range(1, 13)),
