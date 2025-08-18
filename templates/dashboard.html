@@ -446,7 +446,7 @@
                         labels: data.courses,
                         datasets: [
                             {
-                                data: percentages,
+                                data: data.counts, // Use actual counts for chart display
                                 backgroundColor: [
                                     "#4e73df",
                                     "#1cc88a",
@@ -460,6 +460,14 @@
                                     "#3182ce",
                                     "#fd7e14",
                                     "#6f42c1",
+                                    "#ff6384",
+                                    "#ffcd56",
+                                    "#ff9f40",
+                                    "#4bc0c0",
+                                    "#9966ff",
+                                    "#c9cbcf",
+                                    "#ff6b9d",
+                                    "#c449c2"
                                 ],
                                 borderWidth: 2,
                                 borderColor: "#fff",
@@ -489,16 +497,17 @@
                                         );
 
                                         labels.forEach((label, index) => {
-                                            const percentage = chart.data.datasets[0].data[index];
+                                            const studentCount = data.counts[index];
+                                            const percentage = percentages[index];
                                             const courseName = chart.data.labels[index];
 
                                             // Truncate long course names for legend
                                             const displayName =
-                                                courseName.length > 20
-                                                    ? courseName.substring(0, 17) + "..."
+                                                courseName.length > 25
+                                                    ? courseName.substring(0, 22) + "..."
                                                     : courseName;
 
-                                            label.text = `${displayName} (${percentage}%)`;
+                                            label.text = `${displayName} (${studentCount} - ${percentage}%)`;
                                         });
 
                                         return labels;
@@ -508,63 +517,82 @@
                             tooltip: {
                                 callbacks: {
                                     title: function (context) {
-                                        return `Course: ${context[0].label}`;
+                                        return `${context[0].label}`;
                                     },
                                     label: function (context) {
                                         const courseIndex = context.dataIndex;
                                         const studentCount = data.counts[courseIndex];
-                                        const percentage = context.parsed;
+                                        const percentage = percentages[courseIndex];
                                         const courseName = context.label;
+                                        
                                         return [
                                             `Course: ${courseName}`,
-                                            `Students: ${studentCount}`,
+                                            `Total Students: ${studentCount}`,
                                             `Percentage: ${percentage}%`,
-                                            `Total Students: ${totalStudents}`,
+                                            `Academic Year: ${currentYear}-${(currentYear + 1).toString().slice(-2)}`
                                         ];
                                     },
-                                    afterLabel: function (context) {
-                                        const courseIndex = context.dataIndex;
+                                    footer: function (context) {
+                                        const courseIndex = context[0].dataIndex;
                                         const studentCount = data.counts[courseIndex];
                                         if (studentCount === 1) {
-                                            return "1 student enrolled";
+                                            return "1 student enrolled in this course";
                                         } else if (studentCount === 0) {
                                             return "No students enrolled";
                                         } else {
-                                            return `${studentCount} students enrolled`;
+                                            return `${studentCount} students enrolled in this course`;
                                         }
                                     },
                                 },
-                                backgroundColor: "rgba(0, 0, 0, 0.8)",
+                                backgroundColor: "rgba(0, 0, 0, 0.9)",
                                 titleColor: "#fff",
                                 bodyColor: "#fff",
+                                footerColor: "#ccc",
                                 borderColor: "#4e73df",
-                                borderWidth: 1,
-                                cornerRadius: 6,
+                                borderWidth: 2,
+                                cornerRadius: 8,
                                 displayColors: true,
                                 titleFont: {
                                     size: 14,
                                     weight: "bold",
                                 },
                                 bodyFont: {
-                                    size: 12,
+                                    size: 13,
                                 },
+                                footerFont: {
+                                    size: 11,
+                                    style: 'italic'
+                                },
+                                padding: 12,
+                                caretPadding: 8,
                             },
                             datalabels: {
-                                color: '#fff',
+                                color: function(context) {
+                                    // Use white for dark backgrounds, dark for light backgrounds
+                                    const bgColor = context.dataset.backgroundColor[context.dataIndex];
+                                    return '#fff';
+                                },
                                 font: {
                                     weight: 'bold',
-                                    size: 14
+                                    size: 12
                                 },
                                 formatter: function(value, context) {
-                                    return value + '%';
+                                    const percentage = percentages[context.dataIndex];
+                                    return `${percentage}%`;
                                 },
                                 display: function(context) {
-                                    const value = parseFloat(context.dataset.data[context.dataIndex]);
-                                    return value > 5; // Only show percentages for slices larger than 5%
-                                }
+                                    const percentage = parseFloat(percentages[context.dataIndex]);
+                                    return percentage > 3; // Only show percentages for slices larger than 3%
+                                },
+                                textStrokeColor: '#000',
+                                textStrokeWidth: 1,
                             }
                         },
-                        cutout: "40%",
+                        cutout: "45%",
+                        onHover: function(event, activeElements) {
+                            // Change cursor to pointer when hovering over chart segments
+                            event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
+                        },
                     },
                 });
             })
@@ -595,6 +623,13 @@
                             legend: {
                                 position: "bottom",
                             },
+                            tooltip: {
+                                callbacks: {
+                                    label: function() {
+                                        return "Failed to load course data";
+                                    }
+                                }
+                            }
                         },
                     },
                 });

@@ -1387,21 +1387,23 @@ def api_student_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
         
-        # Filter students by admission year
-        query = Student.query.filter(
-            func.extract('year', Student.admission_date) == year
-        )
-
-        # Get all available courses from Course table
-        all_courses = db.session.query(Course.course_full_name).all()
-        all_course_names = [course[0] for course in all_courses if course[0]]
+        # Get all available courses from CourseDetails table (more comprehensive)
+        all_courses_from_details = db.session.query(CourseDetails.course_full_name).distinct().all()
+        all_course_names = [course[0] for course in all_courses_from_details if course[0]]
+        
+        # Also get courses from Course table to ensure completeness
+        courses_from_course_table = db.session.query(Course.course_full_name).distinct().all()
+        for course in courses_from_course_table:
+            if course[0] and course[0] not in all_course_names:
+                all_course_names.append(course[0])
         
         # Get course distribution for students admitted in the selected year
-        course_counts = query.with_entities(
+        course_counts = db.session.query(
             Student.current_course, 
             func.count(Student.id)
         ).filter(
             and_(
+                func.extract('year', Student.admission_date) == year,
                 Student.current_course.isnot(None),
                 Student.current_course != ''
             )
@@ -1410,23 +1412,37 @@ def api_student_stats():
         # Create a dictionary for easy lookup
         course_count_dict = {course: count for course, count in course_counts}
 
-        # Ensure all courses are included, even with 0 students
+        # Include all available courses, showing both enrolled and non-enrolled
         final_courses = []
         final_counts = []
 
+        # First add courses with enrolled students
         for course_name in all_course_names:
             count = course_count_dict.get(course_name, 0)
-            if count > 0 or len(all_course_names) <= 10:  # Show all if few courses, or only non-zero
+            if count > 0:
                 final_courses.append(course_name)
                 final_counts.append(int(count))
 
-        # Handle case where no data exists
+        # Add courses from student records that might not be in course tables
+        for course, count in course_counts:
+            if course not in final_courses:
+                final_courses.append(course)
+                final_counts.append(int(count))
+
+        # If no courses have students, show available courses structure
         if not final_courses:
-            return jsonify({
-                'success': True,
-                'courses': ['No Students Enrolled'],
-                'counts': [1]
-            })
+            # Show first 5 available courses as structure
+            for course_name in all_course_names[:5]:
+                final_courses.append(course_name)
+                final_counts.append(0)
+            
+            # If still no courses, show default
+            if not final_courses:
+                return jsonify({
+                    'success': True,
+                    'courses': ['No Courses Available'],
+                    'counts': [1]
+                })
 
         return jsonify({
             'success': True,
