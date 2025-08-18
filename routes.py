@@ -1385,64 +1385,34 @@ def api_get_course_fees(course_name):
 @login_required
 def api_student_stats():
     try:
-        year = request.args.get('year', datetime.now().year, type=int)
-        
-        # Get all available courses from CourseDetails table (more comprehensive)
-        all_courses_from_details = db.session.query(CourseDetails.course_full_name).distinct().all()
-        all_course_names = [course[0] for course in all_courses_from_details if course[0]]
-        
-        # Also get courses from Course table to ensure completeness
-        courses_from_course_table = db.session.query(Course.course_full_name).distinct().all()
-        for course in courses_from_course_table:
-            if course[0] and course[0] not in all_course_names:
-                all_course_names.append(course[0])
-        
-        # Get course distribution for students admitted in the selected year
+        # Get course distribution for ALL students (not filtered by year)
         course_counts = db.session.query(
             Student.current_course, 
             func.count(Student.id)
         ).filter(
             and_(
-                func.extract('year', Student.admission_date) == year,
                 Student.current_course.isnot(None),
                 Student.current_course != ''
             )
         ).group_by(Student.current_course).all()
 
-        # Create a dictionary for easy lookup
-        course_count_dict = {course: count for course, count in course_counts}
-
-        # Include all available courses, showing both enrolled and non-enrolled
+        # Create final courses and counts lists
         final_courses = []
         final_counts = []
 
-        # First add courses with enrolled students
-        for course_name in all_course_names:
-            count = course_count_dict.get(course_name, 0)
-            if count > 0:
-                final_courses.append(course_name)
-                final_counts.append(int(count))
-
-        # Add courses from student records that might not be in course tables
+        # Add courses with enrolled students
         for course, count in course_counts:
-            if course not in final_courses:
+            if course and count > 0:
                 final_courses.append(course)
                 final_counts.append(int(count))
 
-        # If no courses have students, show available courses structure
+        # If no courses have students, show default
         if not final_courses:
-            # Show first 5 available courses as structure
-            for course_name in all_course_names[:5]:
-                final_courses.append(course_name)
-                final_counts.append(0)
-            
-            # If still no courses, show default
-            if not final_courses:
-                return jsonify({
-                    'success': True,
-                    'courses': ['No Courses Available'],
-                    'counts': [1]
-                })
+            return jsonify({
+                'success': True,
+                'courses': ['No Students Enrolled'],
+                'counts': [1]
+            })
 
         return jsonify({
             'success': True,
@@ -1475,37 +1445,18 @@ def api_course_list():
 @login_required
 def api_dashboard_stats():
     try:
-        year = request.args.get('year', datetime.now().year, type=int)
-        
-        # Filter students by admission year
-        total_students = Student.query.filter(
-            func.extract('year', Student.admission_date) == year
-        ).count()
-        
-        active_students = Student.query.filter(
-            and_(
-                func.extract('year', Student.admission_date) == year,
-                Student.dropout_status == 'Active'
-            )
-        ).count()
+        # Get stats for ALL students (not filtered by year)
+        total_students = Student.query.count()
+        active_students = Student.query.filter_by(dropout_status='Active').count()
 
-        # Calculate total collected fees for the selected year
-        # Get students admitted in the year and sum their fee collections
-        student_ids_in_year = db.session.query(Student.id).filter(
-            func.extract('year', Student.admission_date) == year
-        )
-
+        # Calculate total collected fees from all invoices
         total_collected_fees = db.session.query(
             func.sum(func.coalesce(Invoice.invoice_amount, 0))
-        ).filter(
-            Invoice.student_id.in_([s.id for s in student_ids_in_year.all()])
         ).scalar() or 0
 
-        # Calculate pending fees for students admitted in the selected year
+        # Calculate pending fees for all students
         total_fees_due = db.session.query(
             func.sum(func.coalesce(CollegeFees.total_fee, 0))
-        ).filter(
-            CollegeFees.student_id.in_([s.id for s in student_ids_in_year.all()])
         ).scalar() or 0
 
         pending_fees = max(0, total_fees_due - total_collected_fees)
