@@ -348,12 +348,6 @@
         const yearFilter = document.getElementById("yearFilter");
         yearFilter.disabled = true;
         
-        // Add loading text
-        const loadingText = document.createElement('span');
-        loadingText.innerHTML = ' <i class="fas fa-spinner fa-spin"></i> Loading...';
-        loadingText.id = 'loading-indicator';
-        yearFilter.parentNode.appendChild(loadingText);
-        
         // Update all dashboard components
         Promise.all([
             loadDashboardStats(),
@@ -361,15 +355,10 @@
             loadFeeChart()
         ]).then(() => {
             yearFilter.disabled = false;
-            const loader = document.getElementById('loading-indicator');
-            if (loader) loader.remove();
             console.log('Dashboard updated for year:', currentYear);
         }).catch((error) => {
             console.error('Error updating dashboard:', error);
             yearFilter.disabled = false;
-            const loader = document.getElementById('loading-indicator');
-            if (loader) loader.remove();
-            alert('Error updating dashboard data. Please try again.');
         });
     }
 
@@ -432,9 +421,9 @@
                 }
 
                 // Handle empty data case
-                if (!data.courses || data.courses.length === 0 || data.counts.every(count => count === 0)) {
-                    data.courses = [`No Students for ${currentYear}`];
-                    data.counts = [1];
+                if (!data.courses || data.courses.length === 0) {
+                    data.courses = ["No Data Available"];
+                    data.counts = [0];
                 }
 
                 // Update total students count
