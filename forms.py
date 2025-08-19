@@ -50,6 +50,7 @@ class StudentForm(FlaskForm):
     scholarship_status = SelectField('Government Scholarship', choices=[('Applied', 'Applied'), ('Approved', 'Approved'), ('Rejected', 'Rejected'), ('Granted', 'Granted')])
     rebate_meera_scholarship_status = SelectField('Meera Rebate', choices=[('Applied', 'Applied'), ('Approved', 'Approved'), ('Rejected', 'Rejected'), ('Granted', 'Granted')])
     admission_date = DateField('Admission Date', validators=[DataRequired()])
+    student_status = SelectField('Student Status', choices=[('Active', 'Active'), ('Dropout', 'Dropout'), ('Graduated', 'Graduated')], default='Active')
     submit = SubmitField('Save Student')
 
 class CourseForm(FlaskForm):

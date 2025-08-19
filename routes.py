@@ -69,7 +69,7 @@ def logout():
 def dashboard():
     # Get dashboard statistics
     total_students = Student.query.count()
-    active_students = Student.query.filter_by(dropout_status='Active').count()
+    active_students = Student.query.filter_by(student_status='Active').count()
 
     # Calculate total collected fees from all installments
     total_collected_fees = db.session.query(
@@ -280,7 +280,7 @@ def students():
     if course_filter:
         query = query.filter(Student.current_course == course_filter)
     if status_filter:
-        query = query.filter_by(dropout_status=status_filter)
+        query = query.filter_by(student_status=status_filter)
 
     # Sorting
     if hasattr(Student, sort_by):
@@ -468,10 +468,10 @@ def add_student():
                 fee_record.update_total_fees_paid()
 
             db.session.commit()
-            
+
             # Run fee calculation synchronization
             run_fee_calculation_sync()
-            
+
             flash('Student added successfully with fee record!', 'success')
             return redirect(url_for('students'))
         except Exception as e:
@@ -969,10 +969,10 @@ def payment():
         try:
             db.session.add(invoice)
             db.session.commit()
-            
+
             # Run fee calculation synchronization
             run_fee_calculation_sync()
-            
+
             flash('Payment processed successfully!', 'success')
             return redirect(url_for('fees'))
         except Exception as e:
@@ -1154,7 +1154,7 @@ def add_exam():
         # Get data from form
         student_id = request.form.get('student_id')
         student = Student.query.get(student_id)
-        
+
         # Get course_id from student's course
         course_id = None
         if student and student.current_course:
@@ -1163,19 +1163,19 @@ def add_exam():
                 course = Course.query.filter_by(course_short_name=course_detail.course_short_name).first()
                 if course:
                     course_id = course.course_id
-        
+
         exam_name = form.exam_name.data
         exam_date = form.exam_date.data
-        
+
         # Get subject data
         subject1_name = request.form.get('subject1_name')
         subject1_max_marks = int(request.form.get('subject1_max_marks') or 0)
         subject1_obtained_marks = int(request.form.get('subject1_obtained_marks') or 0)
-        
+
         subject2_name = request.form.get('subject2_name')
         subject2_max_marks = int(request.form.get('subject2_max_marks') or 0)
         subject2_obtained_marks = int(request.form.get('subject2_obtained_marks') or 0)
-        
+
         subject3_name = request.form.get('subject3_name')
         subject3_max_marks = int(request.form.get('subject3_max_marks') or 0)
         subject3_obtained_marks = int(request.form.get('subject3_obtained_marks') or 0)
@@ -1250,11 +1250,11 @@ def edit_exam(exam_id):
         subject1_name = request.form.get('subject1_name')
         subject1_max_marks = int(request.form.get('subject1_max_marks') or 0)
         subject1_obtained_marks = int(request.form.get('subject1_obtained_marks') or 0)
-        
+
         subject2_name = request.form.get('subject2_name')
         subject2_max_marks = int(request.form.get('subject2_max_marks') or 0)
         subject2_obtained_marks = int(request.form.get('subject2_obtained_marks') or 0)
-        
+
         subject3_name = request.form.get('subject3_name')
         subject3_max_marks = int(request.form.get('subject3_max_marks') or 0)
         subject3_obtained_marks = int(request.form.get('subject3_obtained_marks') or 0)
@@ -1281,7 +1281,7 @@ def edit_exam(exam_id):
                 course = Course.query.filter_by(course_short_name=course_detail.course_short_name).first()
                 if course:
                     course_id = course.course_id
-        
+
         # Update exam (student info remains unchanged)
         exam.course_id = course_id
         exam.exam_name = form.exam_name.data
@@ -1447,7 +1447,7 @@ def api_dashboard_stats():
     try:
         # Get stats for ALL students (not filtered by year)
         total_students = Student.query.count()
-        active_students = Student.query.filter_by(dropout_status='Active').count()
+        active_students = Student.query.filter_by(student_status='Active').count()
 
         # Calculate total collected fees from all invoices
         total_collected_fees = db.session.query(
@@ -1488,7 +1488,7 @@ def api_dashboard_stats():
 def api_fee_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
-        
+
         # Get monthly fee collections from invoices for selected year
         monthly_collections = db.session.query(
             func.extract('month', Invoice.date_time),
@@ -1927,10 +1927,10 @@ def edit_student(student_id):
                 # No manual calculation needed as database formulas handle both
 
             db.session.commit()
-            
+
             # Run fee calculation synchronization
             run_fee_calculation_sync()
-            
+
             flash('Student and fee details updated successfully!', 'success')
             return redirect(url_for('students'))
         except Exception as e:
@@ -1978,7 +1978,7 @@ def export_students():
             student.category,
             student.email,
             student.phone,
-            student.dropout_status
+            student.student_status
         ])
 
     output.seek(0)
@@ -2032,7 +2032,7 @@ def fee_summary():
         payment_mode_counts = [cash_count, online_count, cheque_count, dd_count]
     else:
         payment_mode_counts = [0, 0, 0, 0]
-    
+
     payment_modes = ['Cash', 'Online', 'Cheque', 'DD']
 
     # Course-wise fee collection
@@ -2048,7 +2048,7 @@ def fee_summary():
     gov_scholarship_applied = Student.query.filter_by(scholarship_status='Applied').count()
     gov_scholarship_approved = Student.query.filter_by(scholarship_status='Approved').count() 
     gov_scholarship_granted = Student.query.filter_by(scholarship_status='Granted').count()
-    
+
     meera_scholarship_applied = Student.query.filter_by(rebate_meera_scholarship_status='Applied').count()
     meera_scholarship_approved = Student.query.filter_by(rebate_meera_scholarship_status='Approved').count()
     meera_scholarship_granted = Student.query.filter_by(rebate_meera_scholarship_status='Granted').count()
@@ -2058,12 +2058,12 @@ def fee_summary():
         CollegeFees.scholarship_applied == True,
         CollegeFees.government_scholarship_amount > 0
     ).scalar() or 0
-    
+
     merit_approved = db.session.query(func.count(CollegeFees.id)).filter(
         CollegeFees.scholarship_approved == True,
         CollegeFees.government_scholarship_amount > 0
     ).scalar() or 0
-    
+
     merit_granted = db.session.query(func.count(CollegeFees.id)).filter(
         CollegeFees.scholarship_granted == True,
         CollegeFees.government_scholarship_amount > 0
@@ -2074,12 +2074,12 @@ def fee_summary():
         CollegeFees.meera_rebate_applied == True,
         CollegeFees.meera_rebate_amount > 0
     ).scalar() or 0
-    
+
     need_approved = db.session.query(func.count(CollegeFees.id)).filter(
         CollegeFees.meera_rebate_approved == True,
         CollegeFees.meera_rebate_amount > 0
     ).scalar() or 0
-    
+
     need_granted = db.session.query(func.count(CollegeFees.id)).filter(
         CollegeFees.meera_rebate_granted == True,
         CollegeFees.meera_rebate_amount > 0
@@ -2206,7 +2206,7 @@ def api_student_subjects(student_id):
         student = Student.query.get(student_id)
         if not student:
             return jsonify({'success': False, 'error': 'Student not found'})
-        
+
         return jsonify({
             'success': True,
             'subject_1_name': student.subject_1_name,

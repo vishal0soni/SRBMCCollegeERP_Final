@@ -47,10 +47,17 @@ def export_to_json(data, headers, filename):
     """Export data to JSON format"""
     json_data = []
     for row in data:
-        json_data.append(dict(zip(headers, row)))
+        row_dict = {}
+        for i, header in enumerate(headers):
+            if i < len(row):
+                row_dict[header] = row[i]
+            else:
+                row_dict[header] = None
+        json_data.append(row_dict)
 
-    output = json.dumps(json_data, indent=2, default=str)
-    response = make_response(output)
+    json_string = json.dumps(json_data, indent=2, default=str)
+
+    response = make_response(json_string)
     response.headers['Content-Disposition'] = f'attachment; filename={filename}'
     response.headers['Content-Type'] = 'application/json'
 
@@ -64,7 +71,7 @@ def get_students_export_data():
         'Gender', 'Category', 'Email', 'Current Course', 'Subject 1', 'Subject 2', 'Subject 3',
         'Percentage', 'Street', 'Area/Village', 'City/Tehsil', 'State', 'Phone', 
         'Aadhaar Number', 'APAAR ID', 'School Name', 'Scholarship Status', 
-        'Meera Rebate Status', 'Dropout Status', 'Admission Date'
+        'Meera Rebate Status', 'Student Status', 'Admission Date'
     ]
 
     data = []
@@ -94,7 +101,7 @@ def get_students_export_data():
             student.school_name or '',
             student.scholarship_status or '',
             student.rebate_meera_scholarship_status or '',
-            student.dropout_status or 'Active',
+            student.student_status or 'Active',
             student.admission_date.strftime('%Y-%m-%d') if student.admission_date else ''
         ])
 
@@ -356,7 +363,7 @@ def import_students_data(records):
                     school_name=record.get('School Name', ''),
                     scholarship_status=record.get('Scholarship Status', 'Applied'),
                     rebate_meera_scholarship_status=record.get('Meera Rebate Status', 'Applied'),
-                    dropout_status=record.get('Dropout Status', 'Active'),
+                    student_status=record.get('Student Status', 'Active'), # Changed from dropout_status
                     admission_date=datetime.strptime(record.get('Admission Date', ''), '%Y-%m-%d').date() if record.get('Admission Date') else date.today()
                 )
 
@@ -774,27 +781,6 @@ def import_subjects_data(records):
         db.session.rollback()
         return False, f"Import failed: {str(e)}"
 
-def export_to_json(data, headers, filename):
-    """Export data to JSON format"""
-    # Convert data to list of dictionaries
-    json_data = []
-    for row in data:
-        row_dict = {}
-        for i, header in enumerate(headers):
-            if i < len(row):
-                row_dict[header] = row[i]
-            else:
-                row_dict[header] = None
-        json_data.append(row_dict)
-
-    json_string = json.dumps(json_data, indent=2, default=str)
-
-    response = make_response(json_string)
-    response.headers['Content-Disposition'] = f'attachment; filename={filename}'
-    response.headers['Content-Type'] = 'application/json'
-
-    return response
-
 def process_import_file(file, data_type):
     """Process import file for bulk data import"""
     try:
@@ -867,8 +853,82 @@ def import_subjects_data(data, headers):
 
 def import_students_data(data, headers):
     """Import students data from CSV/Excel"""
-    # Implementation placeholder
-    return False, "Student import not yet implemented"
+    try:
+        imported_count = 0
+        errors = []
+        student_status_options = ['Active', 'Dropout', 'Graduated'] # Added 'Graduated'
+
+        for i, row in enumerate(data):
+            try:
+                # Extract data using headers to ensure correct mapping
+                record = {headers[j]: row[j] for j in range(len(headers)) if j < len(row)}
+
+                student_id = record.get('Student ID', '')
+                if not student_id:
+                    errors.append(f"Row {i+1}: 'Student ID' is missing.")
+                    continue
+
+                # Check if student already exists
+                existing_student = Student.query.filter_by(student_unique_id=student_id).first()
+                if existing_student:
+                    errors.append(f"Row {i+1}: Student with ID {student_id} already exists.")
+                    continue
+
+                # Get or set student_status
+                student_status = record.get('Student Status', 'Active')
+                if student_status not in student_status_options:
+                    # If the status is not recognized, default to 'Active' or log an error
+                    # For this example, we'll default to 'Active' and log a warning
+                    errors.append(f"Row {i+1}: Unknown 'Student Status' value '{student_status}'. Defaulting to 'Active'.")
+                    student_status = 'Active'
+
+                # Create new student
+                student = Student(
+                    student_unique_id=student_id,
+                    external_id=record.get('External ID', ''),
+                    first_name=record.get('First Name', ''),
+                    last_name=record.get('Last Name', ''),
+                    father_name=record.get('Father Name', ''),
+                    mother_name=record.get('Mother Name', ''),
+                    gender=record.get('Gender', 'Male'),
+                    category=record.get('Category', 'General'),
+                    email=record.get('Email', ''),
+                    current_course=record.get('Current Course', ''),
+                    subject_1_name=record.get('Subject 1', ''),
+                    subject_2_name=record.get('Subject 2', ''),
+                    subject_3_name=record.get('Subject 3', ''),
+                    percentage=float(record.get('Percentage', 0)) if record.get('Percentage') else None,
+                    street=record.get('Street', ''),
+                    area_village=record.get('Area/Village', ''),
+                    city_tehsil=record.get('City/Tehsil', ''),
+                    state=record.get('State', ''),
+                    phone=record.get('Phone', ''),
+                    aadhaar_card_number=record.get('Aadhaar Number', ''),
+                    apaar_id=record.get('APAAR ID', ''),
+                    school_name=record.get('School Name', ''),
+                    scholarship_status=record.get('Scholarship Status', 'Applied'),
+                    rebate_meera_scholarship_status=record.get('Meera Rebate Status', 'Applied'),
+                    student_status=student_status, # Use the new column name
+                    admission_date=datetime.strptime(record.get('Admission Date', ''), '%Y-%m-%d').date() if record.get('Admission Date') else date.today()
+                )
+
+                db.session.add(student)
+                imported_count += 1
+
+            except Exception as e:
+                errors.append(f"Row {i+1}: Error processing row - {str(e)}")
+
+        db.session.commit()
+        
+        if errors:
+            return False, f"Import completed with {imported_count} students. Encountered {len(errors)} errors.", errors
+        else:
+            return True, f"Successfully imported {imported_count} students."
+
+    except Exception as e:
+        db.session.rollback()
+        return False, f"Error during student import: {str(e)}", []
+
 
 def import_courses_data(data, headers):
     """Import courses data from CSV/Excel"""

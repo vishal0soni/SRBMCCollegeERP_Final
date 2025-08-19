@@ -628,7 +628,7 @@ function calculateTotalFees() {
     const totalCourseFeesElement = document.getElementById('totalCourseFees');
     const totalCourseFeesText = totalCourseFeesElement?.textContent || '₹0.00';
     const totalCourseFees = parseFloat(totalCourseFeesText.replace('₹', '').replace(/,/g, '') || 0);
-    
+
     // Add all additional fee components
     let additionalFees = 0;
     document.querySelectorAll('.additional-fee-input').forEach(input => {

@@ -102,7 +102,7 @@ class Student(db.Model):
     school_name = db.Column(db.String(200))
     scholarship_status = db.Column(db.String(20), default='Applied')  # Applied, Approved, Rejected
     rebate_meera_scholarship_status = db.Column(db.String(20), default='Applied')
-    dropout_status = db.Column(db.String(20), default='Active')  # Active, Dropout
+    student_status = db.Column(db.String(20), default='Active')  # Active, Dropout, Graduated
     admission_date = db.Column(db.Date, default=datetime.utcnow().date())
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
