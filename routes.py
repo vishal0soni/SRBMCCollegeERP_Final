@@ -189,13 +189,25 @@ def admin_add_user():
             db.session.add(user)
             db.session.commit()
 
+            # Store password before hashing for display
+            temp_password = form.password.data or 'password123'
+            
             # Send welcome email
             if user.email:
                 send_email(user.email, 'Welcome to SRBMC ERP', 
-                          f'Your account has been created. Username: {user.username}, Password: {form.password.data or "password123"}')
+                          f'Your account has been created. Username: {user.username}, Password: {temp_password}')
 
-            flash('User created successfully!', 'success')
-            return redirect(url_for('admin_users'))
+            # Return user details for popup display
+            return render_template('admin/user_form.html', 
+                                 form=form, 
+                                 title='Add User',
+                                 show_success_modal=True,
+                                 created_user={
+                                     'username': user.username,
+                                     'email': user.email,
+                                     'password': temp_password,
+                                     'full_name': f"{user.first_name} {user.last_name}"
+                                 })
         except Exception as e:
             db.session.rollback()
             flash(f'Error creating user: {str(e)}', 'error')

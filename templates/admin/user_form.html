@@ -12,7 +12,7 @@
                 <li class="breadcrumb-item active">{{ title }}</li>
             </ol>
         </nav>
-        
+
         <h1 class="h3 mb-4">
             <i class="fas fa-user-edit"></i> {{ title }}
         </h1>
@@ -28,7 +28,7 @@
             <div class="card-body">
                 <form method="POST">
                     {{ form.hidden_tag() }}
-                    
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             {{ form.first_name.label(class="form-label") }}
@@ -41,7 +41,7 @@
                                 </div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="col-md-6 mb-3">
                             {{ form.last_name.label(class="form-label") }}
                             {{ form.last_name(class="form-control") }}
@@ -54,7 +54,7 @@
                             {% endif %}
                         </div>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             {{ form.email.label(class="form-label") }}
@@ -67,7 +67,7 @@
                                 </div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="col-md-6 mb-3">
                             {{ form.phone.label(class="form-label") }}
                             {{ form.phone(class="form-control") }}
@@ -80,7 +80,7 @@
                             {% endif %}
                         </div>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             {{ form.role_id.label(class="form-label") }}
@@ -93,7 +93,7 @@
                                 </div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="col-md-6 mb-3">
                             {{ form.gender.label(class="form-label") }}
                             {{ form.gender(class="form-select") }}
@@ -106,7 +106,7 @@
                             {% endif %}
                         </div>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             {{ form.username.label(class="form-label") }}
@@ -119,7 +119,7 @@
                                 </div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="col-md-6 mb-3">
                             {{ form.password.label(class="form-label") }}
                             {{ form.password(class="form-control") }}
@@ -137,7 +137,7 @@
                             {% endif %}
                         </div>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             {{ form.birthdate.label(class="form-label") }}
@@ -150,7 +150,7 @@
                                 </div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="col-md-6 mb-3">
                             {{ form.status.label(class="form-label") }}
                             {{ form.status(class="form-select") }}
@@ -163,7 +163,7 @@
                             {% endif %}
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         {{ form.street.label(class="form-label") }}
                         {{ form.street(class="form-control") }}
@@ -175,24 +175,24 @@
                             </div>
                         {% endif %}
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             {{ form.area_village.label(class="form-label") }}
                             {{ form.area_village(class="form-control") }}
                         </div>
-                        
+
                         <div class="col-md-4 mb-3">
                             {{ form.city_tehsil.label(class="form-label") }}
                             {{ form.city_tehsil(class="form-control") }}
                         </div>
-                        
+
                         <div class="col-md-4 mb-3">
                             {{ form.state.label(class="form-label") }}
                             {{ form.state(class="form-control") }}
                         </div>
                     </div>
-                    
+
                     <div class="d-flex justify-content-between">
                         <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Back to Users
@@ -204,4 +204,120 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{% if show_success_modal %}
+<!-- Success Modal -->
+<div class="modal fade" id="userCreatedModal" tabindex="-1" aria-labelledby="userCreatedModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="userCreatedModalLabel">
+                    <i class="fas fa-check-circle"></i> User Created Successfully
+                </h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-user-plus fa-3x text-success mb-3"></i>
+                    <h6>{{ created_user.full_name }} has been created successfully!</h6>
+                </div>
+
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title text-primary mb-3">Login Credentials</h6>
+                        <div class="row mb-2">
+                            <div class="col-4 text-end"><strong>Username:</strong></div>
+                            <div class="col-8 text-start">
+                                <span id="username-text">{{ created_user.username }}</span>
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-4 text-end"><strong>Email:</strong></div>
+                            <div class="col-8 text-start">
+                                <span id="email-text">{{ created_user.email }}</span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-4 text-end"><strong>Password:</strong></div>
+                            <div class="col-8 text-start">
+                                <span id="password-text" class="font-monospace">{{ created_user.password }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Hidden text area for copying -->
+                        <textarea id="credentials-text" style="position: absolute; left: -9999px;" readonly>
+Username: {{ created_user.username }}
+Email: {{ created_user.email }}
+Password: {{ created_user.password }}
+Login URL: {{ request.url_root }}login</textarea>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning mt-3" role="alert">
+                    <small><i class="fas fa-exclamation-triangle"></i> Please save these credentials securely. The password will not be shown again.</small>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-primary" onclick="copyCredentials()">
+                    <i class="fas fa-copy"></i> Copy to Clipboard
+                </button>
+                <a href="{{ url_for('admin_users') }}" class="btn btn-success">
+                    <i class="fas fa-check"></i> Close & Go to Users
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show modal on page load
+document.addEventListener('DOMContentLoaded', function() {
+    var modal = new bootstrap.Modal(document.getElementById('userCreatedModal'));
+    modal.show();
+});
+
+function copyCredentials() {
+    const textArea = document.getElementById('credentials-text');
+    textArea.select();
+    textArea.setSelectionRange(0, 99999); // For mobile devices
+
+    try {
+        document.execCommand('copy');
+
+        // Update button to show success
+        const button = event.target;
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-success');
+
+        // Reset button after 2 seconds
+        setTimeout(() => {
+            button.innerHTML = originalHTML;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-primary');
+        }, 2000);
+
+    } catch (err) {
+        // Fallback for browsers that don't support execCommand
+        navigator.clipboard.writeText(textArea.value).then(() => {
+            const button = event.target;
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            button.classList.remove('btn-primary');
+            button.classList.add('btn-success');
+
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.classList.remove('btn-success');
+                button.classList.add('btn-primary');
+            }, 2000);
+        }).catch(() => {
+            alert('Failed to copy credentials. Please copy manually.');
+        });
+    }
+}
+</script>
+{% endif %}
 {% endblock %}
