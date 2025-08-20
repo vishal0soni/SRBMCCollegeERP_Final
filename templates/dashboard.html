@@ -173,44 +173,51 @@
     </div>
 </div></div>
 
-<!-- Charts Row - Both charts in balanced layout -->
+<!-- Course Distribution Chart -->
 <div class="row mb-4">
-    <div class="col-xl-6 col-lg-6">
-        <div class="card shadow mb-4">
-            <div
-                class="card-header py-3 d-flex justify-content-between align-items-center"
-            >
-                <h6 class="m-0 font-weight-bold text-primary">
-                    Student Distribution by Course
-                </h6>
-                <div class="text-muted">
-                    <small
-                        >Total Students:
-                        <span id="totalStudentsCount"
-                            >{{ stats.total_students }}</span
-                        ></small
-                    >
-                </div>
-            </div>
-            <div class="card-body" style="height: 400px">
-                <canvas id="courseChart" style="max-height: 350px"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-6 col-lg-6">
+    <div class="col-12">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">
-                    Monthly Fee Collections
+                    <i class="fas fa-chart-pie"></i> Student Distribution by Course
                 </h6>
             </div>
-            <div class="card-body" style="height: 400px">
-                <canvas id="feeChart" style="max-height: 350px"></canvas>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Chart Column -->
+                    <div class="col-lg-8">
+                        <div class="chart-container" style="height: 400px;">
+                            <canvas id="courseDistributionChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Statistics Column -->
+                    <div class="col-lg-4">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Course</th>
+                                        <th class="text-end">Students</th>
+                                        <th class="text-end">%</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="courseStatsTable">
+                                    <!-- Data will be populated via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
+                            <div class="small text-muted">
+                                <strong>Total Students:</strong>
+                                <span id="totalStudentsDisplay">{{ stats.total_students }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div></div>
+</div>
 
 <!-- Recent Activities -->
 <div class="row">
@@ -307,16 +314,14 @@
 {% endblock %} {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script>
-    let courseChart;
-    let feeChart;
+    let courseDistributionChart;
     let currentYear = new Date().getFullYear();
 
     // Load dashboard charts with dynamic data
     document.addEventListener("DOMContentLoaded", function () {
         loadYearOptions();
         loadDashboardStats();
-        loadStudentDistributionChart();
-        loadFeeChart();
+        loadCourseDistributionChart();
     });
 
     function loadYearOptions() {
@@ -351,8 +356,7 @@
         // Update all dashboard components
         Promise.all([
             loadDashboardStats(),
-            loadStudentDistributionChart(),
-            loadFeeChart()
+            loadCourseDistributionChart()
         ]).then(() => {
             yearFilter.disabled = false;
             console.log('Dashboard updated for year:', currentYear);
@@ -405,121 +409,77 @@
             });
     }
 
-    function loadStudentDistributionChart() {
+    function loadCourseDistributionChart() {
         return fetch(`/api/student-stats?year=${currentYear}`)
             .then((response) => response.json())
             .then((data) => {
-                console.log('Student distribution data loaded:', data);
+                console.log('Course distribution data loaded:', data);
                 
-                const ctx = document
-                    .getElementById("courseChart")
-                    .getContext("2d");
+                const ctx = document.getElementById("courseDistributionChart").getContext("2d");
 
                 // Destroy existing chart if it exists
-                if (courseChart) {
-                    courseChart.destroy();
+                if (courseDistributionChart) {
+                    courseDistributionChart.destroy();
                 }
 
                 // Handle empty data case
                 if (!data.courses || data.courses.length === 0) {
-                    data.courses = ["No Data Available"];
-                    data.counts = [0];
+                    data.courses = ["No Students Enrolled"];
+                    data.counts = [1];
                 }
 
-                // Update total students count
+                // Calculate totals and percentages
                 const totalStudents = data.counts.reduce((a, b) => a + b, 0);
-                const totalStudentsCountElement = document.getElementById("totalStudentsCount");
-                if (totalStudentsCountElement) {
-                    totalStudentsCountElement.textContent = totalStudents;
-                    totalStudentsCountElement.classList.add('updated');
-                    setTimeout(() => totalStudentsCountElement.classList.remove('updated'), 1000);
-                }
-
-                // Calculate percentages
                 const percentages = data.counts.map(count => 
                     totalStudents > 0 ? ((count / totalStudents) * 100).toFixed(1) : 0
                 );
 
-                courseChart = new Chart(ctx, {
-                    type: "doughnut",
+                // Update total students display
+                const totalStudentsDisplayElement = document.getElementById("totalStudentsDisplay");
+                if (totalStudentsDisplayElement) {
+                    totalStudentsDisplayElement.textContent = totalStudents;
+                    totalStudentsDisplayElement.classList.add('updated');
+                    setTimeout(() => totalStudentsDisplayElement.classList.remove('updated'), 1000);
+                }
+
+                // Update statistics table
+                updateCourseStatsTable(data.courses, data.counts, percentages, totalStudents);
+
+                // Create doughnut chart
+                courseDistributionChart = new Chart(ctx, {
+                    type: 'doughnut',
                     data: {
                         labels: data.courses,
-                        datasets: [
-                            {
-                                data: data.counts, // Use actual counts for chart display
-                                backgroundColor: [
-                                    "#4e73df",
-                                    "#1cc88a",
-                                    "#36b9cc",
-                                    "#f6c23e",
-                                    "#e74a3b",
-                                    "#858796",
-                                    "#5a5c69",
-                                    "#2c5282",
-                                    "#1a365d",
-                                    "#3182ce",
-                                    "#fd7e14",
-                                    "#6f42c1",
-                                    "#ff6384",
-                                    "#ffcd56",
-                                    "#ff9f40",
-                                    "#4bc0c0",
-                                    "#9966ff",
-                                    "#c9cbcf",
-                                    "#ff6b9d",
-                                    "#c449c2"
-                                ],
-                                borderWidth: 2,
-                                borderColor: "#fff",
-                            },
-                        ],
+                        datasets: [{
+                            data: data.counts,
+                            backgroundColor: [
+                                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796',
+                                '#5a5c69', '#2c5282', '#1a365d', '#3182ce', '#fd7e14', '#6f42c1'
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
                     },
-                    plugins: [ChartDataLabels],
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                position: "bottom",
+                                position: 'bottom',
                                 labels: {
-                                    padding: 15,
+                                    padding: 20,
                                     usePointStyle: true,
                                     font: {
-                                        size: 11,
-                                    },
-                                    generateLabels: function (chart) {
-                                        const original =
-                                            Chart.defaults.plugins.legend.labels
-                                                .generateLabels;
-                                        const labels = original.call(
-                                            this,
-                                            chart,
-                                        );
-
-                                        labels.forEach((label, index) => {
-                                            const studentCount = data.counts[index];
-                                            const percentage = percentages[index];
-                                            const courseName = chart.data.labels[index];
-
-                                            // Truncate long course names for legend
-                                            const displayName =
-                                                courseName.length > 25
-                                                    ? courseName.substring(0, 22) + "..."
-                                                    : courseName;
-
-                                            label.text = `${displayName} (${studentCount} - ${percentage}%)`;
-                                        });
-
-                                        return labels;
-                                    },
-                                },
+                                        size: 11
+                                    }
+                                }
                             },
                             tooltip: {
                                 callbacks: {
-                                    title: function (context) {
-                                        return `${context[0].label}`;
+                                    title: function(context) {
+                                        return context[0].label;
                                     },
-                                    label: function (context) {
+                                    label: function(context) {
                                         const courseIndex = context.dataIndex;
                                         const studentCount = data.counts[courseIndex];
                                         const percentage = percentages[courseIndex];
@@ -528,303 +488,79 @@
                                         return [
                                             `Course: ${courseName}`,
                                             `Total Students: ${studentCount}`,
-                                            `Percentage: ${percentage}%`,
-                                            `Academic Year: ${currentYear}-${(currentYear + 1).toString().slice(-2)}`
+                                            `Percentage: ${percentage}%`
                                         ];
-                                    },
-                                    footer: function (context) {
-                                        const courseIndex = context[0].dataIndex;
-                                        const studentCount = data.counts[courseIndex];
-                                        if (studentCount === 1) {
-                                            return "1 student enrolled in this course";
-                                        } else if (studentCount === 0) {
-                                            return "No students enrolled";
-                                        } else {
-                                            return `${studentCount} students enrolled in this course`;
-                                        }
-                                    },
+                                    }
                                 },
-                                backgroundColor: "rgba(0, 0, 0, 0.9)",
-                                titleColor: "#fff",
-                                bodyColor: "#fff",
-                                footerColor: "#ccc",
-                                borderColor: "#4e73df",
-                                borderWidth: 2,
-                                cornerRadius: 8,
-                                displayColors: true,
-                                titleFont: {
-                                    size: 14,
-                                    weight: "bold",
-                                },
-                                bodyFont: {
-                                    size: 13,
-                                },
-                                footerFont: {
-                                    size: 11,
-                                    style: 'italic'
-                                },
-                                padding: 12,
-                                caretPadding: 8,
-                            },
-                            datalabels: {
-                                color: function(context) {
-                                    // Use white for dark backgrounds, dark for light backgrounds
-                                    const bgColor = context.dataset.backgroundColor[context.dataIndex];
-                                    return '#fff';
-                                },
-                                font: {
-                                    weight: 'bold',
-                                    size: 12
-                                },
-                                formatter: function(value, context) {
-                                    const percentage = percentages[context.dataIndex];
-                                    return `${percentage}%`;
-                                },
-                                display: function(context) {
-                                    const percentage = parseFloat(percentages[context.dataIndex]);
-                                    return percentage > 3; // Only show percentages for slices larger than 3%
-                                },
-                                textStrokeColor: '#000',
-                                textStrokeWidth: 1,
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: '#4e73df',
+                                borderWidth: 1,
+                                cornerRadius: 6
                             }
                         },
-                        cutout: "45%",
-                        onHover: function(event, activeElements) {
-                            // Change cursor to pointer when hovering over chart segments
-                            event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
-                        },
-                    },
+                        cutout: '60%'
+                    }
                 });
             })
             .catch((error) => {
                 console.error("Error loading course distribution data:", error);
-                // Show placeholder chart on error
-                const ctx = document
-                    .getElementById("courseChart")
-                    .getContext("2d");
-                if (courseChart) {
-                    courseChart.destroy();
+                // Show placeholder on error
+                const ctx = document.getElementById("courseDistributionChart").getContext("2d");
+                if (courseDistributionChart) {
+                    courseDistributionChart.destroy();
                 }
-                courseChart = new Chart(ctx, {
-                    type: "doughnut",
+                
+                courseDistributionChart = new Chart(ctx, {
+                    type: 'doughnut',
                     data: {
-                        labels: ["Error Loading Data"],
-                        datasets: [
-                            {
-                                data: [1],
-                                backgroundColor: ["#e3e6f0"],
-                            },
-                        ],
+                        labels: ['Error Loading Data'],
+                        datasets: [{
+                            data: [1],
+                            backgroundColor: ['#e3e6f0']
+                        }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                position: "bottom",
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function() {
-                                        return "Failed to load course data";
-                                    }
-                                }
+                                position: 'bottom'
                             }
-                        },
-                    },
+                        }
+                    }
                 });
                 throw error;
             });
     }
 
-    function loadFeeChart() {
-        return fetch(`/api/fee-stats?year=${currentYear}`)
-            .then((response) => response.json())
-            .then((data) => {
-                console.log('Fee chart data loaded:', data);
-                const ctx = document
-                    .getElementById("feeChart")
-                    .getContext("2d");
-                const monthNames = [
-                    "Jan",
-                    "Feb",
-                    "Mar",
-                    "Apr",
-                    "May",
-                    "Jun",
-                    "Jul",
-                    "Aug",
-                    "Sep",
-                    "Oct",
-                    "Nov",
-                    "Dec",
-                ];
+    function updateCourseStatsTable(courses, counts, percentages, totalStudents) {
+        const tableBody = document.getElementById("courseStatsTable");
+        tableBody.innerHTML = "";
 
-                if (feeChart) {
-                    feeChart.destroy();
-                }
+        if (totalStudents === 0) {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td colspan="3" class="text-center text-muted">
+                    <em>No student data available</em>
+                </td>
+            `;
+            tableBody.appendChild(row);
+            return;
+        }
 
-                feeChart = new Chart(ctx, {
-                    type: "line",
-                    data: {
-                        labels: monthNames,
-                        datasets: [
-                            {
-                                label: `Fee Collections ${currentYear}-${(currentYear + 1).toString().slice(-2)}`,
-                                data: data.amounts,
-                                borderColor: "#1cc88a",
-                                backgroundColor: "rgba(28, 200, 138, 0.3)",
-                                tension: 0.4,
-                                fill: true,
-                                pointBackgroundColor: "#1cc88a",
-                                pointBorderColor: "#fff",
-                                pointBorderWidth: 2,
-                                pointRadius: 5,
-                                pointHoverRadius: 8,
-                                pointHoverBorderWidth: 3,
-                            },
-                        ],
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'top',
-                                labels: {
-                                    font: {
-                                        size: 12,
-                                        weight: 'bold'
-                                    },
-                                    usePointStyle: true,
-                                    padding: 20
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    title: function(context) {
-                                        return `${context[0].label} ${new Date().getFullYear()}`;
-                                    },
-                                    label: function (context) {
-                                        return (
-                                            "Collections: ₹" +
-                                            context.parsed.y.toLocaleString('en-IN')
-                                        );
-                                    },
-                                },
-                                backgroundColor: "rgba(0, 0, 0, 0.8)",
-                                titleColor: "#fff",
-                                bodyColor: "#fff",
-                                cornerRadius: 6,
-                                borderColor: "#1cc88a",
-                                borderWidth: 1,
-                            },
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: {
-                                    color: "#e3e6f0",
-                                    drawBorder: false,
-                                },
-                                ticks: {
-                                    callback: function (value) {
-                                        if (value >= 100000) {
-                                            return "₹" + (value/100000).toFixed(1) + "L";
-                                        } else if (value >= 1000) {
-                                            return "₹" + (value/1000).toFixed(0) + "K";
-                                        } else {
-                                            return "₹" + value;
-                                        }
-                                    },
-                                    color: "#5a5c69",
-                                    font: {
-                                        size: 11,
-                                    },
-                                    padding: 10,
-                                },
-                                border: {
-                                    display: false,
-                                },
-                            },
-                            x: {
-                                grid: {
-                                    color: "#e3e6f0",
-                                    drawBorder: false,
-                                },
-                                ticks: {
-                                    color: "#5a5c69",
-                                    font: {
-                                        size: 11,
-                                    },
-                                    padding: 10,
-                                },
-                                border: {
-                                    display: false,
-                                },
-                            },
-                        },
-                        interaction: {
-                            intersect: false,
-                            mode: "index",
-                        },
-                        elements: {
-                            line: {
-                                borderWidth: 3,
-                            },
-                        },
-                    },
-                });
-            })
-            .catch((error) => {
-                console.error("Error loading fee collections data:", error);
-                // Show placeholder chart on error
-                const ctx = document
-                    .getElementById("feeChart")
-                    .getContext("2d");
-                const monthNames = [
-                    "Jan",
-                    "Feb",
-                    "Mar",
-                    "Apr",
-                    "May",
-                    "Jun",
-                    "Jul",
-                    "Aug",
-                    "Sep",
-                    "Oct",
-                    "Nov",
-                    "Dec",
-                ];
-                if (feeChart) {
-                    feeChart.destroy();
-                }
-                feeChart = new Chart(ctx, {
-                    type: "line",
-                    data: {
-                        labels: monthNames,
-                        datasets: [
-                            {
-                                label: "No Data Available",
-                                data: Array(12).fill(0),
-                                borderColor: "#e3e6f0",
-                                backgroundColor: "rgba(227, 230, 240, 0.1)",
-                            },
-                        ],
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                            },
-                        },
-                    },
-                });
-                throw error;
-            });
+        courses.forEach((course, index) => {
+            const row = document.createElement("tr");
+            const courseName = course.length > 20 ? course.substring(0, 20) + "..." : course;
+            
+            row.innerHTML = `
+                <td title="${course}">${courseName}</td>
+                <td class="text-end">${counts[index]}</td>
+                <td class="text-end">${percentages[index]}%</td>
+            `;
+            tableBody.appendChild(row);
+        });
     }
 </script>
 {% endblock %}
