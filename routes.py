@@ -1048,29 +1048,57 @@ def exam_summary():
     subject_names = list(subject_data.keys())
     subject_averages = [sum(scores) / len(scores) if scores else 0 for scores in subject_data.values()]
 
-    # Course performance
+    # Course performance - get actual course data from database
     course_data = {}
     for exam in all_exams:
         course = exam.student.current_course
-        if course:
+        if course and exam.percentage is not None:
             if course not in course_data:
                 course_data[course] = []
-            course_data[course].append(exam.percentage)
+            course_data[course].append(float(exam.percentage))
 
-    course_names = list(course_data.keys())
-    course_averages = [sum(scores) / len(scores) if scores else 0 for scores in course_data.values()]
+    # Ensure we have meaningful course names and data
+    course_names = []
+    course_averages = []
+    for course, scores in course_data.items():
+        if scores:  # Only include courses with actual exam data
+            course_names.append(course)
+            course_averages.append(round(sum(scores) / len(scores), 1))
 
-    # Semester trend
+    # If no course data, provide default
+    if not course_names:
+        course_names = ['No Course Data']
+        course_averages = [0]
+
+    # Semester trend - get actual semester data from database
     semester_data = {}
     for exam in all_exams:
         semester = exam.semester
-        if semester:
+        if semester and exam.percentage is not None:
             if semester not in semester_data:
                 semester_data[semester] = []
-            semester_data[semester].append(exam.percentage)
+            semester_data[semester].append(float(exam.percentage))
 
-    semester_labels = sorted(semester_data.keys())
-    semester_averages = [sum(semester_data[sem]) / len(semester_data[sem]) if semester_data[sem] else 0 for sem in semester_labels]
+    # Sort semesters logically and calculate averages
+    semester_labels = []
+    semester_averages = []
+    if semester_data:
+        # Sort semester labels naturally
+        sorted_semesters = sorted(semester_data.keys(), key=lambda x: (
+            x.split()[1] if len(x.split()) > 1 else x,  # Sort by year/number
+            x.split()[0] if len(x.split()) > 1 else x   # Then by semester name
+        ))
+        
+        for semester in sorted_semesters:
+            scores = semester_data[semester]
+            if scores:  # Only include semesters with actual exam data
+                semester_labels.append(semester)
+                semester_averages.append(round(sum(scores) / len(scores), 1))
+    
+    # If no semester data, provide default
+    if not semester_labels:
+        semester_labels = ['No Semester Data']
+        semester_averages = [0]
 
     # Top performers (top 10)
     top_performers = sorted(all_exams, key=lambda x: x.percentage or 0, reverse=True)[:10]
