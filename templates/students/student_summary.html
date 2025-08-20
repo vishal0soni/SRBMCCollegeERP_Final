@@ -11,6 +11,37 @@
     </div>
 </div>
 
+<!-- Global Year Filter Row -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-calendar-alt"></i> Academic Year Filter
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <label for="yearFilter" class="form-label">Select Academic Year:</label>
+                        <select id="yearFilter" class="form-select" onchange="applyYearFilter()">
+                            <!-- Years will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="text-muted">
+                            <small>
+                                <i class="fas fa-info-circle"></i>
+                                All charts and statistics will update automatically when you change the year.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Summary Cards -->
 <div class="row mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
@@ -19,7 +50,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Admissions</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ course_counts|sum(attribute=1) }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalAdmissions">{{ course_counts|sum(attribute=1) }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-user-plus fa-2x text-gray-300"></i>
@@ -35,7 +66,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Gov. Scholarship Applied</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ gov_scholarship_counts.applied }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="govScholarshipApplied">{{ gov_scholarship_counts.applied }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-file-alt fa-2x text-gray-300"></i>
@@ -51,7 +82,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Meera Rebate Applied</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ meera_scholarship_counts.applied }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="meeraRebateApplied">{{ meera_scholarship_counts.applied }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
@@ -67,7 +98,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Courses Available</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">4 courses</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="coursesAvailable">4 courses</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-book fa-2x text-gray-300"></i>
@@ -75,7 +106,7 @@
                 </div>
             </div>
         </div>
-    </div></div>
+    </div>
 </div>
 
 <!-- Charts Row -->
@@ -206,182 +237,296 @@
 
 {% block scripts %}
 <script>
-// Course Distribution Chart
-const courseCtx = document.getElementById('courseDistributionChart').getContext('2d');
-new Chart(courseCtx, {
-    type: 'doughnut',
-    data: {
-        labels: [{% for course, count in course_counts %}'{{ course }}'{% if not loop.last %},{% endif %}{% endfor %}],
-        datasets: [{
-            data: [{% for course, count in course_counts %}{{ count }}{% if not loop.last %},{% endif %}{% endfor %}],
-            backgroundColor: [
-                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796',
-                '#5a5c69', '#f8f9fc', '#5777ba', '#1f9e6b'
-            ]
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    font: {
-                        size: 10
+let courseChart;
+let govScholarshipChart;
+let meeraScholarshipChart;
+let categoryChart;
+let monthlyChart;
+let currentYear = new Date().getFullYear();
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadYearOptions();
+    loadStudentSummaryData();
+});
+
+function loadYearOptions() {
+    const yearFilter = document.getElementById("yearFilter");
+    const startYear = 2020;
+    const endYear = new Date().getFullYear() + 1;
+
+    for (let year = endYear; year >= startYear; year--) {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = `${year}-${(year + 1).toString().slice(-2)}`;
+        
+        if (year === currentYear) {
+            option.selected = true;
+        }
+        
+        yearFilter.appendChild(option);
+    }
+}
+
+function applyYearFilter() {
+    const selectedYear = parseInt(document.getElementById("yearFilter").value);
+    currentYear = selectedYear;
+    
+    const yearFilter = document.getElementById("yearFilter");
+    yearFilter.disabled = true;
+    
+    loadStudentSummaryData().finally(() => {
+        yearFilter.disabled = false;
+    });
+}
+
+function loadStudentSummaryData() {
+    return Promise.all([
+        loadStudentStats(),
+        loadCourseDistributionChart(),
+        loadScholarshipCharts(),
+        loadCategoryChart(),
+        loadMonthlyAdmissionsChart()
+    ]);
+}
+
+function loadStudentStats() {
+    return fetch(`/api/student-summary-stats?year=${currentYear}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('totalAdmissions').textContent = data.stats.total_admissions;
+                document.getElementById('govScholarshipApplied').textContent = data.stats.gov_scholarship_applied;
+                document.getElementById('meeraRebateApplied').textContent = data.stats.meera_rebate_applied;
+                document.getElementById('coursesAvailable').textContent = data.stats.courses_available + ' courses';
+            }
+        })
+        .catch(error => console.error('Error loading student stats:', error));
+}
+
+function loadCourseDistributionChart() {
+    return fetch(`/api/student-stats?year=${currentYear}`)
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('courseDistributionChart').getContext('2d');
+            
+            if (courseChart) {
+                courseChart.destroy();
+            }
+
+            courseChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.courses || ['No Data'],
+                    datasets: [{
+                        data: data.counts || [1],
+                        backgroundColor: [
+                            '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796',
+                            '#5a5c69', '#f8f9fc', '#5777ba', '#1f9e6b'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 10
+                                },
+                                padding: 10
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading course distribution:', error));
+}
+
+function loadScholarshipCharts() {
+    return fetch(`/api/scholarship-stats?year=${currentYear}`)
+        .then(response => response.json())
+        .then(data => {
+            // Government Scholarship Chart
+            const govCtx = document.getElementById('govScholarshipChart').getContext('2d');
+            if (govScholarshipChart) {
+                govScholarshipChart.destroy();
+            }
+
+            const govData = data.scholarship_applied || [0, 0, 0, 0];
+            govScholarshipChart = new Chart(govCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Applied', 'Approved', 'Granted'],
+                    datasets: [{
+                        data: [govData[0], data.scholarship_approved ? data.scholarship_approved[0] : 0, data.scholarship_granted ? data.scholarship_granted[0] : 0],
+                        backgroundColor: ['#f6c23e', '#1cc88a', '#4e73df']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 10
+                                },
+                                padding: 8
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Meera Rebate Chart
+            const meeraCtx = document.getElementById('meeraScholarshipChart').getContext('2d');
+            if (meeraScholarshipChart) {
+                meeraScholarshipChart.destroy();
+            }
+
+            meeraScholarshipChart = new Chart(meeraCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Applied', 'Approved', 'Granted'],
+                    datasets: [{
+                        data: [govData[1], data.scholarship_approved ? data.scholarship_approved[1] : 0, data.scholarship_granted ? data.scholarship_granted[1] : 0],
+                        backgroundColor: ['#f6c23e', '#1cc88a', '#4e73df']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 10
+                                },
+                                padding: 8
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading scholarship data:', error));
+}
+
+function loadCategoryChart() {
+    return fetch(`/api/student-category-stats?year=${currentYear}`)
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('categoryDistributionChart').getContext('2d');
+            
+            if (categoryChart) {
+                categoryChart.destroy();
+            }
+
+            categoryChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.categories || ['No Data'],
+                    datasets: [{
+                        label: 'Students',
+                        data: data.counts || [0],
+                        backgroundColor: '#4e73df'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
                     },
-                    padding: 10
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-        }
-    }
-});
+            });
+        })
+        .catch(error => console.error('Error loading category data:', error));
+}
 
-// Government Scholarship Chart
-const govScholarshipCtx = document.getElementById('govScholarshipChart').getContext('2d');
-new Chart(govScholarshipCtx, {
-    type: 'doughnut',
-    data: {
-        labels: ['Applied', 'Approved', 'Granted'],
-        datasets: [{
-            data: [{{ gov_scholarship_counts.applied }}, {{ gov_scholarship_counts.approved }}, {{ gov_scholarship_counts.granted }}],
-            backgroundColor: ['#f6c23e', '#1cc88a', '#4e73df']
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    font: {
-                        size: 10
+function loadMonthlyAdmissionsChart() {
+    return fetch(`/api/monthly-admissions-stats?year=${currentYear}`)
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('monthlyAdmissionsChart').getContext('2d');
+            
+            if (monthlyChart) {
+                monthlyChart.destroy();
+            }
+
+            monthlyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels || ['No Data'],
+                    datasets: [{
+                        label: 'Admissions',
+                        data: data.counts || [0],
+                        borderColor: '#1cc88a',
+                        backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
                     },
-                    padding: 8
-                }
-            }
-        }
-    }
-});
-
-// Meera Rebate Scholarship Chart
-const meeraScholarshipCtx = document.getElementById('meeraScholarshipChart').getContext('2d');
-new Chart(meeraScholarshipCtx, {
-    type: 'doughnut',
-    data: {
-        labels: ['Applied', 'Approved', 'Granted'],
-        datasets: [{
-            data: [{{ meera_scholarship_counts.applied }}, {{ meera_scholarship_counts.approved }}, {{ meera_scholarship_counts.granted }}],
-            backgroundColor: ['#f6c23e', '#1cc88a', '#4e73df']
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    font: {
-                        size: 10
-                    },
-                    padding: 8
-                }
-            }
-        }
-    }
-});
-
-// Category Distribution Chart
-const categoryCtx = document.getElementById('categoryDistributionChart').getContext('2d');
-new Chart(categoryCtx, {
-    type: 'bar',
-    data: {
-        labels: [{% for category, count in category_counts %}'{{ category or "Not Specified" }}'{% if not loop.last %},{% endif %}{% endfor %}],
-        datasets: [{
-            label: 'Students',
-            data: [{% for category, count in category_counts %}{{ count }}{% if not loop.last %},{% endif %}{% endfor %}],
-            backgroundColor: '#4e73df'
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                labels: {
-                    font: {
-                        size: 10
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
                     }
                 }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    font: {
-                        size: 10
-                    }
-                }
-            },
-            x: {
-                ticks: {
-                    font: {
-                        size: 10
-                    }
-                }
-            }
-        }
-    }
-});
-
-// Monthly Admissions Chart
-const monthlyCtx = document.getElementById('monthlyAdmissionsChart').getContext('2d');
-const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-new Chart(monthlyCtx, {
-    type: 'line',
-    data: {
-        labels: [{% for month, year, count in monthly_admissions %}'{{ ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][month|int - 1] }} {{ year }}'{% if not loop.last %},{% endif %}{% endfor %}],
-        datasets: [{
-            label: 'Admissions',
-            data: [{% for month, year, count in monthly_admissions %}{{ count }}{% if not loop.last %},{% endif %}{% endfor %}],
-            borderColor: '#1cc88a',
-            backgroundColor: 'rgba(28, 200, 138, 0.1)',
-            tension: 0.4
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                labels: {
-                    font: {
-                        size: 10
-                    }
-                }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    font: {
-                        size: 10
-                    }
-                }
-            },
-            x: {
-                ticks: {
-                    font: {
-                        size: 10
-                    }
-                }
-            }
-        }
-    }
-});
+            });
+        })
+        .catch(error => console.error('Error loading monthly admissions data:', error));
+}
 </script>
 {% endblock %}

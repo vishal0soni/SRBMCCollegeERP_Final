@@ -13,6 +13,37 @@
     </div>
 </div>
 
+<!-- Global Year Filter Row -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-calendar-alt"></i> Academic Year Filter
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <label for="yearFilter" class="form-label">Select Academic Year:</label>
+                        <select id="yearFilter" class="form-select" onchange="applyYearFilter()">
+                            <!-- Years will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="text-muted">
+                            <small>
+                                <i class="fas fa-info-circle"></i>
+                                All charts and statistics will update automatically when you change the year.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Fee Summary Cards -->
 <div class="row mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
@@ -21,7 +52,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Fees Due</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₹{{ "%.2f"|format(total_fees_due) }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalFeesDue">₹{{ "%.2f"|format(total_fees_due) }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
@@ -37,7 +68,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Fees Collected</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₹{{ "%.2f"|format(total_fees_collected) }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="feesCollected">₹{{ "%.2f"|format(total_fees_collected) }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-credit-card fa-2x text-gray-300"></i>
@@ -53,7 +84,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Dues</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₹{{ "%.2f"|format(total_pending_dues) }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="pendingDues">₹{{ "%.2f"|format(total_pending_dues) }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
@@ -69,7 +100,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Students with Dues</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ students_with_dues }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="studentsWithDues">{{ students_with_dues }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-users fa-2x text-gray-300"></i>
@@ -136,127 +167,236 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+let monthlyCollectionChart;
+let paymentModeChart;
+let courseFeeChart;
+let scholarshipChart;
+let currentYear = new Date().getFullYear();
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Monthly Collection Chart
-    const monthlyCtx = document.getElementById('monthlyCollectionChart').getContext('2d');
-    new Chart(monthlyCtx, {
-        type: 'line',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            datasets: [{
-                label: 'Collection (₹)',
-                data: {{ monthly_collections | safe }},
-                borderColor: '#1cc88a',
-                backgroundColor: 'rgba(28, 200, 138, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '₹' + value.toLocaleString();
-                        }
-                    }
-                }
-            },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return 'Collection: ₹' + context.parsed.y.toLocaleString();
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    // Payment Mode Chart
-    const paymentCtx = document.getElementById('paymentModeChart').getContext('2d');
-    new Chart(paymentCtx, {
-        type: 'doughnut',
-        data: {
-            labels: {{ payment_modes | safe }},
-            datasets: [{
-                data: {{ payment_mode_counts | safe }},
-                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    });
-
-    // Course Fee Chart
-    const courseFeeCtx = document.getElementById('courseFeeChart').getContext('2d');
-    new Chart(courseFeeCtx, {
-        type: 'bar',
-        data: {
-            labels: {{ course_names | safe }},
-            datasets: [{
-                label: 'Total Collection (₹)',
-                data: {{ course_collections | safe }},
-                backgroundColor: '#4e73df'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '₹' + value.toLocaleString();
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    // Scholarship Chart
-    const scholarshipCtx = document.getElementById('scholarshipChart').getContext('2d');
-    new Chart(scholarshipCtx, {
-        type: 'bar',
-        data: {
-            labels: ['Government Scholarship', 'Meera Rebate', 'Merit Scholarship', 'Need-based Aid'],
-            datasets: [{
-                label: 'Applied',
-                data: {{ scholarship_applied | safe }},
-                backgroundColor: '#36b9cc'
-            }, {
-                label: 'Approved',
-                data: {{ scholarship_approved | safe }},
-                backgroundColor: '#1cc88a'
-            }, {
-                label: 'Granted',
-                data: {{ scholarship_granted | safe }},
-                backgroundColor: '#f6c23e'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
+    loadYearOptions();
+    loadFeeSummaryData();
 });
+
+function loadYearOptions() {
+    const yearFilter = document.getElementById("yearFilter");
+    const startYear = 2020;
+    const endYear = new Date().getFullYear() + 1;
+
+    for (let year = endYear; year >= startYear; year--) {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = `${year}-${(year + 1).toString().slice(-2)}`;
+        
+        if (year === currentYear) {
+            option.selected = true;
+        }
+        
+        yearFilter.appendChild(option);
+    }
+}
+
+function applyYearFilter() {
+    const selectedYear = parseInt(document.getElementById("yearFilter").value);
+    currentYear = selectedYear;
+    
+    const yearFilter = document.getElementById("yearFilter");
+    yearFilter.disabled = true;
+    
+    loadFeeSummaryData().finally(() => {
+        yearFilter.disabled = false;
+    });
+}
+
+function loadFeeSummaryData() {
+    return Promise.all([
+        loadFeeSummaryStats(),
+        loadMonthlyCollectionChart(),
+        loadPaymentModeChart(),
+        loadCourseFeeChart(),
+        loadScholarshipChart()
+    ]);
+}
+
+function loadFeeSummaryStats() {
+    return fetch(`/api/fee-summary-stats?year=${currentYear}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('totalFeesDue').textContent = `₹${parseFloat(data.stats.total_fees_due).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                document.getElementById('feesCollected').textContent = `₹${parseFloat(data.stats.total_fees_collected).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                document.getElementById('pendingDues').textContent = `₹${parseFloat(data.stats.total_pending_dues).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                document.getElementById('studentsWithDues').textContent = data.stats.students_with_dues;
+            }
+        })
+        .catch(error => console.error('Error loading fee summary stats:', error));
+}
+
+function loadMonthlyCollectionChart() {
+    return fetch(`/api/fee-stats?year=${currentYear}`)
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('monthlyCollectionChart').getContext('2d');
+            
+            if (monthlyCollectionChart) {
+                monthlyCollectionChart.destroy();
+            }
+
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            monthlyCollectionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: monthNames,
+                    datasets: [{
+                        label: 'Collection (₹)',
+                        data: data.amounts || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        borderColor: '#1cc88a',
+                        backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Collection: ₹' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading monthly collection data:', error));
+}
+
+function loadPaymentModeChart() {
+    return fetch(`/api/payment-mode-stats?year=${currentYear}`)
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('paymentModeChart').getContext('2d');
+            
+            if (paymentModeChart) {
+                paymentModeChart.destroy();
+            }
+
+            paymentModeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.payment_modes || ['Cash', 'Online', 'Cheque', 'DD'],
+                    datasets: [{
+                        data: data.payment_mode_counts || [0, 0, 0, 0],
+                        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading payment mode data:', error));
+}
+
+function loadCourseFeeChart() {
+    return fetch(`/api/course-fee-stats?year=${currentYear}`)
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('courseFeeChart').getContext('2d');
+            
+            if (courseFeeChart) {
+                courseFeeChart.destroy();
+            }
+
+            courseFeeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.course_names || ['No Data'],
+                    datasets: [{
+                        label: 'Total Collection (₹)',
+                        data: data.course_collections || [0],
+                        backgroundColor: '#4e73df'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading course fee data:', error));
+}
+
+function loadScholarshipChart() {
+    return fetch(`/api/scholarship-stats?year=${currentYear}`)
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('scholarshipChart').getContext('2d');
+            
+            if (scholarshipChart) {
+                scholarshipChart.destroy();
+            }
+
+            scholarshipChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Government Scholarship', 'Meera Rebate', 'Merit Scholarship', 'Need-based Aid'],
+                    datasets: [{
+                        label: 'Applied',
+                        data: data.scholarship_applied || [0, 0, 0, 0],
+                        backgroundColor: '#36b9cc'
+                    }, {
+                        label: 'Approved',
+                        data: data.scholarship_approved || [0, 0, 0, 0],
+                        backgroundColor: '#1cc88a'
+                    }, {
+                        label: 'Granted',
+                        data: data.scholarship_granted || [0, 0, 0, 0],
+                        backgroundColor: '#f6c23e'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading scholarship data:', error));
+}
 </script>
 {% endblock %}

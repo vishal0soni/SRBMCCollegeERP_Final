@@ -16,6 +16,37 @@
     </div>
 </div>
 
+<!-- Global Year Filter Row -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-calendar-alt"></i> Academic Year Filter
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <label for="yearFilter" class="form-label">Select Academic Year:</label>
+                        <select id="yearFilter" class="form-select" onchange="applyYearFilter()">
+                            <!-- Years will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="text-muted">
+                            <small>
+                                <i class="fas fa-info-circle"></i>
+                                All charts and statistics will update automatically when you change the year.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Exam Statistics -->
 <div class="row mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
@@ -246,200 +277,306 @@
 
 {% block scripts %}
 <script>
-// Exam Summary Charts
+let gradeChart;
+let subjectChart;
+let courseChart;
+let semesterChart;
+let currentYear = new Date().getFullYear();
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Grade Distribution Chart
-    const gradeCtx = document.getElementById('gradeDistributionChart').getContext('2d');
-    new Chart(gradeCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['A+', 'A', 'B+', 'B', 'C+', 'C', 'F'],
-            datasets: [{
-                data: {{ grade_distribution | safe }},
-                backgroundColor: [
-                    '#28a745', '#20c997', '#17a2b8', '#ffc107', 
-                    '#fd7e14', '#6f42c1', '#dc3545'
-                ],
-                borderWidth: 2,
-                borderColor: '#fff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 8,
-                        usePointStyle: true,
-                        font: {
-                            size: 10
-                        }
-                    }
-                }
-            },
-            cutout: '50%'
-        }
-    });
-
-    // Subject Performance Chart
-    const subjectCtx = document.getElementById('subjectPerformanceChart').getContext('2d');
-    new Chart(subjectCtx, {
-        type: 'bar',
-        data: {
-            labels: {{ subject_names | safe }},
-            datasets: [{
-                label: 'Average Score (%)',
-                data: {{ subject_averages | safe }},
-                backgroundColor: '#4e73df',
-                borderColor: '#4e73df',
-                borderWidth: 1,
-                borderRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    grid: {
-                        color: '#e3e6f0'
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return value + '%';
-                        },
-                        font: {
-                            size: 11
-                        }
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        maxRotation: 45,
-                        minRotation: 0,
-                        font: {
-                            size: 10
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    // Course Performance Chart
-    const courseCtx = document.getElementById('coursePerformanceChart').getContext('2d');
-    new Chart(courseCtx, {
-        type: 'bar',
-        data: {
-            labels: {{ course_names | safe }},
-            datasets: [{
-                label: 'Average Performance (%)',
-                data: {{ course_averages | safe }},
-                backgroundColor: '#1cc88a',
-                borderColor: '#1cc88a',
-                borderWidth: 1,
-                borderRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    grid: {
-                        color: '#e3e6f0'
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return value + '%';
-                        }
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        maxRotation: 45,
-                        minRotation: 0
-                    }
-                }
-            }
-        }
-    });
-
-    // Semester Trend Chart
-    const semesterCtx = document.getElementById('semesterTrendChart').getContext('2d');
-    new Chart(semesterCtx, {
-        type: 'line',
-        data: {
-            labels: {{ semester_labels | safe }},
-            datasets: [{
-                label: 'Average Performance (%)',
-                data: {{ semester_averages | safe }},
-                borderColor: '#36b9cc',
-                backgroundColor: 'rgba(54, 185, 204, 0.1)',
-                fill: true,
-                tension: 0.4,
-                borderWidth: 3,
-                pointBackgroundColor: '#36b9cc',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 5
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    grid: {
-                        color: '#e3e6f0'
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return value + '%';
-                        }
-                    }
-                },
-                x: {
-                    grid: {
-                        color: '#e3e6f0'
-                    }
-                }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            }
-        }
-    });
+    loadYearOptions();
+    loadExamSummaryData();
 });
+
+function loadYearOptions() {
+    const yearFilter = document.getElementById("yearFilter");
+    const startYear = 2020;
+    const endYear = new Date().getFullYear() + 1;
+
+    for (let year = endYear; year >= startYear; year--) {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = `${year}-${(year + 1).toString().slice(-2)}`;
+        
+        if (year === currentYear) {
+            option.selected = true;
+        }
+        
+        yearFilter.appendChild(option);
+    }
+}
+
+function applyYearFilter() {
+    const selectedYear = parseInt(document.getElementById("yearFilter").value);
+    currentYear = selectedYear;
+    
+    const yearFilter = document.getElementById("yearFilter");
+    yearFilter.disabled = true;
+    
+    loadExamSummaryData().finally(() => {
+        yearFilter.disabled = false;
+    });
+}
+
+function loadExamSummaryData() {
+    return Promise.all([
+        loadExamStats(),
+        loadGradeDistributionChart(),
+        loadSubjectPerformanceChart(),
+        loadCoursePerformanceChart(),
+        loadSemesterTrendChart()
+    ]);
+}
+
+function loadExamStats() {
+    return fetch(`/api/exam-summary-stats?year=${currentYear}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('totalExams').textContent = data.stats.total_exams;
+                document.getElementById('passRate').textContent = data.stats.pass_rate.toFixed(1) + '%';
+                document.getElementById('averageScore').textContent = data.stats.average_score.toFixed(1) + '%';
+                document.getElementById('failedStudents').textContent = data.stats.failed_students;
+            }
+        })
+        .catch(error => console.error('Error loading exam stats:', error));
+}
+
+function loadGradeDistributionChart() {
+    return fetch(`/api/grade-distribution-stats?year=${currentYear}`)
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('gradeDistributionChart').getContext('2d');
+            
+            if (gradeChart) {
+                gradeChart.destroy();
+            }
+
+            gradeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['A+', 'A', 'B+', 'B', 'C+', 'C', 'F'],
+                    datasets: [{
+                        data: data.grade_distribution || [0, 0, 0, 0, 0, 0, 0],
+                        backgroundColor: [
+                            '#28a745', '#20c997', '#17a2b8', '#ffc107', 
+                            '#fd7e14', '#6f42c1', '#dc3545'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 8,
+                                usePointStyle: true,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    cutout: '50%'
+                }
+            });
+        })
+        .catch(error => console.error('Error loading grade distribution:', error));
+}
+
+function loadSubjectPerformanceChart() {
+    return fetch(`/api/subject-performance-stats?year=${currentYear}`)
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('subjectPerformanceChart').getContext('2d');
+            
+            if (subjectChart) {
+                subjectChart.destroy();
+            }
+
+            subjectChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.subject_names || ['No Data'],
+                    datasets: [{
+                        label: 'Average Score (%)',
+                        data: data.subject_averages || [0],
+                        backgroundColor: '#4e73df',
+                        borderColor: '#4e73df',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: '#e3e6f0'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                },
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 0,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading subject performance:', error));
+}
+
+function loadCoursePerformanceChart() {
+    return fetch(`/api/course-performance-stats?year=${currentYear}`)
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('coursePerformanceChart').getContext('2d');
+            
+            if (courseChart) {
+                courseChart.destroy();
+            }
+
+            courseChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.course_names || ['No Data'],
+                    datasets: [{
+                        label: 'Average Performance (%)',
+                        data: data.course_averages || [0],
+                        backgroundColor: '#1cc88a',
+                        borderColor: '#1cc88a',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: '#e3e6f0'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 0
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading course performance:', error));
+}
+
+function loadSemesterTrendChart() {
+    return fetch(`/api/semester-trend-stats?year=${currentYear}`)
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('semesterTrendChart').getContext('2d');
+            
+            if (semesterChart) {
+                semesterChart.destroy();
+            }
+
+            semesterChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.semester_labels || ['No Data'],
+                    datasets: [{
+                        label: 'Average Performance (%)',
+                        data: data.semester_averages || [0],
+                        borderColor: '#36b9cc',
+                        backgroundColor: 'rgba(54, 185, 204, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#36b9cc',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: '#e3e6f0'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: '#e3e6f0'
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading semester trend:', error));
+}
 </script>
 {% endblock %}
