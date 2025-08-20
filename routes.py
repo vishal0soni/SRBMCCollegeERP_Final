@@ -1397,14 +1397,17 @@ def api_get_course_fees(course_name):
 @login_required
 def api_student_stats():
     try:
-        # Get course distribution for ALL students (not filtered by year)
+        year = request.args.get('year', datetime.now().year, type=int)
+        
+        # Filter students based on admission year
         course_counts = db.session.query(
             Student.current_course, 
             func.count(Student.id)
         ).filter(
             and_(
                 Student.current_course.isnot(None),
-                Student.current_course != ''
+                Student.current_course != '',
+                func.extract('year', Student.admission_date) == year
             )
         ).group_by(Student.current_course).all()
 
@@ -1418,7 +1421,7 @@ def api_student_stats():
                 final_courses.append(course)
                 final_counts.append(int(count))
 
-        # If no courses have students, show default
+        # If no courses have students for the selected year, show default
         if not final_courses:
             return jsonify({
                 'success': True,
@@ -1457,18 +1460,32 @@ def api_course_list():
 @login_required
 def api_dashboard_stats():
     try:
-        # Get stats for ALL students (not filtered by year)
-        total_students = Student.query.count()
-        active_students = Student.query.filter_by(student_status='Active').count()
+        year = request.args.get('year', datetime.now().year, type=int)
+        
+        # Filter students based on admission year
+        total_students = Student.query.filter(
+            func.extract('year', Student.admission_date) == year
+        ).count()
+        
+        active_students = Student.query.filter(
+            and_(
+                Student.student_status == 'Active',
+                func.extract('year', Student.admission_date) == year
+            )
+        ).count()
 
-        # Calculate total collected fees from all invoices
+        # Calculate total collected fees from invoices for students admitted in the selected year
         total_collected_fees = db.session.query(
             func.sum(func.coalesce(Invoice.invoice_amount, 0))
+        ).join(Student).filter(
+            func.extract('year', Student.admission_date) == year
         ).scalar() or 0
 
-        # Calculate pending fees for all students
+        # Calculate pending fees for students admitted in the selected year
         total_fees_due = db.session.query(
             func.sum(func.coalesce(CollegeFees.total_fee, 0))
+        ).join(Student).filter(
+            func.extract('year', Student.admission_date) == year
         ).scalar() or 0
 
         pending_fees = max(0, total_fees_due - total_collected_fees)
