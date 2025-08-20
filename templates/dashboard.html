@@ -173,9 +173,10 @@
     </div>
 </div></div>
 
-<!-- Course Distribution Chart -->
+<!-- Charts Row -->
 <div class="row mb-4">
-    <div class="col-12">
+    <!-- Course Distribution Chart -->
+    <div class="col-lg-6 mb-4">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">
@@ -183,36 +184,24 @@
                 </h6>
             </div>
             <div class="card-body">
-                <div class="row">
-                    <!-- Chart Column -->
-                    <div class="col-lg-8">
-                        <div class="chart-container" style="height: 400px;">
-                            <canvas id="courseDistributionChart"></canvas>
-                        </div>
-                    </div>
-                    <!-- Statistics Column -->
-                    <div class="col-lg-4">
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Course</th>
-                                        <th class="text-end">Students</th>
-                                        <th class="text-end">%</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="courseStatsTable">
-                                    <!-- Data will be populated via JavaScript -->
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="mt-3">
-                            <div class="small text-muted">
-                                <strong>Total Students:</strong>
-                                <span id="totalStudentsDisplay">{{ stats.total_students }}</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="courseDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Monthly Fee Collection Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-chart-line"></i> Monthly Fee Collections
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="monthlyFeeChart"></canvas>
                 </div>
             </div>
         </div>
@@ -322,6 +311,7 @@
         loadYearOptions();
         loadDashboardStats();
         loadCourseDistributionChart();
+        loadMonthlyFeeChart();
     });
 
     function loadYearOptions() {
@@ -356,7 +346,8 @@
         // Update all dashboard components
         Promise.all([
             loadDashboardStats(),
-            loadCourseDistributionChart()
+            loadCourseDistributionChart(),
+            loadMonthlyFeeChart()
         ]).then(() => {
             yearFilter.disabled = false;
             console.log('Dashboard updated for year:', currentYear);
@@ -428,23 +419,6 @@
                     data.counts = [1];
                 }
 
-                // Calculate totals and percentages
-                const totalStudents = data.counts.reduce((a, b) => a + b, 0);
-                const percentages = data.counts.map(count => 
-                    totalStudents > 0 ? ((count / totalStudents) * 100).toFixed(1) : 0
-                );
-
-                // Update total students display
-                const totalStudentsDisplayElement = document.getElementById("totalStudentsDisplay");
-                if (totalStudentsDisplayElement) {
-                    totalStudentsDisplayElement.textContent = totalStudents;
-                    totalStudentsDisplayElement.classList.add('updated');
-                    setTimeout(() => totalStudentsDisplayElement.classList.remove('updated'), 1000);
-                }
-
-                // Update statistics table
-                updateCourseStatsTable(data.courses, data.counts, percentages, totalStudents);
-
                 // Create doughnut chart
                 courseDistributionChart = new Chart(ctx, {
                     type: 'doughnut',
@@ -482,7 +456,8 @@
                                     label: function(context) {
                                         const courseIndex = context.dataIndex;
                                         const studentCount = data.counts[courseIndex];
-                                        const percentage = percentages[courseIndex];
+                                        const totalStudents = data.counts.reduce((a, b) => a + b, 0);
+                                        const percentage = totalStudents > 0 ? ((studentCount / totalStudents) * 100).toFixed(1) : 0;
                                         const courseName = context.label;
                                         
                                         return [
@@ -535,32 +510,121 @@
             });
     }
 
-    function updateCourseStatsTable(courses, counts, percentages, totalStudents) {
-        const tableBody = document.getElementById("courseStatsTable");
-        tableBody.innerHTML = "";
+    let monthlyFeeChart;
 
-        if (totalStudents === 0) {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td colspan="3" class="text-center text-muted">
-                    <em>No student data available</em>
-                </td>
-            `;
-            tableBody.appendChild(row);
-            return;
-        }
+    function loadMonthlyFeeChart() {
+        return fetch(`/api/fee-stats?year=${currentYear}`)
+            .then((response) => response.json())
+            .then((data) => {
+                console.log('Monthly fee data loaded:', data);
+                
+                const ctx = document.getElementById("monthlyFeeChart").getContext("2d");
 
-        courses.forEach((course, index) => {
-            const row = document.createElement("tr");
-            const courseName = course.length > 20 ? course.substring(0, 20) + "..." : course;
-            
-            row.innerHTML = `
-                <td title="${course}">${courseName}</td>
-                <td class="text-end">${counts[index]}</td>
-                <td class="text-end">${percentages[index]}%</td>
-            `;
-            tableBody.appendChild(row);
-        });
+                // Destroy existing chart if it exists
+                if (monthlyFeeChart) {
+                    monthlyFeeChart.destroy();
+                }
+
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+                // Create line chart
+                monthlyFeeChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: monthNames,
+                        datasets: [{
+                            label: 'Fee Collections (₹)',
+                            data: data.amounts || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            borderColor: '#1cc88a',
+                            backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#1cc88a',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true,
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Collection: ₹' + context.parsed.y.toLocaleString('en-IN', {minimumFractionDigits: 2});
+                                    }
+                                },
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: '#1cc88a',
+                                borderWidth: 1,
+                                cornerRadius: 6
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '₹' + value.toLocaleString('en-IN');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch((error) => {
+                console.error("Error loading monthly fee data:", error);
+                // Show placeholder on error
+                const ctx = document.getElementById("monthlyFeeChart").getContext("2d");
+                if (monthlyFeeChart) {
+                    monthlyFeeChart.destroy();
+                }
+                
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                
+                monthlyFeeChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: monthNames,
+                        datasets: [{
+                            label: 'Error Loading Data',
+                            data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            borderColor: '#e3e6f0',
+                            backgroundColor: 'rgba(227, 230, 240, 0.1)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+                throw error;
+            });
     }
 </script>
 {% endblock %}
