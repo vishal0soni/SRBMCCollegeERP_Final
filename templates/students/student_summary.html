@@ -624,9 +624,9 @@ function loadCategoryChart() {
                 categoryChart.destroy();
             }
 
-            if (data.success) {
-                const categories = data.categories || ['No Data'];
-                const counts = data.counts || [0];
+            if (data.success && data.categories && data.categories.length > 0) {
+                const categories = data.categories;
+                const counts = data.counts;
 
                 categoryChart = new Chart(ctx, {
                     type: 'doughnut',
@@ -733,9 +733,9 @@ function loadMonthlyAdmissionsChart() {
                 monthlyChart.destroy();
             }
 
-            if (data.success) {
-                const labels = data.labels || ['No Data'];
-                const counts = data.counts || [0];
+            if (data.success && data.labels && data.labels.length > 0) {
+                const labels = data.labels;
+                const counts = data.counts;
 
                 monthlyChart = new Chart(ctx, {
                     type: 'line',

@@ -2631,19 +2631,30 @@ def api_student_category_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
         
+        # Get category distribution with proper handling of null values
         category_counts = db.session.query(
             Student.category,
             func.count(Student.id)
         ).filter(
-            func.extract('year', Student.admission_date) == year
+            and_(
+                func.extract('year', Student.admission_date) == year,
+                Student.id.isnot(None)
+            )
         ).group_by(Student.category).all()
 
-        categories = [category[0] or 'Not Specified' for category in category_counts]
-        counts = [category[1] for category in category_counts]
+        categories = []
+        counts = []
+        
+        for category, count in category_counts:
+            categories.append(category if category else 'Not Specified')
+            counts.append(int(count))
 
         if not categories:
-            categories = ['No Data']
-            counts = [0]
+            return jsonify({
+                'success': True,
+                'categories': ['No Students'],
+                'counts': [0]
+            })
 
         return jsonify({
             'success': True,
@@ -2664,11 +2675,15 @@ def api_monthly_admissions_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
         
+        # Get monthly admissions with proper filtering
         monthly_admissions = db.session.query(
-            func.extract('month', Student.admission_date),
-            func.count(Student.id)
+            func.extract('month', Student.admission_date).label('month'),
+            func.count(Student.id).label('count')
         ).filter(
-            func.extract('year', Student.admission_date) == year
+            and_(
+                Student.admission_date.isnot(None),
+                func.extract('year', Student.admission_date) == year
+            )
         ).group_by(func.extract('month', Student.admission_date)).order_by(func.extract('month', Student.admission_date)).all()
 
         month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -2676,13 +2691,16 @@ def api_monthly_admissions_stats():
         counts = []
         
         for month, count in monthly_admissions:
-            if month and 1 <= month <= 12:
+            if month and 1 <= int(month) <= 12:
                 labels.append(f"{month_names[int(month)-1]} {year}")
-                counts.append(count)
+                counts.append(int(count))
 
         if not labels:
-            labels = ['No Data']
-            counts = [0]
+            return jsonify({
+                'success': True,
+                'labels': ['No Admissions'],
+                'counts': [0]
+            })
 
         return jsonify({
             'success': True,
