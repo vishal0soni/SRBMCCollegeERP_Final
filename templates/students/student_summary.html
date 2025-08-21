@@ -50,7 +50,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Admissions</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalAdmissions">{{ course_counts|sum(attribute=1) }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalAdmissions">0</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-user-plus fa-2x text-gray-300"></i>
@@ -66,7 +66,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Gov. Scholarship Applied</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="govScholarshipApplied">{{ gov_scholarship_counts.applied }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="govScholarshipApplied">0</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-file-alt fa-2x text-gray-300"></i>
@@ -82,7 +82,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Meera Rebate Applied</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="meeraRebateApplied">{{ meera_scholarship_counts.applied }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="meeraRebateApplied">0</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
@@ -98,7 +98,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Courses Available</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="coursesAvailable">4 courses</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="coursesAvailable">0</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-book fa-2x text-gray-300"></i>
@@ -178,7 +178,7 @@
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-sm">
+                    <table class="table table-sm" id="courseBreakdownTable">
                         <thead>
                             <tr>
                                 <th>Course</th>
@@ -187,14 +187,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% set total_students = course_counts|sum(attribute=1) %}
-                            {% for course, count in course_counts %}
                             <tr>
-                                <td>{{ course }}</td>
-                                <td class="text-end">{{ count }}</td>
-                                <td class="text-end">{{ "%.1f"|format((count / total_students * 100) if total_students > 0 else 0) }}%</td>
+                                <td colspan="3" class="text-center text-muted">Data will update based on selected year</td>
                             </tr>
-                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -209,7 +204,7 @@
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-sm">
+                    <table class="table table-sm" id="categoryBreakdownTable">
                         <thead>
                             <tr>
                                 <th>Category</th>
@@ -218,14 +213,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% set total_students = category_counts|sum(attribute=1) %}
-                            {% for category, count in category_counts %}
                             <tr>
-                                <td>{{ category or 'Not Specified' }}</td>
-                                <td class="text-end">{{ count }}</td>
-                                <td class="text-end">{{ "%.1f"|format((count / total_students * 100) if total_students > 0 else 0) }}%</td>
+                                <td colspan="3" class="text-center text-muted">Data will update based on selected year</td>
                             </tr>
-                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -341,6 +331,9 @@ function loadCourseDistributionChart() {
                     }
                 }
             });
+
+            // Update course breakdown table
+            updateCourseBreakdownTable(data.courses || [], data.counts || []);
         })
         .catch(error => console.error('Error loading course distribution:', error));
 }
@@ -525,8 +518,63 @@ function loadCategoryChart() {
                     }
                 }
             });
+
+            // Update category breakdown table
+            updateCategoryBreakdownTable(data.categories || [], data.counts || []);
         })
         .catch(error => console.error('Error loading category data:', error));
+}
+
+function updateCourseBreakdownTable(courses, counts) {
+    const tbody = document.querySelector('#courseBreakdownTable tbody');
+    tbody.innerHTML = '';
+
+    if (courses.length === 0 || (courses.length === 1 && courses[0] === 'No Data')) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No data available for selected year</td></tr>';
+        return;
+    }
+
+    const total = counts.reduce((sum, count) => sum + count, 0);
+    
+    for (let i = 0; i < courses.length; i++) {
+        const course = courses[i];
+        const count = counts[i];
+        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${course}</td>
+            <td class="text-end">${count}</td>
+            <td class="text-end">${percentage}%</td>
+        `;
+        tbody.appendChild(row);
+    }
+}
+
+function updateCategoryBreakdownTable(categories, counts) {
+    const tbody = document.querySelector('#categoryBreakdownTable tbody');
+    tbody.innerHTML = '';
+
+    if (categories.length === 0 || (categories.length === 1 && categories[0] === 'No Data')) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No data available for selected year</td></tr>';
+        return;
+    }
+
+    const total = counts.reduce((sum, count) => sum + count, 0);
+    
+    for (let i = 0; i < categories.length; i++) {
+        const category = categories[i] || 'Not Specified';
+        const count = counts[i];
+        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${category}</td>
+            <td class="text-end">${count}</td>
+            <td class="text-end">${percentage}%</td>
+        `;
+        tbody.appendChild(row);
+    }
 }
 
 function loadMonthlyAdmissionsChart() {

@@ -114,13 +114,13 @@
 <!-- Charts Row -->
 <div class="row">
     <!-- Monthly Fee Collection Chart -->
-    <div class="col-lg-7 mb-4">
+    <div class="col-lg-8 mb-4">
         <div class="card shadow">
             <div class="card-header">
                 <h6 class="m-0 font-weight-bold text-primary">Monthly Fee Collections</h6>
             </div>
             <div class="card-body">
-                <div style="position: relative; height: 300px;">
+                <div style="position: relative; height: 350px;">
                     <canvas id="monthlyCollectionChart"></canvas>
                 </div>
             </div>
@@ -128,13 +128,13 @@
     </div>
 
     <!-- Payment Mode Distribution Chart -->
-    <div class="col-lg-5 mb-4">
+    <div class="col-lg-4 mb-4">
         <div class="card shadow">
             <div class="card-header">
                 <h6 class="m-0 font-weight-bold text-primary">Payment Mode Distribution</h6>
             </div>
             <div class="card-body">
-                <div style="position: relative; height: 300px;">
+                <div style="position: relative; height: 350px;">
                     <canvas id="paymentModeChart"></canvas>
                 </div>
             </div>
@@ -436,6 +436,7 @@ function loadScholarshipChart() {
                 scholarshipChart.destroy();
             }
 
+            // Only show Government Scholarship and Meera Rebate (indices 0 and 1)
             scholarshipChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
