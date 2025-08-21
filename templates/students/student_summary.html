@@ -297,18 +297,22 @@ function loadCourseDistributionChart() {
     return fetch(`/api/student-stats?year=${currentYear}`)
         .then(response => response.json())
         .then(data => {
+            console.log('Course distribution data loaded:', data);
             const ctx = document.getElementById('courseDistributionChart').getContext('2d');
             
             if (courseChart) {
                 courseChart.destroy();
             }
 
+            const courses = data.courses || ['No Data'];
+            const counts = data.counts || [0];
+
             courseChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: data.courses || ['No Data'],
+                    labels: courses,
                     datasets: [{
-                        data: data.counts || [1],
+                        data: counts,
                         backgroundColor: [
                             '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796',
                             '#5a5c69', '#f8f9fc', '#5777ba', '#1f9e6b'
@@ -332,10 +336,14 @@ function loadCourseDistributionChart() {
                 }
             });
 
-            // Update course breakdown table
-            updateCourseBreakdownTable(data.courses || [], data.counts || []);
+            // Update course breakdown table with proper data
+            updateCourseBreakdownTable(courses, counts);
         })
-        .catch(error => console.error('Error loading course distribution:', error));
+        .catch(error => {
+            console.error('Error loading course distribution:', error);
+            // Show error state in table
+            updateCourseBreakdownTable(['Error Loading'], [0]);
+        });
 }
 
 function loadScholarshipCharts() {
@@ -471,19 +479,23 @@ function loadCategoryChart() {
     return fetch(`/api/student-category-stats?year=${currentYear}`)
         .then(response => response.json())
         .then(data => {
+            console.log('Category distribution data loaded:', data);
             const ctx = document.getElementById('categoryDistributionChart').getContext('2d');
             
             if (categoryChart) {
                 categoryChart.destroy();
             }
 
+            const categories = data.categories || ['No Data'];
+            const counts = data.counts || [0];
+
             categoryChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: data.categories || ['No Data'],
+                    labels: categories,
                     datasets: [{
                         label: 'Students',
-                        data: data.counts || [0],
+                        data: counts,
                         backgroundColor: '#4e73df'
                     }]
                 },
@@ -519,17 +531,28 @@ function loadCategoryChart() {
                 }
             });
 
-            // Update category breakdown table
-            updateCategoryBreakdownTable(data.categories || [], data.counts || []);
+            // Update category breakdown table with proper data
+            updateCategoryBreakdownTable(categories, counts);
         })
-        .catch(error => console.error('Error loading category data:', error));
+        .catch(error => {
+            console.error('Error loading category data:', error);
+            // Show error state in table
+            updateCategoryBreakdownTable(['Error Loading'], [0]);
+        });
 }
 
 function updateCourseBreakdownTable(courses, counts) {
+    console.log('Updating course table with:', courses, counts);
     const tbody = document.querySelector('#courseBreakdownTable tbody');
+    
+    if (!tbody) {
+        console.error('Course breakdown table body not found');
+        return;
+    }
+    
     tbody.innerHTML = '';
 
-    if (courses.length === 0 || (courses.length === 1 && courses[0] === 'No Data')) {
+    if (!courses || courses.length === 0 || (courses.length === 1 && (courses[0] === 'No Data' || courses[0] === 'Error Loading'))) {
         tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No data available for selected year</td></tr>';
         return;
     }
@@ -537,13 +560,13 @@ function updateCourseBreakdownTable(courses, counts) {
     const total = counts.reduce((sum, count) => sum + count, 0);
     
     for (let i = 0; i < courses.length; i++) {
-        const course = courses[i];
-        const count = counts[i];
-        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+        const course = courses[i] || 'Unknown Course';
+        const count = counts[i] || 0;
+        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : '0.0';
         
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${course}</td>
+            <td title="${course}">${course}</td>
             <td class="text-end">${count}</td>
             <td class="text-end">${percentage}%</td>
         `;
@@ -552,10 +575,17 @@ function updateCourseBreakdownTable(courses, counts) {
 }
 
 function updateCategoryBreakdownTable(categories, counts) {
+    console.log('Updating category table with:', categories, counts);
     const tbody = document.querySelector('#categoryBreakdownTable tbody');
+    
+    if (!tbody) {
+        console.error('Category breakdown table body not found');
+        return;
+    }
+    
     tbody.innerHTML = '';
 
-    if (categories.length === 0 || (categories.length === 1 && categories[0] === 'No Data')) {
+    if (!categories || categories.length === 0 || (categories.length === 1 && (categories[0] === 'No Data' || categories[0] === 'Error Loading'))) {
         tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No data available for selected year</td></tr>';
         return;
     }
@@ -564,8 +594,8 @@ function updateCategoryBreakdownTable(categories, counts) {
     
     for (let i = 0; i < categories.length; i++) {
         const category = categories[i] || 'Not Specified';
-        const count = counts[i];
-        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+        const count = counts[i] || 0;
+        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : '0.0';
         
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -581,22 +611,27 @@ function loadMonthlyAdmissionsChart() {
     return fetch(`/api/monthly-admissions-stats?year=${currentYear}`)
         .then(response => response.json())
         .then(data => {
+            console.log('Monthly admissions data loaded:', data);
             const ctx = document.getElementById('monthlyAdmissionsChart').getContext('2d');
             
             if (monthlyChart) {
                 monthlyChart.destroy();
             }
 
+            const labels = data.labels || ['No Data'];
+            const counts = data.counts || [0];
+
             monthlyChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: data.labels || ['No Data'],
+                    labels: labels,
                     datasets: [{
                         label: 'Admissions',
-                        data: data.counts || [0],
+                        data: counts,
                         borderColor: '#1cc88a',
                         backgroundColor: 'rgba(28, 200, 138, 0.1)',
-                        tension: 0.4
+                        tension: 0.4,
+                        fill: true
                     }]
                 },
                 options: {
@@ -631,7 +666,9 @@ function loadMonthlyAdmissionsChart() {
                 }
             });
         })
-        .catch(error => console.error('Error loading monthly admissions data:', error));
+        .catch(error => {
+            console.error('Error loading monthly admissions data:', error);
+        });
 }
 </script>
 {% endblock %}

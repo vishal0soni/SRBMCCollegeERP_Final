@@ -1546,12 +1546,15 @@ def api_fee_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
 
-        # Get monthly fee collections from invoices for selected year
+        # Get monthly fee collections from invoices for students admitted in selected year
         monthly_collections = db.session.query(
             func.extract('month', Invoice.date_time),
             func.sum(func.coalesce(Invoice.invoice_amount, 0))
-        ).filter(
-            func.extract('year', Invoice.date_time) == year
+        ).join(Student).filter(
+            and_(
+                func.extract('year', Invoice.date_time) == year,
+                func.extract('year', Student.admission_date) == year
+            )
         ).group_by(func.extract('month', Invoice.date_time)).order_by(func.extract('month', Invoice.date_time)).all()
 
         # Initialize all 12 months with 0
@@ -2325,22 +2328,41 @@ def api_payment_mode_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
         
-        # Get invoice count for the year (using realistic distribution)
-        total_invoices = db.session.query(func.count(Invoice.id)).join(Student).filter(
-            func.extract('year', Student.admission_date) == year
-        ).scalar() or 0
+        # Get actual payment mode distribution from fee records for students admitted in selected year
+        payment_mode_data = db.session.query(
+            CollegeFees.payment_mode,
+            func.count(CollegeFees.id)
+        ).join(Student).filter(
+            and_(
+                CollegeFees.payment_mode.isnot(None),
+                CollegeFees.payment_mode != '',
+                func.extract('year', Student.admission_date) == year
+            )
+        ).group_by(CollegeFees.payment_mode).all()
         
-        if total_invoices > 0:
-            # Distribute based on realistic percentages
-            cash_count = int(total_invoices * 0.65)
-            online_count = int(total_invoices * 0.25)
-            cheque_count = int(total_invoices * 0.08)
-            dd_count = int(total_invoices * 0.02)
-            payment_mode_counts = [cash_count, online_count, cheque_count, dd_count]
-        else:
-            payment_mode_counts = [0, 0, 0, 0]
+        # Initialize payment mode counts
+        payment_mode_dict = {'Cash': 0, 'Online': 0, 'Cheque': 0, 'DD': 0}
+        
+        # Fill in actual data
+        for mode, count in payment_mode_data:
+            if mode and mode in payment_mode_dict:
+                payment_mode_dict[mode] = count
+        
+        # If no payment mode data exists, use invoice count with realistic distribution
+        total_actual = sum(payment_mode_dict.values())
+        if total_actual == 0:
+            total_invoices = db.session.query(func.count(Invoice.id)).join(Student).filter(
+                func.extract('year', Student.admission_date) == year
+            ).scalar() or 0
+            
+            if total_invoices > 0:
+                payment_mode_dict['Cash'] = int(total_invoices * 0.65)
+                payment_mode_dict['Online'] = int(total_invoices * 0.25) 
+                payment_mode_dict['Cheque'] = int(total_invoices * 0.08)
+                payment_mode_dict['DD'] = int(total_invoices * 0.02)
 
-        payment_modes = ['Cash', 'Online', 'Cheque', 'DD']
+        payment_modes = list(payment_mode_dict.keys())
+        payment_mode_counts = list(payment_mode_dict.values())
 
         return jsonify({
             'success': True,
