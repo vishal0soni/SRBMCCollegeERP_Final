@@ -213,13 +213,18 @@ function applyYearFilter() {
 }
 
 function loadFeeSummaryData() {
+    console.log('Loading fee summary data for year:', currentYear);
     return Promise.all([
         loadFeeSummaryStats(),
         loadMonthlyCollectionChart(),
         loadPaymentModeChart(),
         loadCourseFeeChart(),
         loadScholarshipChart()
-    ]);
+    ]).then(() => {
+        console.log('All fee summary data loaded successfully');
+    }).catch(error => {
+        console.error('Error loading fee summary data:', error);
+    });
 }
 
 function loadFeeSummaryStats() {
@@ -237,9 +242,11 @@ function loadFeeSummaryStats() {
 }
 
 function loadMonthlyCollectionChart() {
+    console.log('Loading monthly collection chart for year:', currentYear);
     return fetch(`/api/fee-stats?year=${currentYear}`)
         .then(response => response.json())
         .then(data => {
+            console.log('Monthly collection data received:', data);
             const ctx = document.getElementById('monthlyCollectionChart').getContext('2d');
             
             if (monthlyCollectionChart) {
@@ -247,6 +254,7 @@ function loadMonthlyCollectionChart() {
             }
 
             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const amounts = data.amounts || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
             
             monthlyCollectionChart = new Chart(ctx, {
                 type: 'line',
@@ -254,7 +262,7 @@ function loadMonthlyCollectionChart() {
                     labels: monthNames,
                     datasets: [{
                         label: 'Collection (₹)',
-                        data: data.amounts || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        data: amounts,
                         borderColor: '#1cc88a',
                         backgroundColor: 'rgba(28, 200, 138, 0.1)',
                         tension: 0.4,
@@ -311,25 +319,53 @@ function loadMonthlyCollectionChart() {
                 }
             });
         })
-        .catch(error => console.error('Error loading monthly collection data:', error));
+        .catch(error => {
+            console.error('Error loading monthly collection data:', error);
+            // Show error state chart
+            const ctx = document.getElementById('monthlyCollectionChart').getContext('2d');
+            if (monthlyCollectionChart) {
+                monthlyCollectionChart.destroy();
+            }
+            monthlyCollectionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Error Loading Data',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        borderColor: '#e74a3b',
+                        backgroundColor: 'rgba(231, 74, 59, 0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        });
 }
 
 function loadPaymentModeChart() {
+    console.log('Loading payment mode chart for year:', currentYear);
     return fetch(`/api/payment-mode-stats?year=${currentYear}`)
         .then(response => response.json())
         .then(data => {
+            console.log('Payment mode data received:', data);
             const ctx = document.getElementById('paymentModeChart').getContext('2d');
             
             if (paymentModeChart) {
                 paymentModeChart.destroy();
             }
 
+            const paymentModes = data.payment_modes || ['Cash', 'Online', 'Cheque', 'DD'];
+            const paymentCounts = data.payment_mode_counts || [0, 0, 0, 0];
+
             paymentModeChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: data.payment_modes || ['Cash', 'Online', 'Cheque', 'DD'],
+                    labels: paymentModes,
                     datasets: [{
-                        data: data.payment_mode_counts || [0, 0, 0, 0],
+                        data: paymentCounts,
                         backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e'],
                         borderWidth: 2,
                         borderColor: '#fff'
@@ -354,26 +390,52 @@ function loadPaymentModeChart() {
                 }
             });
         })
-        .catch(error => console.error('Error loading payment mode data:', error));
+        .catch(error => {
+            console.error('Error loading payment mode data:', error);
+            // Show error state chart
+            const ctx = document.getElementById('paymentModeChart').getContext('2d');
+            if (paymentModeChart) {
+                paymentModeChart.destroy();
+            }
+            paymentModeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Error Loading Data'],
+                    datasets: [{
+                        data: [1],
+                        backgroundColor: ['#e74a3b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        });
 }
 
 function loadCourseFeeChart() {
+    console.log('Loading course fee chart for year:', currentYear);
     return fetch(`/api/course-fee-stats?year=${currentYear}`)
         .then(response => response.json())
         .then(data => {
+            console.log('Course fee data received:', data);
             const ctx = document.getElementById('courseFeeChart').getContext('2d');
             
             if (courseFeeChart) {
                 courseFeeChart.destroy();
             }
 
+            const courseNames = data.course_names || ['No Data Available'];
+            const courseCollections = data.course_collections || [0];
+
             courseFeeChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: data.course_names || ['No Data'],
+                    labels: courseNames,
                     datasets: [{
                         label: 'Total Collection (₹)',
-                        data: data.course_collections || [0],
+                        data: courseCollections,
                         backgroundColor: '#4e73df',
                         borderColor: '#4e73df',
                         borderWidth: 1,
@@ -423,13 +485,37 @@ function loadCourseFeeChart() {
                 }
             });
         })
-        .catch(error => console.error('Error loading course fee data:', error));
+        .catch(error => {
+            console.error('Error loading course fee data:', error);
+            // Show error state chart
+            const ctx = document.getElementById('courseFeeChart').getContext('2d');
+            if (courseFeeChart) {
+                courseFeeChart.destroy();
+            }
+            courseFeeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Error Loading Data'],
+                    datasets: [{
+                        label: 'Error',
+                        data: [0],
+                        backgroundColor: '#e74a3b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        });
 }
 
 function loadScholarshipChart() {
+    console.log('Loading scholarship chart for year:', currentYear);
     return fetch(`/api/scholarship-stats?year=${currentYear}`)
         .then(response => response.json())
         .then(data => {
+            console.log('Scholarship data received:', data);
             const ctx = document.getElementById('scholarshipChart').getContext('2d');
             
             if (scholarshipChart) {
@@ -437,23 +523,27 @@ function loadScholarshipChart() {
             }
 
             // Only show Government Scholarship and Meera Rebate (indices 0 and 1)
+            const appliedData = data.scholarship_applied ? [data.scholarship_applied[0], data.scholarship_applied[1]] : [0, 0];
+            const approvedData = data.scholarship_approved ? [data.scholarship_approved[0], data.scholarship_approved[1]] : [0, 0];
+            const grantedData = data.scholarship_granted ? [data.scholarship_granted[0], data.scholarship_granted[1]] : [0, 0];
+
             scholarshipChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: ['Government Scholarship', 'Meera Rebate'],
                     datasets: [{
                         label: 'Applied',
-                        data: data.scholarship_applied ? [data.scholarship_applied[0], data.scholarship_applied[1]] : [0, 0],
+                        data: appliedData,
                         backgroundColor: '#36b9cc',
                         borderRadius: 4
                     }, {
                         label: 'Approved',
-                        data: data.scholarship_approved ? [data.scholarship_approved[0], data.scholarship_approved[1]] : [0, 0],
+                        data: approvedData,
                         backgroundColor: '#1cc88a',
                         borderRadius: 4
                     }, {
                         label: 'Granted',
-                        data: data.scholarship_granted ? [data.scholarship_granted[0], data.scholarship_granted[1]] : [0, 0],
+                        data: grantedData,
                         backgroundColor: '#f6c23e',
                         borderRadius: 4
                     }]
@@ -498,7 +588,29 @@ function loadScholarshipChart() {
                 }
             });
         })
-        .catch(error => console.error('Error loading scholarship data:', error));
+        .catch(error => {
+            console.error('Error loading scholarship data:', error);
+            // Show error state chart
+            const ctx = document.getElementById('scholarshipChart').getContext('2d');
+            if (scholarshipChart) {
+                scholarshipChart.destroy();
+            }
+            scholarshipChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Error Loading Data'],
+                    datasets: [{
+                        label: 'Error',
+                        data: [0],
+                        backgroundColor: '#e74a3b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        });
 }
 </script>
 {% endblock %}

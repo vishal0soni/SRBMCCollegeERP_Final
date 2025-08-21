@@ -1545,6 +1545,7 @@ def api_dashboard_stats():
 def api_fee_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
+        app.logger.info(f"Loading fee stats for year: {year}")
 
         # Get monthly fee collections from invoices for students admitted in selected year
         monthly_collections = db.session.query(
@@ -1565,6 +1566,8 @@ def api_fee_stats():
             if month and amount is not None:
                 months_data[int(month)] = float(amount)
 
+        app.logger.info(f"Monthly collections data: {months_data}")
+
         return jsonify({
             'success': True,
             'months': list(months_data.keys()),
@@ -1574,7 +1577,8 @@ def api_fee_stats():
         app.logger.error(f"Error in api_fee_stats: {e}")
         # Return default data for selected year
         return jsonify({
-            'success': True,
+            'success': False,
+            'error': str(e),
             'months': list(range(1, 13)),
             'amounts': [0] * 12
         })

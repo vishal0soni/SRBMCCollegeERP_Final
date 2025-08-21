@@ -270,27 +270,46 @@ function applyYearFilter() {
 }
 
 function loadStudentSummaryData() {
+    console.log('Loading student summary data for year:', currentYear);
     return Promise.all([
         loadStudentStats(),
         loadCourseDistributionChart(),
         loadScholarshipCharts(),
         loadCategoryChart(),
         loadMonthlyAdmissionsChart()
-    ]);
+    ]).then(() => {
+        console.log('All student summary data loaded successfully');
+    }).catch(error => {
+        console.error('Error loading student summary data:', error);
+    });
 }
 
 function loadStudentStats() {
+    console.log('Loading student stats for year:', currentYear);
     return fetch(`/api/student-summary-stats?year=${currentYear}`)
         .then(response => response.json())
         .then(data => {
+            console.log('Student stats received:', data);
             if (data.success) {
-                document.getElementById('totalAdmissions').textContent = data.stats.total_admissions;
-                document.getElementById('govScholarshipApplied').textContent = data.stats.gov_scholarship_applied;
-                document.getElementById('meeraRebateApplied').textContent = data.stats.meera_rebate_applied;
-                document.getElementById('coursesAvailable').textContent = data.stats.courses_available + ' courses';
+                document.getElementById('totalAdmissions').textContent = data.stats.total_admissions || 0;
+                document.getElementById('govScholarshipApplied').textContent = data.stats.gov_scholarship_applied || 0;
+                document.getElementById('meeraRebateApplied').textContent = data.stats.meera_rebate_applied || 0;
+                document.getElementById('coursesAvailable').textContent = (data.stats.courses_available || 0) + ' courses';
+            } else {
+                // Show error state
+                document.getElementById('totalAdmissions').textContent = '0';
+                document.getElementById('govScholarshipApplied').textContent = '0';
+                document.getElementById('meeraRebateApplied').textContent = '0';
+                document.getElementById('coursesAvailable').textContent = '0 courses';
             }
         })
-        .catch(error => console.error('Error loading student stats:', error));
+        .catch(error => {
+            console.error('Error loading student stats:', error);
+            document.getElementById('totalAdmissions').textContent = 'Error';
+            document.getElementById('govScholarshipApplied').textContent = 'Error';
+            document.getElementById('meeraRebateApplied').textContent = 'Error';
+            document.getElementById('coursesAvailable').textContent = 'Error';
+        });
 }
 
 function loadCourseDistributionChart() {
@@ -476,6 +495,7 @@ function loadScholarshipCharts() {
 }
 
 function loadCategoryChart() {
+    console.log('Loading category chart for year:', currentYear);
     return fetch(`/api/student-category-stats?year=${currentYear}`)
         .then(response => response.json())
         .then(data => {
@@ -517,7 +537,8 @@ function loadCategoryChart() {
                             ticks: {
                                 font: {
                                     size: 10
-                                }
+                                },
+                                stepSize: 1
                             }
                         },
                         x: {
@@ -536,6 +557,26 @@ function loadCategoryChart() {
         })
         .catch(error => {
             console.error('Error loading category data:', error);
+            // Show error state chart
+            const ctx = document.getElementById('categoryDistributionChart').getContext('2d');
+            if (categoryChart) {
+                categoryChart.destroy();
+            }
+            categoryChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Error Loading Data'],
+                    datasets: [{
+                        label: 'Error',
+                        data: [0],
+                        backgroundColor: '#e74a3b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
             // Show error state in table
             updateCategoryBreakdownTable(['Error Loading'], [0]);
         });
@@ -608,6 +649,7 @@ function updateCategoryBreakdownTable(categories, counts) {
 }
 
 function loadMonthlyAdmissionsChart() {
+    console.log('Loading monthly admissions chart for year:', currentYear);
     return fetch(`/api/monthly-admissions-stats?year=${currentYear}`)
         .then(response => response.json())
         .then(data => {
@@ -631,7 +673,9 @@ function loadMonthlyAdmissionsChart() {
                         borderColor: '#1cc88a',
                         backgroundColor: 'rgba(28, 200, 138, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
                     }]
                 },
                 options: {
@@ -652,14 +696,16 @@ function loadMonthlyAdmissionsChart() {
                             ticks: {
                                 font: {
                                     size: 10
-                                }
+                                },
+                                stepSize: 1
                             }
                         },
                         x: {
                             ticks: {
                                 font: {
                                     size: 10
-                                }
+                                },
+                                maxRotation: 45
                             }
                         }
                     }
@@ -668,6 +714,27 @@ function loadMonthlyAdmissionsChart() {
         })
         .catch(error => {
             console.error('Error loading monthly admissions data:', error);
+            // Show error state chart
+            const ctx = document.getElementById('monthlyAdmissionsChart').getContext('2d');
+            if (monthlyChart) {
+                monthlyChart.destroy();
+            }
+            monthlyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Error Loading Data'],
+                    datasets: [{
+                        label: 'Error',
+                        data: [0],
+                        borderColor: '#e74a3b',
+                        backgroundColor: 'rgba(231, 74, 59, 0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
         });
 }
 </script>
