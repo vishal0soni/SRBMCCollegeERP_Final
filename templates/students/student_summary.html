@@ -624,53 +624,65 @@ function loadCategoryChart() {
                 categoryChart.destroy();
             }
 
-            const categories = data.categories || ['No Data'];
-            const counts = data.counts || [0];
+            if (data.success) {
+                const categories = data.categories || ['No Data'];
+                const counts = data.counts || [0];
 
-            categoryChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: categories,
-                    datasets: [{
-                        label: 'Students',
-                        data: counts,
-                        backgroundColor: '#4e73df'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                font: {
-                                    size: 10
-                                }
-                            }
-                        }
+                categoryChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: categories,
+                        datasets: [{
+                            data: counts,
+                            backgroundColor: [
+                                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'
+                            ]
+                        }]
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                font: {
-                                    size: 10
-                                },
-                                stepSize: 1
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                font: {
-                                    size: 10
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: {
+                                        size: 10
+                                    },
+                                    padding: 10
                                 }
                             }
                         }
                     }
-                }
-            });
-
-            // Category breakdown table will be updated by loadBreakdownTables()
+                });
+            } else {
+                // Show no data state
+                categoryChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['No Data Available'],
+                        datasets: [{
+                            data: [1],
+                            backgroundColor: ['#e3e6f0']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: {
+                                        size: 10
+                                    },
+                                    padding: 10
+                                }
+                            }
+                        }
+                    }
+                });
+            }
         })
         .catch(error => {
             console.error('Error loading category data:', error);
@@ -680,21 +692,30 @@ function loadCategoryChart() {
                 categoryChart.destroy();
             }
             categoryChart = new Chart(ctx, {
-                type: 'bar',
+                type: 'doughnut',
                 data: {
                     labels: ['Error Loading Data'],
                     datasets: [{
-                        label: 'Error',
-                        data: [0],
-                        backgroundColor: '#e74a3b'
+                        data: [1],
+                        backgroundColor: ['#e74a3b']
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 10
+                                },
+                                padding: 10
+                            }
+                        }
+                    }
                 }
             });
-            // Error state handled by loadBreakdownTables()
         });
 }
 
@@ -712,57 +733,104 @@ function loadMonthlyAdmissionsChart() {
                 monthlyChart.destroy();
             }
 
-            const labels = data.labels || ['No Data'];
-            const counts = data.counts || [0];
+            if (data.success) {
+                const labels = data.labels || ['No Data'];
+                const counts = data.counts || [0];
 
-            monthlyChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Admissions',
-                        data: counts,
-                        borderColor: '#1cc88a',
-                        backgroundColor: 'rgba(28, 200, 138, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                font: {
-                                    size: 10
+                monthlyChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Monthly Admissions',
+                            data: counts,
+                            borderColor: '#1cc88a',
+                            backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: '#1cc88a',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    font: {
+                                        size: 10
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    font: {
+                                        size: 10
+                                    },
+                                    stepSize: 1,
+                                    precision: 0
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Number of Students',
+                                    font: {
+                                        size: 10
+                                    }
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    font: {
+                                        size: 10
+                                    },
+                                    maxRotation: 45
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Month',
+                                    font: {
+                                        size: 10
+                                    }
                                 }
                             }
                         }
+                    }
+                });
+            } else {
+                // Show no data state
+                monthlyChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['No Data Available'],
+                        datasets: [{
+                            label: 'No Data',
+                            data: [0],
+                            borderColor: '#e3e6f0',
+                            backgroundColor: 'rgba(227, 230, 240, 0.1)'
+                        }]
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                font: {
-                                    size: 10
-                                },
-                                stepSize: 1
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                font: {
-                                    size: 10
-                                },
-                                maxRotation: 45
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    font: {
+                                        size: 10
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
         })
         .catch(error => {
             console.error('Error loading monthly admissions data:', error);
@@ -784,7 +852,16 @@ function loadMonthlyAdmissionsChart() {
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
                 }
             });
         });
