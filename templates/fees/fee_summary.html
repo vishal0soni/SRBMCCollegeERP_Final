@@ -114,25 +114,29 @@
 <!-- Charts Row -->
 <div class="row">
     <!-- Monthly Fee Collection Chart -->
-    <div class="col-lg-6 mb-4">
+    <div class="col-lg-7 mb-4">
         <div class="card shadow">
             <div class="card-header">
                 <h6 class="m-0 font-weight-bold text-primary">Monthly Fee Collections</h6>
             </div>
-            <div class="card-body" style="height: 250px;">
-                <canvas id="monthlyCollectionChart" height="200"></canvas>
+            <div class="card-body">
+                <div style="position: relative; height: 300px;">
+                    <canvas id="monthlyCollectionChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Payment Mode Distribution Chart -->
-    <div class="col-lg-6 mb-4">
+    <div class="col-lg-5 mb-4">
         <div class="card shadow">
             <div class="card-header">
                 <h6 class="m-0 font-weight-bold text-primary">Payment Mode Distribution</h6>
             </div>
-            <div class="card-body" style="height: 250px;">
-                <canvas id="paymentModeChart" height="200"></canvas>
+            <div class="card-body">
+                <div style="position: relative; height: 300px;">
+                    <canvas id="paymentModeChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -254,7 +258,9 @@ function loadMonthlyCollectionChart() {
                         borderColor: '#1cc88a',
                         backgroundColor: 'rgba(28, 200, 138, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
                     }]
                 },
                 options: {
@@ -266,11 +272,34 @@ function loadMonthlyCollectionChart() {
                             ticks: {
                                 callback: function(value) {
                                     return '₹' + value.toLocaleString();
+                                },
+                                font: {
+                                    size: 11
                                 }
+                            },
+                            grid: {
+                                color: '#e3e6f0'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                color: '#e3e6f0'
                             }
                         }
                     },
                     plugins: {
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
@@ -301,7 +330,9 @@ function loadPaymentModeChart() {
                     labels: data.payment_modes || ['Cash', 'Online', 'Cheque', 'DD'],
                     datasets: [{
                         data: data.payment_mode_counts || [0, 0, 0, 0],
-                        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b']
+                        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
                     }]
                 },
                 options: {
@@ -309,9 +340,17 @@ function loadPaymentModeChart() {
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom'
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 11
+                                },
+                                padding: 10,
+                                usePointStyle: true
+                            }
                         }
-                    }
+                    },
+                    cutout: '60%'
                 }
             });
         })
@@ -335,7 +374,10 @@ function loadCourseFeeChart() {
                     datasets: [{
                         label: 'Total Collection (₹)',
                         data: data.course_collections || [0],
-                        backgroundColor: '#4e73df'
+                        backgroundColor: '#4e73df',
+                        borderColor: '#4e73df',
+                        borderWidth: 1,
+                        borderRadius: 4
                     }]
                 },
                 options: {
@@ -347,6 +389,33 @@ function loadCourseFeeChart() {
                             ticks: {
                                 callback: function(value) {
                                     return '₹' + value.toLocaleString();
+                                },
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                color: '#e3e6f0'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 0,
+                                font: {
+                                    size: 10
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 12
                                 }
                             }
                         }
@@ -370,19 +439,22 @@ function loadScholarshipChart() {
             scholarshipChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['Government Scholarship', 'Meera Rebate', 'Merit Scholarship', 'Need-based Aid'],
+                    labels: ['Government Scholarship', 'Meera Rebate'],
                     datasets: [{
                         label: 'Applied',
-                        data: data.scholarship_applied || [0, 0, 0, 0],
-                        backgroundColor: '#36b9cc'
+                        data: data.scholarship_applied ? [data.scholarship_applied[0], data.scholarship_applied[1]] : [0, 0],
+                        backgroundColor: '#36b9cc',
+                        borderRadius: 4
                     }, {
                         label: 'Approved',
-                        data: data.scholarship_approved || [0, 0, 0, 0],
-                        backgroundColor: '#1cc88a'
+                        data: data.scholarship_approved ? [data.scholarship_approved[0], data.scholarship_approved[1]] : [0, 0],
+                        backgroundColor: '#1cc88a',
+                        borderRadius: 4
                     }, {
                         label: 'Granted',
-                        data: data.scholarship_granted || [0, 0, 0, 0],
-                        backgroundColor: '#f6c23e'
+                        data: data.scholarship_granted ? [data.scholarship_granted[0], data.scholarship_granted[1]] : [0, 0],
+                        backgroundColor: '#f6c23e',
+                        borderRadius: 4
                     }]
                 },
                 options: {
@@ -390,7 +462,36 @@ function loadScholarshipChart() {
                     maintainAspectRatio: false,
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            ticks: {
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                color: '#e3e6f0'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 12
+                                },
+                                padding: 15
+                            }
                         }
                     }
                 }

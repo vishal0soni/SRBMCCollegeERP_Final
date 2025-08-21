@@ -2361,6 +2361,10 @@ def api_course_fee_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
         
+        # Get all available courses from CourseDetails
+        all_courses = db.session.query(CourseDetails.course_full_name).distinct().all()
+        all_course_names = [course[0] for course in all_courses if course[0]]
+        
         # Course-wise fee collection for selected year
         course_collections_data = db.session.query(
             Student.current_course,
@@ -2372,11 +2376,25 @@ def api_course_fee_stats():
             )
         ).group_by(Student.current_course).all()
 
-        course_names = [course[0] for course in course_collections_data if course[0]]
-        course_collections = [float(course[1]) for course in course_collections_data if course[1]]
+        # Create a dictionary for easy lookup
+        collections_dict = {course[0]: float(course[1]) for course in course_collections_data if course[1]}
+        
+        # Prepare final data with all courses
+        course_names = []
+        course_collections = []
+        
+        for course_name in all_course_names:
+            course_names.append(course_name)
+            course_collections.append(collections_dict.get(course_name, 0))
+        
+        # Add any courses that have collections but aren't in CourseDetails
+        for course, amount in course_collections_data:
+            if course and course not in all_course_names:
+                course_names.append(course)
+                course_collections.append(float(amount))
 
         if not course_names:
-            course_names = ['No Data Available']
+            course_names = ['No Courses Available']
             course_collections = [0]
 
         return jsonify({

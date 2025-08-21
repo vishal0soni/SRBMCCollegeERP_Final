@@ -355,32 +355,60 @@ function loadScholarshipCharts() {
                 govScholarshipChart.destroy();
             }
 
-            const govData = data.scholarship_applied || [0, 0, 0, 0];
-            govScholarshipChart = new Chart(govCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Applied', 'Approved', 'Granted'],
-                    datasets: [{
-                        data: [govData[0], data.scholarship_approved ? data.scholarship_approved[0] : 0, data.scholarship_granted ? data.scholarship_granted[0] : 0],
-                        backgroundColor: ['#f6c23e', '#1cc88a', '#4e73df']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: {
-                                    size: 10
-                                },
-                                padding: 8
+            const govApplied = data.scholarship_applied ? data.scholarship_applied[0] : 0;
+            const govApproved = data.scholarship_approved ? data.scholarship_approved[0] : 0;
+            const govGranted = data.scholarship_granted ? data.scholarship_granted[0] : 0;
+            const govTotal = govApplied + govApproved + govGranted;
+
+            if (govTotal === 0) {
+                govScholarshipChart = new Chart(govCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['No Data Available'],
+                        datasets: [{
+                            data: [1],
+                            backgroundColor: ['#e3e6f0']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 10 },
+                                    padding: 8
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            } else {
+                govScholarshipChart = new Chart(govCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Applied', 'Approved', 'Granted'],
+                        datasets: [{
+                            data: [govApplied, govApproved, govGranted],
+                            backgroundColor: ['#f6c23e', '#1cc88a', '#4e73df']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 10 },
+                                    padding: 8
+                                }
+                            }
+                        }
+                    }
+                });
+            }
 
             // Meera Rebate Chart
             const meeraCtx = document.getElementById('meeraScholarshipChart').getContext('2d');
@@ -388,31 +416,60 @@ function loadScholarshipCharts() {
                 meeraScholarshipChart.destroy();
             }
 
-            meeraScholarshipChart = new Chart(meeraCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Applied', 'Approved', 'Granted'],
-                    datasets: [{
-                        data: [govData[1], data.scholarship_approved ? data.scholarship_approved[1] : 0, data.scholarship_granted ? data.scholarship_granted[1] : 0],
-                        backgroundColor: ['#f6c23e', '#1cc88a', '#4e73df']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: {
-                                    size: 10
-                                },
-                                padding: 8
+            const meeraApplied = data.scholarship_applied ? data.scholarship_applied[1] : 0;
+            const meeraApproved = data.scholarship_approved ? data.scholarship_approved[1] : 0;
+            const meeraGranted = data.scholarship_granted ? data.scholarship_granted[1] : 0;
+            const meeraTotal = meeraApplied + meeraApproved + meeraGranted;
+
+            if (meeraTotal === 0) {
+                meeraScholarshipChart = new Chart(meeraCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['No Data Available'],
+                        datasets: [{
+                            data: [1],
+                            backgroundColor: ['#e3e6f0']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 10 },
+                                    padding: 8
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            } else {
+                meeraScholarshipChart = new Chart(meeraCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Applied', 'Approved', 'Granted'],
+                        datasets: [{
+                            data: [meeraApplied, meeraApproved, meeraGranted],
+                            backgroundColor: ['#f6c23e', '#1cc88a', '#4e73df']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 10 },
+                                    padding: 8
+                                }
+                            }
+                        }
+                    }
+                });
+            }
         })
         .catch(error => console.error('Error loading scholarship data:', error));
 }
