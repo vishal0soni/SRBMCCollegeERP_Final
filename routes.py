@@ -2904,6 +2904,70 @@ def api_semester_trend_stats():
             'semester_averages': [0]
         })
 
+@app.route('/api/student-breakdown-data')
+@login_required
+def api_student_breakdown_data():
+    try:
+        year = request.args.get('year', datetime.now().year, type=int)
+        
+        # Get course breakdown data
+        course_counts = db.session.query(
+            Student.current_course, 
+            func.count(Student.id)
+        ).filter(
+            and_(
+                Student.current_course.isnot(None),
+                Student.current_course != '',
+                func.extract('year', Student.admission_date) == year
+            )
+        ).group_by(Student.current_course).all()
+
+        # Get category breakdown data
+        category_counts = db.session.query(
+            Student.category,
+            func.count(Student.id)
+        ).filter(
+            and_(
+                Student.category.isnot(None),
+                func.extract('year', Student.admission_date) == year
+            )
+        ).group_by(Student.category).all()
+
+        # Format course data
+        course_breakdown = []
+        course_total = sum(count for _, count in course_counts)
+        for course, count in course_counts:
+            percentage = (count / course_total * 100) if course_total > 0 else 0
+            course_breakdown.append({
+                'name': course,
+                'count': count,
+                'percentage': round(percentage, 1)
+            })
+
+        # Format category data
+        category_breakdown = []
+        category_total = sum(count for _, count in category_counts)
+        for category, count in category_counts:
+            percentage = (count / category_total * 100) if category_total > 0 else 0
+            category_breakdown.append({
+                'name': category or 'Not Specified',
+                'count': count,
+                'percentage': round(percentage, 1)
+            })
+
+        return jsonify({
+            'success': True,
+            'course_breakdown': course_breakdown,
+            'category_breakdown': category_breakdown
+        })
+    except Exception as e:
+        app.logger.error(f"Error in api_student_breakdown_data: {e}")
+        return jsonify({
+            'success': False,
+            'course_breakdown': [],
+            'category_breakdown': []
+        })
+
 @app.route('/api/update-fee-field/<int:fee_id>', methods=['POST'])
 @login_required
 def api_update_fee_field(fee_id):

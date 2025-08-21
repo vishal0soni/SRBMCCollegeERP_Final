@@ -114,10 +114,10 @@
     <div class="col-xl-4 col-lg-4 col-md-6">
         <div class="card shadow mb-4">
             <div class="card-header py-2">
-                <h6 class="m-0 font-weight-bold text-primary">Course-wise Distribution</h6>
+                <h6 class="m-0 font-weight-bold text-primary">Student Distribution by Course</h6>
             </div>
             <div class="card-body" style="height: 300px;">
-                <canvas id="courseDistributionChart"></canvas>
+                <canvas id="studentDistributionByCourseChart"></canvas>
             </div>
         </div>
     </div>
@@ -227,7 +227,7 @@
 
 {% block scripts %}
 <script>
-let courseChart;
+let studentDistributionChart;
 let govScholarshipChart;
 let meeraScholarshipChart;
 let categoryChart;
@@ -273,14 +273,89 @@ function loadStudentSummaryData() {
     console.log('Loading student summary data for year:', currentYear);
     return Promise.all([
         loadStudentStats(),
-        loadCourseDistributionChart(),
+        loadStudentDistributionChart(),
         loadScholarshipCharts(),
         loadCategoryChart(),
-        loadMonthlyAdmissionsChart()
+        loadMonthlyAdmissionsChart(),
+        loadBreakdownTables()
     ]).then(() => {
         console.log('All student summary data loaded successfully');
     }).catch(error => {
         console.error('Error loading student summary data:', error);
+    });
+}
+
+function loadBreakdownTables() {
+    console.log('Loading breakdown tables for year:', currentYear);
+    return fetch(`/api/student-breakdown-data?year=${currentYear}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Breakdown data loaded:', data);
+            if (data.success) {
+                updateCourseBreakdownTableFromAPI(data.course_breakdown);
+                updateCategoryBreakdownTableFromAPI(data.category_breakdown);
+            } else {
+                // Show error state
+                updateCourseBreakdownTableFromAPI([]);
+                updateCategoryBreakdownTableFromAPI([]);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading breakdown tables:', error);
+            updateCourseBreakdownTableFromAPI([]);
+            updateCategoryBreakdownTableFromAPI([]);
+        });
+}
+
+function updateCourseBreakdownTableFromAPI(courseBreakdown) {
+    const tbody = document.querySelector('#courseBreakdownTable tbody');
+    
+    if (!tbody) {
+        console.error('Course breakdown table body not found');
+        return;
+    }
+    
+    tbody.innerHTML = '';
+
+    if (!courseBreakdown || courseBreakdown.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No data available for selected year</td></tr>';
+        return;
+    }
+
+    courseBreakdown.forEach(course => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td title="${course.name}">${course.name}</td>
+            <td class="text-end">${course.count}</td>
+            <td class="text-end">${course.percentage}%</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function updateCategoryBreakdownTableFromAPI(categoryBreakdown) {
+    const tbody = document.querySelector('#categoryBreakdownTable tbody');
+    
+    if (!tbody) {
+        console.error('Category breakdown table body not found');
+        return;
+    }
+    
+    tbody.innerHTML = '';
+
+    if (!categoryBreakdown || categoryBreakdown.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No data available for selected year</td></tr>';
+        return;
+    }
+
+    categoryBreakdown.forEach(category => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${category.name}</td>
+            <td class="text-end">${category.count}</td>
+            <td class="text-end">${category.percentage}%</td>
+        `;
+        tbody.appendChild(row);
     });
 }
 
@@ -312,21 +387,22 @@ function loadStudentStats() {
         });
 }
 
-function loadCourseDistributionChart() {
+function loadStudentDistributionChart() {
+    console.log('Loading student distribution by course for year:', currentYear);
     return fetch(`/api/student-stats?year=${currentYear}`)
         .then(response => response.json())
         .then(data => {
-            console.log('Course distribution data loaded:', data);
-            const ctx = document.getElementById('courseDistributionChart').getContext('2d');
+            console.log('Student distribution by course data loaded:', data);
+            const ctx = document.getElementById('studentDistributionByCourseChart').getContext('2d');
             
-            if (courseChart) {
-                courseChart.destroy();
+            if (studentDistributionChart) {
+                studentDistributionChart.destroy();
             }
 
             const courses = data.courses || ['No Data'];
             const counts = data.counts || [0];
 
-            courseChart = new Chart(ctx, {
+            studentDistributionChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: courses,
@@ -355,143 +431,185 @@ function loadCourseDistributionChart() {
                 }
             });
 
-            // Update course breakdown table with proper data
-            updateCourseBreakdownTable(courses, counts);
+            // Course breakdown table will be updated by loadBreakdownTables()
         })
         .catch(error => {
-            console.error('Error loading course distribution:', error);
-            // Show error state in table
-            updateCourseBreakdownTable(['Error Loading'], [0]);
+            console.error('Error loading student distribution by course:', error);
+            // Error state handled by loadBreakdownTables()
         });
 }
 
 function loadScholarshipCharts() {
-    return fetch(`/api/scholarship-stats?year=${currentYear}`)
-        .then(response => response.json())
-        .then(data => {
-            // Government Scholarship Chart
-            const govCtx = document.getElementById('govScholarshipChart').getContext('2d');
-            if (govScholarshipChart) {
-                govScholarshipChart.destroy();
-            }
+    console.log('Loading scholarship charts for year:', currentYear);
+    
+    // Get government scholarship counts directly by counting student records
+    Promise.all([
+        fetch(`/api/student-summary-stats?year=${currentYear}`),
+        // Get detailed scholarship data from students
+        fetch(`/api/scholarship-stats?year=${currentYear}`)
+    ]).then(responses => {
+        return Promise.all(responses.map(r => r.json()));
+    }).then(([summaryData, scholarshipData]) => {
+        console.log('Scholarship data loaded:', summaryData, scholarshipData);
+        
+        // Government Scholarship Chart
+        const govCtx = document.getElementById('govScholarshipChart').getContext('2d');
+        if (govScholarshipChart) {
+            govScholarshipChart.destroy();
+        }
 
-            const govApplied = data.scholarship_applied ? data.scholarship_applied[0] : 0;
-            const govApproved = data.scholarship_approved ? data.scholarship_approved[0] : 0;
-            const govGranted = data.scholarship_granted ? data.scholarship_granted[0] : 0;
-            const govTotal = govApplied + govApproved + govGranted;
+        // Use data from scholarship API for government scholarships
+        const govApplied = scholarshipData.scholarship_applied ? scholarshipData.scholarship_applied[0] : 0;
+        const govApproved = scholarshipData.scholarship_approved ? scholarshipData.scholarship_approved[0] : 0;
+        const govGranted = scholarshipData.scholarship_granted ? scholarshipData.scholarship_granted[0] : 0;
+        const govTotal = govApplied + govApproved + govGranted;
 
-            if (govTotal === 0) {
-                govScholarshipChart = new Chart(govCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['No Data Available'],
-                        datasets: [{
-                            data: [1],
-                            backgroundColor: ['#e3e6f0']
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    font: { size: 10 },
-                                    padding: 8
-                                }
+        if (govTotal === 0) {
+            govScholarshipChart = new Chart(govCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['No Data Available'],
+                    datasets: [{
+                        data: [1],
+                        backgroundColor: ['#e3e6f0']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { size: 10 },
+                                padding: 8
                             }
                         }
                     }
-                });
-            } else {
-                govScholarshipChart = new Chart(govCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Applied', 'Approved', 'Granted'],
-                        datasets: [{
-                            data: [govApplied, govApproved, govGranted],
-                            backgroundColor: ['#f6c23e', '#1cc88a', '#4e73df']
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    font: { size: 10 },
-                                    padding: 8
-                                }
+                }
+            });
+        } else {
+            govScholarshipChart = new Chart(govCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Applied', 'Approved', 'Granted'],
+                    datasets: [{
+                        data: [govApplied, govApproved, govGranted],
+                        backgroundColor: ['#f6c23e', '#1cc88a', '#4e73df']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { size: 10 },
+                                padding: 8
                             }
                         }
                     }
-                });
-            }
+                }
+            });
+        }
 
-            // Meera Rebate Chart
-            const meeraCtx = document.getElementById('meeraScholarshipChart').getContext('2d');
-            if (meeraScholarshipChart) {
-                meeraScholarshipChart.destroy();
-            }
+        // Meera Rebate Chart
+        const meeraCtx = document.getElementById('meeraScholarshipChart').getContext('2d');
+        if (meeraScholarshipChart) {
+            meeraScholarshipChart.destroy();
+        }
 
-            const meeraApplied = data.scholarship_applied ? data.scholarship_applied[1] : 0;
-            const meeraApproved = data.scholarship_approved ? data.scholarship_approved[1] : 0;
-            const meeraGranted = data.scholarship_granted ? data.scholarship_granted[1] : 0;
-            const meeraTotal = meeraApplied + meeraApproved + meeraGranted;
+        const meeraApplied = scholarshipData.scholarship_applied ? scholarshipData.scholarship_applied[1] : 0;
+        const meeraApproved = scholarshipData.scholarship_approved ? scholarshipData.scholarship_approved[1] : 0;
+        const meeraGranted = scholarshipData.scholarship_granted ? scholarshipData.scholarship_granted[1] : 0;
+        const meeraTotal = meeraApplied + meeraApproved + meeraGranted;
 
-            if (meeraTotal === 0) {
-                meeraScholarshipChart = new Chart(meeraCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['No Data Available'],
-                        datasets: [{
-                            data: [1],
-                            backgroundColor: ['#e3e6f0']
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    font: { size: 10 },
-                                    padding: 8
-                                }
+        if (meeraTotal === 0) {
+            meeraScholarshipChart = new Chart(meeraCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['No Data Available'],
+                    datasets: [{
+                        data: [1],
+                        backgroundColor: ['#e3e6f0']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { size: 10 },
+                                padding: 8
                             }
                         }
                     }
-                });
-            } else {
-                meeraScholarshipChart = new Chart(meeraCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Applied', 'Approved', 'Granted'],
-                        datasets: [{
-                            data: [meeraApplied, meeraApproved, meeraGranted],
-                            backgroundColor: ['#f6c23e', '#1cc88a', '#4e73df']
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    font: { size: 10 },
-                                    padding: 8
-                                }
+                }
+            });
+        } else {
+            meeraScholarshipChart = new Chart(meeraCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Applied', 'Approved', 'Granted'],
+                    datasets: [{
+                        data: [meeraApplied, meeraApproved, meeraGranted],
+                        backgroundColor: ['#f6c23e', '#1cc88a', '#4e73df']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { size: 10 },
+                                padding: 8
                             }
                         }
                     }
-                });
+                }
+            });
+        }
+    }).catch(error => {
+        console.error('Error loading scholarship data:', error);
+        // Show error states for both charts
+        createErrorChart('govScholarshipChart', govScholarshipChart);
+        createErrorChart('meeraScholarshipChart', meeraScholarshipChart);
+    });
+}
+
+function createErrorChart(chartId, chartVariable) {
+    const ctx = document.getElementById(chartId).getContext('2d');
+    if (chartVariable) {
+        chartVariable.destroy();
+    }
+    return new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Error Loading'],
+            datasets: [{
+                data: [1],
+                backgroundColor: ['#e74a3b']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { size: 10 },
+                        padding: 8
+                    }
+                }
             }
-        })
-        .catch(error => console.error('Error loading scholarship data:', error));
+        }
+    });
 }
 
 function loadCategoryChart() {
@@ -552,8 +670,7 @@ function loadCategoryChart() {
                 }
             });
 
-            // Update category breakdown table with proper data
-            updateCategoryBreakdownTable(categories, counts);
+            // Category breakdown table will be updated by loadBreakdownTables()
         })
         .catch(error => {
             console.error('Error loading category data:', error);
@@ -577,76 +694,11 @@ function loadCategoryChart() {
                     maintainAspectRatio: false
                 }
             });
-            // Show error state in table
-            updateCategoryBreakdownTable(['Error Loading'], [0]);
+            // Error state handled by loadBreakdownTables()
         });
 }
 
-function updateCourseBreakdownTable(courses, counts) {
-    console.log('Updating course table with:', courses, counts);
-    const tbody = document.querySelector('#courseBreakdownTable tbody');
-    
-    if (!tbody) {
-        console.error('Course breakdown table body not found');
-        return;
-    }
-    
-    tbody.innerHTML = '';
-
-    if (!courses || courses.length === 0 || (courses.length === 1 && (courses[0] === 'No Data' || courses[0] === 'Error Loading'))) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No data available for selected year</td></tr>';
-        return;
-    }
-
-    const total = counts.reduce((sum, count) => sum + count, 0);
-    
-    for (let i = 0; i < courses.length; i++) {
-        const course = courses[i] || 'Unknown Course';
-        const count = counts[i] || 0;
-        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : '0.0';
-        
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td title="${course}">${course}</td>
-            <td class="text-end">${count}</td>
-            <td class="text-end">${percentage}%</td>
-        `;
-        tbody.appendChild(row);
-    }
-}
-
-function updateCategoryBreakdownTable(categories, counts) {
-    console.log('Updating category table with:', categories, counts);
-    const tbody = document.querySelector('#categoryBreakdownTable tbody');
-    
-    if (!tbody) {
-        console.error('Category breakdown table body not found');
-        return;
-    }
-    
-    tbody.innerHTML = '';
-
-    if (!categories || categories.length === 0 || (categories.length === 1 && (categories[0] === 'No Data' || categories[0] === 'Error Loading'))) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No data available for selected year</td></tr>';
-        return;
-    }
-
-    const total = counts.reduce((sum, count) => sum + count, 0);
-    
-    for (let i = 0; i < categories.length; i++) {
-        const category = categories[i] || 'Not Specified';
-        const count = counts[i] || 0;
-        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : '0.0';
-        
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${category}</td>
-            <td class="text-end">${count}</td>
-            <td class="text-end">${percentage}%</td>
-        `;
-        tbody.appendChild(row);
-    }
-}
+// Table update functions moved to loadBreakdownTables() section above
 
 function loadMonthlyAdmissionsChart() {
     console.log('Loading monthly admissions chart for year:', currentYear);
