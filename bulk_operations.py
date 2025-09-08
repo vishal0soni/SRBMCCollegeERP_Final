@@ -704,40 +704,79 @@ def import_users_data(records):
 
         for i, record in enumerate(records, 1):
             try:
-                # Check if user already exists
-                existing_user = UserProfile.query.filter_by(
-                    username=record.get('Username', '')
-                ).first()
+                # Validate required fields
+                username = str(record.get('Username', '')).strip()
+                first_name = str(record.get('First Name', '')).strip()
+                last_name = str(record.get('Last Name', '')).strip()
+                email = str(record.get('Email', '')).strip()
 
-                if existing_user:
-                    errors.append(f"Row {i}: User with username {record.get('Username')} already exists")
+                if not username:
+                    errors.append(f"Row {i}: Username is required")
                     continue
+
+                if not first_name:
+                    errors.append(f"Row {i}: First Name is required")
+                    continue
+
+                if not last_name:
+                    errors.append(f"Row {i}: Last Name is required")
+                    continue
+
+                if not email:
+                    errors.append(f"Row {i}: Email is required")
+                    continue
+
+                # Check if user already exists
+                existing_user = UserProfile.query.filter_by(username=username).first()
+                if existing_user:
+                    errors.append(f"Row {i}: User with username '{username}' already exists")
+                    continue
+
+                # Check if email already exists
+                existing_email = UserProfile.query.filter_by(email=email).first()
+                if existing_email:
+                    errors.append(f"Row {i}: User with email '{email}' already exists")
+                    continue
+
+                # Get role_id - default to 1 if not specified or role doesn't exist
+                role_id = 1  # Default role
+                role_name = str(record.get('Role', '')).strip()
+                if role_name:
+                    role = UserRole.query.filter_by(role_name=role_name).first()
+                    if role:
+                        role_id = role.role_id
+                    else:
+                        errors.append(f"Row {i}: Role '{role_name}' not found, using default role")
 
                 # Create new user
                 user = UserProfile(
-                    role_id=1,  # Default role
-                    username=record.get('Username', ''),
-                    first_name=record.get('First Name', ''),
-                    last_name=record.get('Last Name', ''),
-                    email=record.get('Email', ''),
-                    phone=record.get('Phone', ''),
-                    gender=record.get('Gender', ''),
+                    role_id=role_id,
+                    username=username,
+                    first_name=first_name,
+                    last_name=last_name,
+                    email=email,
+                    phone=str(record.get('Phone', '')).strip(),
+                    gender=str(record.get('Gender', '')).strip(),
                     password_hash=generate_password_hash('password123'),  # Default password
-                    status=record.get('Status', 'Active')
+                    status=str(record.get('Status', 'Active')).strip()
                 )
 
                 db.session.add(user)
-                db.session.commit()
                 imported_count += 1
 
             except Exception as e:
+                db.session.rollback()
                 errors.append(f"Row {i}: {str(e)}")
                 continue
 
+        # Commit all users at once
+        if imported_count > 0:
+            db.session.commit()
+
         message = f"Successfully imported {imported_count} users."
         if errors:
-            message += f" {len(errors)} errors occurred."
-        
+            message += f" {len(errors)} errors occurred:\n" + "\n".join(errors)
+
         return True, message
 
     except Exception as e:
