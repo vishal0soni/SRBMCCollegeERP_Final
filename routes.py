@@ -3278,6 +3278,23 @@ def download_template(data_type):
                 ['BA-24-001', 'Student Name', 'Bachelor of Arts First Year', '25000', '10000', '15000',
                  '5000', '5000', '0', '0', '0', '0', 'Partial']
             ]
+        elif data_type == 'exams':
+            headers = [
+                'Student ID', 'Student Name', 'Course', 'Exam Name', 'Semester', 'Exam Date',
+                'Subject 1', 'Subject 1 Max', 'Subject 1 Obtained',
+                'Subject 2', 'Subject 2 Max', 'Subject 2 Obtained',
+                'Subject 3', 'Subject 3 Max', 'Subject 3 Obtained',
+                'Subject 4', 'Subject 4 Max', 'Subject 4 Obtained',
+                'Subject 5', 'Subject 5 Max', 'Subject 5 Obtained',
+                'Subject 6', 'Subject 6 Max', 'Subject 6 Obtained',
+                'Total Max Marks', 'Total Obtained', 'Percentage', 'Grade', 'Status'
+            ]
+            sample_data = [
+                ['BA-24-001', 'Student Name', 'Bachelor of Arts First Year', 'First Semester Exam', 'Semester 1', '2024-01-15',
+                 'English', '100', '85', 'Hindi', '100', '78', 'History', '100', '82',
+                 '', '0', '0', '', '0', '0', '', '0', '0',
+                 '300', '245', '81.67', 'A', 'Pass']
+            ]
         elif data_type == 'invoices':
             headers = [
                 'Invoice Number', 'Student ID', 'Student Name', 'Course', 'Invoice Date',

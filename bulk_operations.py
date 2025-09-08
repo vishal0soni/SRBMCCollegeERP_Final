@@ -727,8 +727,148 @@ def import_fees_data(records):
         return False, f"Import failed: {str(e)}"
 
 def import_exams_data(records):
-    """Placeholder for exams import"""
-    return False, "Exams import functionality not yet implemented."
+    """Import exams data from records"""
+    try:
+        imported_count = 0
+        errors = []
+
+        for i, record in enumerate(records, 1):
+            try:
+                # Validate required fields
+                student_id = str(record.get('Student ID', '')).strip()
+                exam_name = str(record.get('Exam Name', '')).strip()
+                
+                if not student_id:
+                    errors.append(f"Row {i}: Student ID is required")
+                    continue
+                    
+                if not exam_name:
+                    errors.append(f"Row {i}: Exam Name is required")
+                    continue
+
+                # Find student by student_unique_id
+                student = Student.query.filter_by(student_unique_id=student_id).first()
+                if not student:
+                    errors.append(f"Row {i}: Student with ID '{student_id}' not found")
+                    continue
+
+                # Get course information
+                course = None
+                if student.current_course:
+                    course_detail = CourseDetails.query.filter_by(course_full_name=student.current_course).first()
+                    if course_detail:
+                        course = Course.query.filter_by(course_short_name=course_detail.course_short_name).first()
+
+                # Parse exam date
+                exam_date = None
+                if record.get('Exam Date'):
+                    try:
+                        from datetime import datetime
+                        exam_date = datetime.strptime(str(record.get('Exam Date')), '%Y-%m-%d').date()
+                    except ValueError:
+                        try:
+                            exam_date = datetime.strptime(str(record.get('Exam Date')), '%m/%d/%Y').date()
+                        except ValueError:
+                            errors.append(f"Row {i}: Invalid exam date format. Use YYYY-MM-DD or MM/DD/YYYY")
+                            continue
+
+                # Get subject data and calculate totals
+                subjects_data = []
+                total_max = 0
+                total_obtained = 0
+
+                for j in range(1, 7):  # Support up to 6 subjects
+                    subject_name = record.get(f'Subject {j}')
+                    max_marks = record.get(f'Subject {j} Max')
+                    obtained_marks = record.get(f'Subject {j} Obtained')
+
+                    if subject_name and max_marks is not None and obtained_marks is not None:
+                        try:
+                            max_marks = int(max_marks)
+                            obtained_marks = int(obtained_marks)
+                            
+                            if obtained_marks > max_marks:
+                                errors.append(f"Row {i}: Subject {j} obtained marks cannot exceed max marks")
+                                continue
+                                
+                            subjects_data.append({
+                                'name': str(subject_name),
+                                'max': max_marks,
+                                'obtained': obtained_marks
+                            })
+                            total_max += max_marks
+                            total_obtained += obtained_marks
+                        except ValueError:
+                            errors.append(f"Row {i}: Invalid marks format for Subject {j}")
+                            continue
+
+                if not subjects_data:
+                    errors.append(f"Row {i}: At least one subject is required")
+                    continue
+
+                # Calculate percentage and grade
+                percentage = (total_obtained / total_max * 100) if total_max > 0 else 0
+                
+                # Calculate grade based on percentage
+                if percentage >= 90:
+                    grade = 'A+'
+                elif percentage >= 80:
+                    grade = 'A'
+                elif percentage >= 70:
+                    grade = 'B+'
+                elif percentage >= 60:
+                    grade = 'B'
+                elif percentage >= 50:
+                    grade = 'C+'
+                elif percentage >= 40:
+                    grade = 'C'
+                else:
+                    grade = 'F'
+
+                overall_status = 'Pass' if percentage >= 40 else 'Fail'
+
+                # Create exam record
+                exam_data = {
+                    'student_id': student.id,
+                    'course_id': course.course_id if course else None,
+                    'exam_name': exam_name,
+                    'semester': str(record.get('Semester', '')).strip(),
+                    'exam_date': exam_date,
+                    'total_max_marks': total_max,
+                    'total_obtained_marks': total_obtained,
+                    'percentage': round(percentage, 2),
+                    'grade': grade,
+                    'overall_status': overall_status
+                }
+
+                # Add subject-wise marks
+                for j, subject_data in enumerate(subjects_data[:6]):  # Max 6 subjects
+                    exam_data[f'subject{j+1}_name'] = subject_data['name']
+                    exam_data[f'subject{j+1}_max_marks'] = subject_data['max']
+                    exam_data[f'subject{j+1}_obtained_marks'] = subject_data['obtained']
+
+                exam = Exam(**exam_data)
+                db.session.add(exam)
+                imported_count += 1
+
+            except Exception as e:
+                db.session.rollback()
+                errors.append(f"Row {i}: {str(e)}")
+                continue
+
+        # Commit all exam records at once
+        if imported_count > 0:
+            db.session.commit()
+
+        message = f"Successfully imported {imported_count} exam records."
+        if errors:
+            message += f" {len(errors)} errors occurred:\n" + "\n".join(errors)
+
+        return True, message
+
+    except Exception as e:
+        db.session.rollback()
+        return False, f"Import failed: {str(e)}"
 
 def export_users_data():
     """Export users data"""
@@ -945,6 +1085,8 @@ def process_import_file(file, data_type):
             return import_fees_data(records)
         elif data_type == 'invoices':
             return import_invoices_data(records)
+        elif data_type == 'exams':
+            return import_exams_data(records)
         elif data_type == 'subjects':
             return import_subjects_data(records)
         else:
