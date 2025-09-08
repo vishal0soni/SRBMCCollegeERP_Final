@@ -667,7 +667,7 @@ def import_exams_data(records):
 
 def export_users_data():
     """Export users data"""
-    from models import UserProfile, Role
+    from models import UserProfile, UserRole
 
     users = db.session.query(UserProfile).join(UserProfile.role).all()
 
@@ -695,7 +695,7 @@ def export_users_data():
 
 def import_users_data(records):
     """Import users data from records"""
-    from models import UserProfile, Role
+    from models import UserProfile, UserRole
     from werkzeug.security import generate_password_hash
 
     try:
