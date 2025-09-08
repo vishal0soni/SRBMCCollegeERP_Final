@@ -377,7 +377,7 @@ def import_students_data(records):
 
         message = f"Successfully imported {imported_count} students."
         if errors:
-            message += f" {len(errors)} errors occurred."
+            message += f" {len(errors)} errors occurred:\n" + "\n".join(errors)
 
         return True, message
 
