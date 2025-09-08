@@ -658,8 +658,73 @@ def import_data(data_type, records):
         raise ValueError(f"Unsupported data type: {data_type}")
 
 def import_fees_data(records):
-    """Placeholder for fees import"""
-    return False, "Fees import functionality not yet implemented."
+    """Import fees data from records"""
+    try:
+        imported_count = 0
+        errors = []
+
+        for i, record in enumerate(records, 1):
+            try:
+                # Validate required fields
+                student_id = str(record.get('Student ID', '')).strip()
+                
+                if not student_id:
+                    errors.append(f"Row {i}: Student ID is required")
+                    continue
+
+                # Find student by student_unique_id
+                student = Student.query.filter_by(student_unique_id=student_id).first()
+                if not student:
+                    errors.append(f"Row {i}: Student with ID '{student_id}' not found")
+                    continue
+
+                # Check if fee record already exists
+                existing_fee = CollegeFees.query.filter_by(student_id=student.id).first()
+                if existing_fee:
+                    errors.append(f"Row {i}: Fee record for student '{student_id}' already exists")
+                    continue
+
+                # Get course information
+                course = None
+                if student.current_course:
+                    course_detail = CourseDetails.query.filter_by(course_full_name=student.current_course).first()
+                    if course_detail:
+                        course = Course.query.filter_by(course_short_name=course_detail.course_short_name).first()
+
+                # Create new fee record
+                fee_record = CollegeFees(
+                    student_id=student.id,
+                    course_id=course.course_id if course else None,
+                    total_course_fees=float(record.get('Total Fee', 0) or 0),
+                    installment_1=float(record.get('Installment 1', 0) or 0),
+                    installment_2=float(record.get('Installment 2', 0) or 0),
+                    installment_3=float(record.get('Installment 3', 0) or 0),
+                    installment_4=float(record.get('Installment 4', 0) or 0),
+                    installment_5=float(record.get('Installment 5', 0) or 0),
+                    installment_6=float(record.get('Installment 6', 0) or 0)
+                )
+
+                db.session.add(fee_record)
+                imported_count += 1
+
+            except Exception as e:
+                db.session.rollback()
+                errors.append(f"Row {i}: {str(e)}")
+                continue
+
+        # Commit all fee records at once
+        if imported_count > 0:
+            db.session.commit()
+
+        message = f"Successfully imported {imported_count} fee records."
+        if errors:
+            message += f" {len(errors)} errors occurred:\n" + "\n".join(errors)
+
+        return True, message
+
+    except Exception as e:
+        db.session.rollback()
+        return False, f"Import failed: {str(e)}"
 
 def import_exams_data(records):
     """Placeholder for exams import"""
@@ -876,6 +941,8 @@ def process_import_file(file, data_type):
             return import_course_details_data(records)
         elif data_type == 'users':
             return import_users_data(records)
+        elif data_type == 'fees':
+            return import_fees_data(records)
         elif data_type == 'invoices':
             return import_invoices_data(records)
         elif data_type == 'subjects':
