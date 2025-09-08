@@ -734,11 +734,15 @@ def import_users_data(records):
                 errors.append(f"Row {i}: {str(e)}")
                 continue
 
-        return True, f"Successfully imported {imported_count} users. {len(errors)} errors occurred." if errors else f"Successfully imported {imported_count} users.", errors
+        message = f"Successfully imported {imported_count} users."
+        if errors:
+            message += f" {len(errors)} errors occurred."
+        
+        return True, message
 
     except Exception as e:
         db.session.rollback()
-        return False, f"Import failed: {str(e)}", []
+        return False, f"Import failed: {str(e)}"
 
 
 def get_subjects_export_data():
