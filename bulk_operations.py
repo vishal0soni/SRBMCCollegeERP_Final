@@ -761,16 +761,45 @@ def import_exams_data(records):
 
                 # Parse exam date
                 exam_date = None
-                if record.get('Exam Date'):
+                exam_date_value = record.get('Exam Date')
+                if exam_date_value:
                     try:
-                        from datetime import datetime
-                        exam_date = datetime.strptime(str(record.get('Exam Date')), '%Y-%m-%d').date()
-                    except ValueError:
-                        try:
-                            exam_date = datetime.strptime(str(record.get('Exam Date')), '%m/%d/%Y').date()
-                        except ValueError:
-                            errors.append(f"Row {i}: Invalid exam date format. Use YYYY-MM-DD or MM/DD/YYYY")
-                            continue
+                        # Handle pandas Timestamp objects (common in Excel imports)
+                        if hasattr(exam_date_value, 'date'):
+                            exam_date = exam_date_value.date()
+                        # Handle datetime objects
+                        elif isinstance(exam_date_value, datetime):
+                            exam_date = exam_date_value.date()
+                        # Handle string dates
+                        elif isinstance(exam_date_value, str):
+                            exam_date_str = str(exam_date_value).strip()
+                            # Try multiple date formats
+                            date_formats = ['%Y-%m-%d', '%m/%d/%Y', '%d/%m/%Y', '%Y-%m-%d %H:%M:%S', '%m/%d/%Y %H:%M:%S']
+                            for fmt in date_formats:
+                                try:
+                                    exam_date = datetime.strptime(exam_date_str, fmt).date()
+                                    break
+                                except ValueError:
+                                    continue
+                            if not exam_date:
+                                errors.append(f"Row {i}: Invalid exam date format '{exam_date_str}'. Use YYYY-MM-DD or MM/DD/YYYY")
+                                continue
+                        else:
+                            # Try to convert other types to string first
+                            exam_date_str = str(exam_date_value).strip()
+                            date_formats = ['%Y-%m-%d', '%m/%d/%Y', '%d/%m/%Y']
+                            for fmt in date_formats:
+                                try:
+                                    exam_date = datetime.strptime(exam_date_str, fmt).date()
+                                    break
+                                except ValueError:
+                                    continue
+                            if not exam_date:
+                                errors.append(f"Row {i}: Invalid exam date format '{exam_date_str}'. Use YYYY-MM-DD or MM/DD/YYYY")
+                                continue
+                    except Exception as e:
+                        errors.append(f"Row {i}: Error parsing exam date: {str(e)}")
+                        continue
 
                 # Get subject data and calculate totals
                 subjects_data = []
