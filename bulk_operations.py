@@ -320,6 +320,34 @@ def process_import_file(file, data_type):
     except Exception as e:
         return False, f"Error processing file: {str(e)}"
 
+def _parse_admission_date(date_value):
+    """Parse admission date from various formats (string, Timestamp, etc.)"""
+    if not date_value:
+        return date.today()
+    
+    # If it's already a pandas Timestamp, convert to date
+    if hasattr(date_value, 'date'):
+        return date_value.date()
+    
+    # If it's a string, try to parse it
+    if isinstance(date_value, str):
+        try:
+            return datetime.strptime(date_value, '%Y-%m-%d').date()
+        except ValueError:
+            # Try other common date formats
+            for fmt in ['%m/%d/%Y', '%d/%m/%Y', '%Y-%m-%d %H:%M:%S']:
+                try:
+                    return datetime.strptime(date_value, fmt).date()
+                except ValueError:
+                    continue
+    
+    # If it's a datetime object, extract the date
+    if isinstance(date_value, datetime):
+        return date_value.date()
+    
+    # Default fallback
+    return date.today()
+
 def import_students_data(records):
     """Import students data from records"""
     try:
@@ -364,7 +392,7 @@ def import_students_data(records):
                     scholarship_status=record.get('Scholarship Status', 'Applied'),
                     rebate_meera_scholarship_status=record.get('Meera Rebate Status', 'Applied'),
                     student_status=record.get('Student Status', 'Active'), # Changed from dropout_status
-                    admission_date=datetime.strptime(record.get('Admission Date', ''), '%Y-%m-%d').date() if record.get('Admission Date') else date.today()
+                    admission_date=self._parse_admission_date(record.get('Admission Date'))
                 )
 
                 db.session.add(student)
