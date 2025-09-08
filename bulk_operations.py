@@ -782,155 +782,87 @@ def import_subjects_data(records):
         return False, f"Import failed: {str(e)}"
 
 def process_import_file(file, data_type):
-    """Process import file for bulk data import"""
+    """Process uploaded file for import"""
     try:
         filename = secure_filename(file.filename)
+        file_ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
 
-        if filename.endswith('.csv'):
-            # Read CSV file
-            stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
-            csv_input = csv.reader(stream)
-            headers = next(csv_input)
-            data = list(csv_input)
-        elif filename.endswith(('.xlsx', '.xls')):
-            # Read Excel file
+        if file_ext == 'csv':
+            df = pd.read_csv(file)
+        elif file_ext in ['xlsx', 'xls']:
             df = pd.read_excel(file)
-            headers = df.columns.tolist()
-            data = df.values.tolist()
         else:
             return False, "Unsupported file format. Please use CSV or Excel files."
 
-        # Process data based on type
-        if data_type == 'subjects':
-            return import_subjects_data(data, headers)
-        elif data_type == 'students':
-            return import_students_data(data, headers)
+        # Convert DataFrame to records
+        records = df.to_dict('records')
+
+        if data_type == 'students':
+            return import_students_data(records)
         elif data_type == 'courses':
-            return import_courses_data(data, headers)
+            return import_courses_data(records)
+        elif data_type == 'course_details':
+            return import_course_details_data(records)
+        elif data_type == 'users':
+            return import_users_data(records)
+        elif data_type == 'invoices':
+            return import_invoices_data(records)
+        elif data_type == 'subjects':
+            return import_subjects_data(records)
         else:
-            return False, f"Import not implemented for {data_type}"
+            return False, "Invalid data type specified."
 
     except Exception as e:
         return False, f"Error processing file: {str(e)}"
 
-def import_subjects_data(data, headers):
-    """Import subjects data from CSV/Excel"""
+def import_subjects_data(records):
+    """Import subjects data from records"""
     try:
         imported_count = 0
         errors = []
-        for row in data:
-            if len(row) < 3:  # Skip incomplete rows
-                continue
 
-            subject_name = row[1] if len(row) > 1 else ''
-            subject_type = row[2] if len(row) > 2 else 'Compulsory'
-            course_short_name = row[0] if len(row) > 0 else ''
+        for i, record in enumerate(records, 1):
+            try:
+                course_short_name = record.get('Course Short Name', '')
+                subject_name = record.get('Subject Name', '')
+                subject_type = record.get('Subject Type', 'Compulsory')
 
-            if not subject_name or not course_short_name:
-                continue
+                if not course_short_name or not subject_name:
+                    errors.append(f"Row {i}: Course Short Name and Subject Name are required.")
+                    continue
 
-            # Check if subject already exists
-            existing = Subject.query.filter_by(
-                subject_name=subject_name, 
-                course_short_name=course_short_name
-            ).first()
+                # Check if subject already exists
+                existing_subject = Subject.query.filter_by(
+                    course_short_name=course_short_name,
+                    subject_name=subject_name
+                ).first()
 
-            if not existing:
+                if existing_subject:
+                    errors.append(f"Row {i}: Subject with name {subject_name} already exists for course {course_short_name}.")
+                    continue
+
+                # Create new subject
                 subject = Subject(
+                    course_short_name=course_short_name,
                     subject_name=subject_name,
                     subject_type=subject_type,
-                    course_short_name=course_short_name
-                                )
+                )
+
                 db.session.add(subject)
                 imported_count += 1
 
-        db.session.commit()
-        return True, f"Successfully imported {imported_count} subjects"
-
-    except Exception as e:
-        db.session.rollback()
-        return False, f"Error importing subjects: {str(e)}"
-
-def import_students_data(data, headers):
-    """Import students data from CSV/Excel"""
-    try:
-        imported_count = 0
-        errors = []
-        student_status_options = ['Active', 'Dropout', 'Graduated'] # Added 'Graduated'
-
-        for i, row in enumerate(data):
-            try:
-                # Extract data using headers to ensure correct mapping
-                record = {headers[j]: row[j] for j in range(len(headers)) if j < len(row)}
-
-                student_id = record.get('Student ID', '')
-                if not student_id:
-                    errors.append(f"Row {i+1}: 'Student ID' is missing.")
-                    continue
-
-                # Check if student already exists
-                existing_student = Student.query.filter_by(student_unique_id=student_id).first()
-                if existing_student:
-                    errors.append(f"Row {i+1}: Student with ID {student_id} already exists.")
-                    continue
-
-                # Get or set student_status
-                student_status = record.get('Student Status', 'Active')
-                if student_status not in student_status_options:
-                    # If the status is not recognized, default to 'Active' or log an error
-                    # For this example, we'll default to 'Active' and log a warning
-                    errors.append(f"Row {i+1}: Unknown 'Student Status' value '{student_status}'. Defaulting to 'Active'.")
-                    student_status = 'Active'
-
-                # Create new student
-                student = Student(
-                    student_unique_id=student_id,
-                    external_id=record.get('External ID', ''),
-                    first_name=record.get('First Name', ''),
-                    last_name=record.get('Last Name', ''),
-                    father_name=record.get('Father Name', ''),
-                    mother_name=record.get('Mother Name', ''),
-                    gender=record.get('Gender', 'Male'),
-                    category=record.get('Category', 'General'),
-                    email=record.get('Email', ''),
-                    current_course=record.get('Current Course', ''),
-                    subject_1_name=record.get('Subject 1', ''),
-                    subject_2_name=record.get('Subject 2', ''),
-                    subject_3_name=record.get('Subject 3', ''),
-                    percentage=float(record.get('Percentage', 0)) if record.get('Percentage') else None,
-                    street=record.get('Street', ''),
-                    area_village=record.get('Area/Village', ''),
-                    city_tehsil=record.get('City/Tehsil', ''),
-                    state=record.get('State', ''),
-                    phone=record.get('Phone', ''),
-                    aadhaar_card_number=record.get('Aadhaar Number', ''),
-                    apaar_id=record.get('APAAR ID', ''),
-                    school_name=record.get('School Name', ''),
-                    scholarship_status=record.get('Scholarship Status', 'Applied'),
-                    rebate_meera_scholarship_status=record.get('Meera Rebate Status', 'Applied'),
-                    student_status=student_status, # Use the new column name
-                    admission_date=datetime.strptime(record.get('Admission Date', ''), '%Y-%m-%d').date() if record.get('Admission Date') else date.today()
-                )
-
-                db.session.add(student)
-                imported_count += 1
-
             except Exception as e:
-                errors.append(f"Row {i+1}: Error processing row - {str(e)}")
+                errors.append(f"Row {i}: {str(e)}")
 
         db.session.commit()
-        
+
+        message = f"Successfully imported {imported_count} subjects."
         if errors:
-            return False, f"Import completed with {imported_count} students. Encountered {len(errors)} errors.", errors
-        else:
-            return True, f"Successfully imported {imported_count} students."
+            message += f" {len(errors)} errors occurred."
+
+        return True, message
 
     except Exception as e:
         db.session.rollback()
-        return False, f"Error during student import: {str(e)}", []
+        return False, f"Import failed: {str(e)}"
 
-
-def import_courses_data(data, headers):
-    """Import courses data from CSV/Excel"""
-    # Implementation placeholder
-    return False, "Course import not yet implemented"
