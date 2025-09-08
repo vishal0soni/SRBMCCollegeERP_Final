@@ -504,6 +504,94 @@ function showNotification(message, type = 'info', duration = 8000) {
     });
 }
 
+// Show message popup
+function showMessagePopup(message, type = 'info', title = null, callback = null) {
+    const modal = document.getElementById('messagePopupModal');
+    const modalTitle = document.getElementById('messageModalTitle');
+    const modalIcon = document.getElementById('messageModalIcon');
+    const modalText = document.getElementById('messageModalText');
+    const modalHeader = document.getElementById('messageModalHeader');
+    const modalOkBtn = document.getElementById('messageModalOkBtn');
+
+    // Set message text
+    modalText.textContent = message;
+
+    // Set title and styling based on type
+    const config = getPopupConfig(type);
+    modalTitle.textContent = title || config.title;
+    modalIcon.className = `${config.icon} me-2`;
+    modalHeader.className = `modal-header ${config.headerClass}`;
+    modalOkBtn.className = `btn ${config.buttonClass}`;
+
+    // Set callback for OK button
+    modalOkBtn.onclick = function() {
+        if (callback) callback();
+        bootstrap.Modal.getInstance(modal).hide();
+    };
+
+    // Show modal
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+}
+
+// Show confirmation popup
+function showConfirmationPopup(message, onConfirm, onCancel = null, title = 'Confirm Action') {
+    const modal = document.getElementById('confirmationPopupModal');
+    const modalTitle = document.getElementById('confirmationPopupModalLabel');
+    const modalText = document.getElementById('confirmationModalText');
+    const confirmBtn = document.getElementById('confirmationModalConfirmBtn');
+
+    // Set content
+    modalTitle.innerHTML = `<i class="fas fa-question-circle text-warning me-2"></i>${title}`;
+    modalText.textContent = message;
+
+    // Set up event handlers
+    confirmBtn.onclick = function() {
+        if (onConfirm) onConfirm();
+        bootstrap.Modal.getInstance(modal).hide();
+    };
+
+    // Handle cancel
+    modal.addEventListener('hidden.bs.modal', function() {
+        if (onCancel) onCancel();
+    }, { once: true });
+
+    // Show modal
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+}
+
+// Get popup configuration based on type
+function getPopupConfig(type) {
+    const configs = {
+        success: {
+            title: 'Success',
+            icon: 'fas fa-check-circle text-success',
+            headerClass: 'border-success',
+            buttonClass: 'btn-success'
+        },
+        error: {
+            title: 'Error',
+            icon: 'fas fa-exclamation-circle text-danger',
+            headerClass: 'border-danger',
+            buttonClass: 'btn-danger'
+        },
+        warning: {
+            title: 'Warning',
+            icon: 'fas fa-exclamation-triangle text-warning',
+            headerClass: 'border-warning',
+            buttonClass: 'btn-warning'
+        },
+        info: {
+            title: 'Information',
+            icon: 'fas fa-info-circle text-info',
+            headerClass: 'border-info',
+            buttonClass: 'btn-info'
+        }
+    };
+    return configs[type] || configs.info;
+}
+
 // Get notification icon
 function getNotificationIcon(type) {
     const icons = {
@@ -624,6 +712,8 @@ function handleBeforeUnload(event) {
 // Export functions for global use
 window.SRBMCApp = {
     showNotification,
+    showMessagePopup,
+    showConfirmationPopup,
     formatCurrency,
     formatDate,
     formatPercentage,

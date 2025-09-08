@@ -185,25 +185,33 @@
 {% block scripts %}
 <script>
 function deleteCourseDetails(detailId) {
-    if (confirm('Are you sure you want to delete this course details record?')) {
-        fetch(`/course-details/delete/${detailId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Error deleting course details: ' + data.error);
-            }
-        })
-        .catch(error => {
-            alert('Error deleting course details: ' + error);
-        });
-    }
+    SRBMCApp.showConfirmationPopup(
+        'Are you sure you want to delete this course details record?',
+        function() {
+            // User confirmed deletion
+            fetch(`/course-details/delete/${detailId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    SRBMCApp.showMessagePopup('Course details deleted successfully!', 'success', 'Success', function() {
+                        location.reload();
+                    });
+                } else {
+                    SRBMCApp.showMessagePopup('Error deleting course details: ' + data.error, 'error', 'Deletion Failed');
+                }
+            })
+            .catch(error => {
+                SRBMCApp.showMessagePopup('Error deleting course details: ' + error, 'error', 'Network Error');
+            });
+        },
+        null,
+        'Delete Course Details'
+    );
 }
 </script>
 {% endblock %}

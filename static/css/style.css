@@ -257,7 +257,7 @@ body {
 .modal-header {
     border-bottom: 1px solid #e3e6f0;
     background-color: var(--light-color);
-    border-radius: 0.75rem 0.75rem 0 0;
+    border-radius: 0.75rem 0.75rem 0 0 !important;
 }
 
 .modal-footer {
@@ -774,4 +774,105 @@ body {
 .btn-info.dropdown-toggle:hover {
     background-color: #36b9cc;
     border-color: #36b9cc;
+}
+
+/* Notification styles */
+.notification-container {
+    max-height: 100vh;
+    overflow-y: auto;
+}
+
+.notification-item {
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Popup Modal Styles */
+.modal-content {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+}
+
+.modal-header {
+    border-bottom: 1px solid #e3e6f0;
+    padding: 1.5rem 1.5rem 1rem;
+}
+
+.modal-body {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.modal-footer {
+    border-top: 1px solid #e3e6f0;
+    padding: 1rem 1.5rem 1.5rem;
+}
+
+/* Message popup specific styles */
+#messagePopupModal .modal-header.border-success {
+    border-left: 4px solid #1cc88a;
+    background-color: #f8f9fa;
+}
+
+#messagePopupModal .modal-header.border-danger {
+    border-left: 4px solid #e74a3b;
+    background-color: #f8f9fa;
+}
+
+#messagePopupModal .modal-header.border-warning {
+    border-left: 4px solid #f6c23e;
+    background-color: #f8f9fa;
+}
+
+#messagePopupModal .modal-header.border-info {
+    border-left: 4px solid #36b9cc;
+    background-color: #f8f9fa;
+}
+
+/* Confirmation popup styles */
+#confirmationPopupModal .modal-content {
+    border-top: 4px solid #f6c23e;
+}
+
+/* Animation for modals */
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+    transform: scale(0.8);
+}
+
+.modal.show .modal-dialog {
+    transform: scale(1);
+}
+
+/* Custom button styles for popups */
+.modal-footer .btn {
+    min-width: 80px;
+    font-weight: 500;
+}
+
+/* Responsive popup design */
+@media (max-width: 576px) {
+    .modal-dialog {
+        margin: 1rem;
+        max-width: calc(100% - 2rem);
+    }
+
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
 }
