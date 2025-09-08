@@ -838,6 +838,27 @@ def delete_course(course_id):
     course = Course.query.get_or_404(course_id)
 
     try:
+        # Check if course is linked to any fee records
+        linked_fees = CollegeFees.query.filter_by(course_id=course.course_id).first()
+        if linked_fees:
+            return jsonify({
+                'error': 'This course cannot be deleted because it is linked to student fee records. Please remove or reassign the fee records first.'
+            }), 400
+
+        # Check if course is linked to any exam records
+        linked_exams = Exam.query.filter_by(course_id=course.course_id).first()
+        if linked_exams:
+            return jsonify({
+                'error': 'This course cannot be deleted because it is linked to student exam records. Please remove or reassign the exam records first.'
+            }), 400
+
+        # Check if course is linked to any invoice records
+        linked_invoices = Invoice.query.filter_by(course_id=course.course_id).first()
+        if linked_invoices:
+            return jsonify({
+                'error': 'This course cannot be deleted because it is linked to student invoice records. Please remove or reassign the invoice records first.'
+            }), 400
+
         # Delete related subjects first
         Subject.query.filter_by(course_short_name=course.course_short_name).delete()
 
