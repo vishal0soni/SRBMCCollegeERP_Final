@@ -392,7 +392,7 @@ def import_students_data(records):
                     scholarship_status=record.get('Scholarship Status', 'Applied'),
                     rebate_meera_scholarship_status=record.get('Meera Rebate Status', 'Applied'),
                     student_status=record.get('Student Status', 'Active'), # Changed from dropout_status
-                    admission_date=self._parse_admission_date(record.get('Admission Date'))
+                    admission_date=_parse_admission_date(record.get('Admission Date'))
                 )
 
                 db.session.add(student)
