@@ -3268,6 +3268,16 @@ def download_template(data_type):
                 ['', 'teacher1', 'Teacher', 'Name', 'teacher@example.com', '9876543210',
                  'Male', 'Teacher', 'Active', '2024-01-01']
             ]
+        elif data_type == 'fees':
+            headers = [
+                'Student ID', 'Student Name', 'Course', 'Total Fee', 'Paid Amount', 'Due Amount',
+                'Installment 1', 'Installment 2', 'Installment 3', 'Installment 4', 
+                'Installment 5', 'Installment 6', 'Payment Status'
+            ]
+            sample_data = [
+                ['BA-24-001', 'Student Name', 'Bachelor of Arts First Year', '25000', '10000', '15000',
+                 '5000', '5000', '0', '0', '0', '0', 'Partial']
+            ]
         elif data_type == 'invoices':
             headers = [
                 'Invoice Number', 'Student ID', 'Student Name', 'Course', 'Invoice Date',
