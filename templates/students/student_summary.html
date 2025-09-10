@@ -615,7 +615,10 @@ function createErrorChart(chartId, chartVariable) {
 function loadCategoryChart() {
     console.log('Loading category chart for year:', currentYear);
     return fetch(`/api/student-category-stats?year=${currentYear}`)
-        .then(response => response.json())
+        .then(response => {
+            console.log('Category API response status:', response.status);
+            return response.json();
+        })
         .then(data => {
             console.log('Category distribution data loaded:', data);
             const ctx = document.getElementById('categoryDistributionChart').getContext('2d');
@@ -627,6 +630,9 @@ function loadCategoryChart() {
             if (data.success && data.categories && data.categories.length > 0) {
                 const categories = data.categories;
                 const counts = data.counts;
+                
+                console.log('Categories:', categories);
+                console.log('Counts:', counts);
 
                 categoryChart = new Chart(ctx, {
                     type: 'doughnut',
@@ -671,11 +677,12 @@ function loadCategoryChart() {
                     }
                 });
             } else {
+                console.log('No category data available, showing placeholder');
                 // Show no data state
                 categoryChart = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
-                        labels: ['No Data Available'],
+                        labels: [`No Students for ${currentYear}`],
                         datasets: [{
                             data: [1],
                             backgroundColor: ['#e3e6f0']
@@ -739,7 +746,10 @@ function loadCategoryChart() {
 function loadMonthlyAdmissionsChart() {
     console.log('Loading monthly admissions chart for year:', currentYear);
     return fetch(`/api/monthly-admissions-stats?year=${currentYear}`)
-        .then(response => response.json())
+        .then(response => {
+            console.log('Monthly admissions API response status:', response.status);
+            return response.json();
+        })
         .then(data => {
             console.log('Monthly admissions data loaded:', data);
             const ctx = document.getElementById('monthlyAdmissionsChart').getContext('2d');
@@ -751,6 +761,9 @@ function loadMonthlyAdmissionsChart() {
             if (data.success && data.labels && data.labels.length > 0) {
                 const labels = data.labels;
                 const counts = data.counts;
+                
+                console.log('Monthly labels:', labels);
+                console.log('Monthly counts:', counts);
 
                 monthlyChart = new Chart(ctx, {
                     type: 'line',
@@ -849,6 +862,7 @@ function loadMonthlyAdmissionsChart() {
                     }
                 });
             } else {
+                console.log('No monthly admissions data available, showing placeholder');
                 // Show no data state
                 monthlyChart = new Chart(ctx, {
                     type: 'line',
