@@ -636,7 +636,9 @@ function loadCategoryChart() {
                             data: counts,
                             backgroundColor: [
                                 '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'
-                            ]
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#fff'
                         }]
                     },
                     options: {
@@ -649,10 +651,23 @@ function loadCategoryChart() {
                                     font: {
                                         size: 10
                                     },
-                                    padding: 10
+                                    padding: 10,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
                                 }
                             }
-                        }
+                        },
+                        cutout: '50%'
                     }
                 });
             } else {
@@ -760,9 +775,22 @@ function loadMonthlyAdmissionsChart() {
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
+                                display: true,
+                                position: 'top',
                                 labels: {
                                     font: {
                                         size: 10
+                                    },
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    title: function(context) {
+                                        return context[0].label;
+                                    },
+                                    label: function(context) {
+                                        return `Admissions: ${context.parsed.y}`;
                                     }
                                 }
                             }
@@ -775,14 +803,23 @@ function loadMonthlyAdmissionsChart() {
                                         size: 10
                                     },
                                     stepSize: 1,
-                                    precision: 0
+                                    precision: 0,
+                                    callback: function(value) {
+                                        if (value % 1 === 0) {
+                                            return value;
+                                        }
+                                    }
                                 },
                                 title: {
                                     display: true,
                                     text: 'Number of Students',
                                     font: {
-                                        size: 10
+                                        size: 10,
+                                        weight: 'bold'
                                     }
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.1)'
                                 }
                             },
                             x: {
@@ -796,10 +833,18 @@ function loadMonthlyAdmissionsChart() {
                                     display: true,
                                     text: 'Month',
                                     font: {
-                                        size: 10
+                                        size: 10,
+                                        weight: 'bold'
                                     }
+                                },
+                                grid: {
+                                    display: false
                                 }
                             }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
                         }
                     }
                 });
@@ -808,12 +853,13 @@ function loadMonthlyAdmissionsChart() {
                 monthlyChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: ['No Data Available'],
+                        labels: [`No Admissions in ${currentYear}`],
                         datasets: [{
                             label: 'No Data',
                             data: [0],
                             borderColor: '#e3e6f0',
-                            backgroundColor: 'rgba(227, 230, 240, 0.1)'
+                            backgroundColor: 'rgba(227, 230, 240, 0.1)',
+                            pointRadius: 0
                         }]
                     },
                     options: {
@@ -821,7 +867,20 @@ function loadMonthlyAdmissionsChart() {
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                labels: {
+                                display: false
+                            },
+                            tooltip: {
+                                enabled: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                display: false
+                            },
+                            x: {
+                                display: true,
+                                ticks: {
                                     font: {
                                         size: 10
                                     }
@@ -847,7 +906,8 @@ function loadMonthlyAdmissionsChart() {
                         label: 'Error',
                         data: [0],
                         borderColor: '#e74a3b',
-                        backgroundColor: 'rgba(231, 74, 59, 0.1)'
+                        backgroundColor: 'rgba(231, 74, 59, 0.1)',
+                        pointRadius: 0
                     }]
                 },
                 options: {
@@ -855,7 +915,17 @@ function loadMonthlyAdmissionsChart() {
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            labels: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            display: false
+                        },
+                        x: {
+                            display: true,
+                            ticks: {
                                 font: {
                                     size: 10
                                 }
