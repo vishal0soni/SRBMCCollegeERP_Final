@@ -2949,7 +2949,7 @@ def api_student_breakdown_data():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
         
-        # Get course breakdown data - handle null admission dates
+        # Get course breakdown data for the selected year
         course_counts = db.session.query(
             Student.current_course, 
             func.count(Student.id)
@@ -2957,22 +2957,16 @@ def api_student_breakdown_data():
             and_(
                 Student.current_course.isnot(None),
                 Student.current_course != '',
-                or_(
-                    func.extract('year', Student.admission_date) == year,
-                    Student.admission_date.is_(None)
-                )
+                func.extract('year', Student.admission_date) == year
             )
         ).group_by(Student.current_course).all()
 
-        # Get category breakdown data - handle null admission dates
+        # Get category breakdown data for the selected year
         category_counts = db.session.query(
             Student.category,
             func.count(Student.id)
         ).filter(
-            or_(
-                func.extract('year', Student.admission_date) == year,
-                Student.admission_date.is_(None)
-            )
+            func.extract('year', Student.admission_date) == year
         ).group_by(Student.category).all()
 
         # Format course data
