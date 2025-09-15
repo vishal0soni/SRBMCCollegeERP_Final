@@ -282,36 +282,7 @@ function loadStudentSummaryData() {
         console.log('All student summary data loaded successfully');
     }).catch(error => {
         console.error('Error loading student summary data:', error);
-        // Show error message to user
-        showErrorMessage('Failed to load student data. Please refresh the page.');
     });
-}
-
-function showErrorMessage(message) {
-    // Create or update error notification
-    let errorDiv = document.getElementById('error-notification');
-    if (!errorDiv) {
-        errorDiv = document.createElement('div');
-        errorDiv.id = 'error-notification';
-        errorDiv.className = 'alert alert-danger alert-dismissible fade show';
-        errorDiv.style.position = 'fixed';
-        errorDiv.style.top = '10px';
-        errorDiv.style.right = '10px';
-        errorDiv.style.zIndex = '9999';
-        document.body.appendChild(errorDiv);
-    }
-    
-    errorDiv.innerHTML = `
-        <strong>Error:</strong> ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-        if (errorDiv && errorDiv.parentNode) {
-            errorDiv.parentNode.removeChild(errorDiv);
-        }
-    }, 5000);
 }
 
 function loadBreakdownTables() {
@@ -390,8 +361,7 @@ function updateCategoryBreakdownTableFromAPI(categoryBreakdown) {
 
 function loadStudentStats() {
     console.log('Loading student stats for year:', currentYear);
-    const cacheBuster = new Date().getTime();
-    return fetch(`/api/student-summary-stats?year=${currentYear}&_=${cacheBuster}`)
+    return fetch(`/api/student-summary-stats?year=${currentYear}`)
         .then(response => response.json())
         .then(data => {
             console.log('Student stats received:', data);
@@ -419,8 +389,7 @@ function loadStudentStats() {
 
 function loadStudentDistributionChart() {
     console.log('Loading student distribution by course for year:', currentYear);
-    const cacheBuster = new Date().getTime();
-    return fetch(`/api/student-stats?year=${currentYear}&_=${cacheBuster}`)
+    return fetch(`/api/student-stats?year=${currentYear}`)
         .then(response => response.json())
         .then(data => {
             console.log('Student distribution by course data loaded:', data);
@@ -430,80 +399,19 @@ function loadStudentDistributionChart() {
                 studentDistributionChart.destroy();
             }
 
-            if (data.success && data.courses && data.courses.length > 0) {
-                const courses = data.courses;
-                const counts = data.counts;
+            const courses = data.courses || ['No Data'];
+            const counts = data.counts || [0];
 
-                studentDistributionChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: courses,
-                        datasets: [{
-                            data: counts,
-                            backgroundColor: [
-                                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796',
-                                '#5a5c69', '#f8f9fc', '#5777ba', '#1f9e6b'
-                            ]
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    font: {
-                                        size: 10
-                                    },
-                                    padding: 10
-                                }
-                            }
-                        }
-                    }
-                });
-            } else {
-                // Show no data state
-                studentDistributionChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: [`No Students for ${currentYear}-${(currentYear + 1).toString().slice(-2)}`],
-                        datasets: [{
-                            data: [1],
-                            backgroundColor: ['#e3e6f0']
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    font: {
-                                        size: 10
-                                    },
-                                    padding: 10
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error loading student distribution by course:', error);
-            const ctx = document.getElementById('studentDistributionByCourseChart').getContext('2d');
-            if (studentDistributionChart) {
-                studentDistributionChart.destroy();
-            }
             studentDistributionChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Error Loading Data'],
+                    labels: courses,
                     datasets: [{
-                        data: [1],
-                        backgroundColor: ['#e74a3b']
+                        data: counts,
+                        backgroundColor: [
+                            '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796',
+                            '#5a5c69', '#f8f9fc', '#5777ba', '#1f9e6b'
+                        ]
                     }]
                 },
                 options: {
@@ -511,11 +419,23 @@ function loadStudentDistributionChart() {
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom'
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 10
+                                },
+                                padding: 10
+                            }
                         }
                     }
                 }
             });
+
+            // Course breakdown table will be updated by loadBreakdownTables()
+        })
+        .catch(error => {
+            console.error('Error loading student distribution by course:', error);
+            // Error state handled by loadBreakdownTables()
         });
 }
 
@@ -694,8 +614,7 @@ function createErrorChart(chartId, chartVariable) {
 
 function loadCategoryChart() {
     console.log('Loading category chart for year:', currentYear);
-    const cacheBuster = new Date().getTime();
-    return fetch(`/api/student-category-stats?year=${currentYear}&_=${cacheBuster}`)
+    return fetch(`/api/student-category-stats?year=${currentYear}`)
         .then(response => {
             console.log('Category API response status:', response.status);
             return response.json();
@@ -826,8 +745,7 @@ function loadCategoryChart() {
 
 function loadMonthlyAdmissionsChart() {
     console.log('Loading monthly admissions chart for year:', currentYear);
-    const cacheBuster = new Date().getTime();
-    return fetch(`/api/monthly-admissions-stats?year=${currentYear}&_=${cacheBuster}`)
+    return fetch(`/api/monthly-admissions-stats?year=${currentYear}`)
         .then(response => {
             console.log('Monthly admissions API response status:', response.status);
             return response.json();
