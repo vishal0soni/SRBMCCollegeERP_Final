@@ -2817,7 +2817,7 @@ def api_monthly_admissions_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
         
-        # Get monthly admissions with proper filtering
+        # Get monthly admissions with proper filtering - get all 12 months
         monthly_admissions = db.session.query(
             func.extract('month', Student.admission_date).label('month'),
             func.count(Student.id).label('count')
@@ -2826,35 +2826,51 @@ def api_monthly_admissions_stats():
                 Student.admission_date.isnot(None),
                 func.extract('year', Student.admission_date) == year
             )
-        ).group_by(func.extract('month', Student.admission_date)).order_by(func.extract('month', Student.admission_date)).all()
+        ).group_by(func.extract('month', Student.admission_date)).all()
 
         month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        labels = []
-        counts = []
         
+        # Create a dictionary to store month-wise counts
+        month_counts = {i: 0 for i in range(1, 13)}
+        
+        # Fill in actual data
         for month, count in monthly_admissions:
             if month and 1 <= int(month) <= 12:
-                labels.append(f"{month_names[int(month)-1]} {year}")
-                counts.append(int(count))
+                month_counts[int(month)] = int(count)
+        
+        # Prepare labels and counts for all 12 months
+        labels = []
+        counts = []
+        total_admissions = 0
+        
+        for month_num in range(1, 13):
+            labels.append(f"{month_names[month_num-1]} {year}")
+            count = month_counts[month_num]
+            counts.append(count)
+            total_admissions += count
 
-        if not labels:
+        # If no admissions for the entire year, show a message
+        if total_admissions == 0:
             return jsonify({
                 'success': True,
-                'labels': ['No Admissions'],
-                'counts': [0]
+                'labels': [f'No Admissions in {year}-{(year + 1) % 100:02d}'],
+                'counts': [0],
+                'total_admissions': 0
             })
 
         return jsonify({
             'success': True,
             'labels': labels,
-            'counts': counts
+            'counts': counts,
+            'total_admissions': total_admissions
         })
     except Exception as e:
         app.logger.error(f"Error in api_monthly_admissions_stats: {e}")
         return jsonify({
             'success': False,
-            'labels': ['Error Loading'],
-            'counts': [0]
+            'labels': ['Error Loading Data'],
+            'counts': [0],
+            'total_admissions': 0
         })
 
 @app.route('/api/exam-summary-stats')

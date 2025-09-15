@@ -758,29 +758,32 @@ function loadMonthlyAdmissionsChart() {
                 monthlyChart.destroy();
             }
 
-            if (data.success && data.labels && data.labels.length > 0) {
+            if (data.success && data.labels && data.labels.length > 0 && data.total_admissions > 0) {
                 const labels = data.labels;
                 const counts = data.counts;
+                const totalAdmissions = data.total_admissions || 0;
                 
                 console.log('Monthly labels:', labels);
                 console.log('Monthly counts:', counts);
+                console.log('Total admissions:', totalAdmissions);
 
                 monthlyChart = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: `Admissions ${currentYear}-${(currentYear + 1).toString().slice(-2)}`,
+                            label: `Monthly Admissions (Total: ${totalAdmissions})`,
                             data: counts,
                             borderColor: '#1cc88a',
                             backgroundColor: 'rgba(28, 200, 138, 0.1)',
                             tension: 0.4,
                             fill: true,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
                             pointBackgroundColor: '#1cc88a',
                             pointBorderColor: '#fff',
-                            pointBorderWidth: 2
+                            pointBorderWidth: 2,
+                            borderWidth: 3
                         }]
                     },
                     options: {
@@ -792,18 +795,34 @@ function loadMonthlyAdmissionsChart() {
                                 position: 'top',
                                 labels: {
                                     font: {
-                                        size: 10
+                                        size: 11,
+                                        weight: 'bold'
                                     },
-                                    usePointStyle: true
+                                    usePointStyle: true,
+                                    padding: 15
                                 }
                             },
                             tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleFont: {
+                                    size: 12,
+                                    weight: 'bold'
+                                },
+                                bodyFont: {
+                                    size: 11
+                                },
                                 callbacks: {
                                     title: function(context) {
                                         return context[0].label;
                                     },
                                     label: function(context) {
-                                        return `Admissions: ${context.parsed.y}`;
+                                        const value = context.parsed.y;
+                                        return `Students Admitted: ${value}`;
+                                    },
+                                    afterLabel: function(context) {
+                                        const value = context.parsed.y;
+                                        const percentage = ((value / totalAdmissions) * 100).toFixed(1);
+                                        return `Percentage of Year: ${percentage}%`;
                                     }
                                 }
                             }
@@ -827,26 +846,28 @@ function loadMonthlyAdmissionsChart() {
                                     display: true,
                                     text: 'Number of Students',
                                     font: {
-                                        size: 10,
+                                        size: 11,
                                         weight: 'bold'
                                     }
                                 },
                                 grid: {
-                                    color: 'rgba(0, 0, 0, 0.1)'
+                                    color: 'rgba(0, 0, 0, 0.1)',
+                                    lineWidth: 1
                                 }
                             },
                             x: {
                                 ticks: {
                                     font: {
-                                        size: 10
+                                        size: 9
                                     },
-                                    maxRotation: 45
+                                    maxRotation: 45,
+                                    color: '#666'
                                 },
                                 title: {
                                     display: true,
-                                    text: 'Month',
+                                    text: `Academic Year ${currentYear}-${(currentYear + 1) % 100}`,
                                     font: {
-                                        size: 10,
+                                        size: 11,
                                         weight: 'bold'
                                     }
                                 },
@@ -863,13 +884,13 @@ function loadMonthlyAdmissionsChart() {
                 });
             } else {
                 console.log('No monthly admissions data available for year:', currentYear);
-                // Show no data state
+                // Show no data state with proper year format
                 monthlyChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: [`No Admissions in ${currentYear}-${(currentYear + 1).toString().slice(-2)}`],
+                        labels: [`No Admissions in ${currentYear}-${(currentYear + 1) % 100}`],
                         datasets: [{
-                            label: 'No Data',
+                            label: 'No Data Available',
                             data: [0],
                             borderColor: '#e3e6f0',
                             backgroundColor: 'rgba(227, 230, 240, 0.1)',
@@ -881,7 +902,13 @@ function loadMonthlyAdmissionsChart() {
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                display: false
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    font: {
+                                        size: 10
+                                    }
+                                }
                             },
                             tooltip: {
                                 enabled: false
@@ -890,11 +917,30 @@ function loadMonthlyAdmissionsChart() {
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                display: false
+                                display: true,
+                                ticks: {
+                                    font: {
+                                        size: 10
+                                    }
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Number of Students',
+                                    font: {
+                                        size: 10
+                                    }
+                                }
                             },
                             x: {
                                 display: true,
                                 ticks: {
+                                    font: {
+                                        size: 10
+                                    }
+                                },
+                                title: {
+                                    display: true,
+                                    text: `Academic Year ${currentYear}-${(currentYear + 1) % 100}`,
                                     font: {
                                         size: 10
                                     }
@@ -935,7 +981,12 @@ function loadMonthlyAdmissionsChart() {
                     scales: {
                         y: {
                             beginAtZero: true,
-                            display: false
+                            display: true,
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
                         },
                         x: {
                             display: true,
