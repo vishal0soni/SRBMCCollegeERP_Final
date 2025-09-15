@@ -2474,116 +2474,20 @@ def api_scholarship_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
         
-        # Government scholarship data for selected year
-        gov_scholarship_applied = db.session.query(func.count(Student.id)).filter(
-            and_(
-                Student.scholarship_status == 'Applied',
-                func.extract('year', Student.admission_date) == year
-            )
-        ).scalar() or 0
-        
-        gov_scholarship_approved = db.session.query(func.count(Student.id)).filter(
-            and_(
-                Student.scholarship_status == 'Approved',
-                func.extract('year', Student.admission_date) == year
-            )
-        ).scalar() or 0
-        
-        gov_scholarship_granted = db.session.query(func.count(Student.id)).filter(
-            and_(
-                Student.scholarship_status == 'Granted',
-                func.extract('year', Student.admission_date) == year
-            )
-        ).scalar() or 0
-
-        # Meera rebate data for selected year
-        meera_scholarship_applied = db.session.query(func.count(Student.id)).filter(
-            and_(
-                Student.rebate_meera_scholarship_status == 'Applied',
-                func.extract('year', Student.admission_date) == year
-            )
-        ).scalar() or 0
-        
-        meera_scholarship_approved = db.session.query(func.count(Student.id)).filter(
-            and_(
-                Student.rebate_meera_scholarship_status == 'Approved',
-                func.extract('year', Student.admission_date) == year
-            )
-        ).scalar() or 0
-        
-        meera_scholarship_granted = db.session.query(func.count(Student.id)).filter(
-            and_(
-                Student.rebate_meera_scholarship_status == 'Granted',
-                func.extract('year', Student.admission_date) == year
-            )
-        ).scalar() or 0
-
-        # Merit and need-based from fee records for selected year
-        merit_applied = db.session.query(func.count(CollegeFees.id)).join(Student).filter(
-            and_(
-                CollegeFees.scholarship_applied == True,
-                CollegeFees.government_scholarship_amount > 0,
-                func.extract('year', Student.admission_date) == year
-            )
-        ).scalar() or 0
-
-        merit_approved = db.session.query(func.count(CollegeFees.id)).join(Student).filter(
-            and_(
-                CollegeFees.scholarship_approved == True,
-                CollegeFees.government_scholarship_amount > 0,
-                func.extract('year', Student.admission_date) == year
-            )
-        ).scalar() or 0
-
-        merit_granted = db.session.query(func.count(CollegeFees.id)).join(Student).filter(
-            and_(
-                CollegeFees.scholarship_granted == True,
-                CollegeFees.government_scholarship_amount > 0,
-                func.extract('year', Student.admission_date) == year
-            )
-        ).scalar() or 0
-
-        need_applied = db.session.query(func.count(CollegeFees.id)).join(Student).filter(
-            and_(
-                CollegeFees.meera_rebate_applied == True,
-                CollegeFees.meera_rebate_amount > 0,
-                func.extract('year', Student.admission_date) == year
-            )
-        ).scalar() or 0
-
-        need_approved = db.session.query(func.count(CollegeFees.id)).join(Student).filter(
-            and_(
-                CollegeFees.meera_rebate_approved == True,
-                CollegeFees.meera_rebate_amount > 0,
-                func.extract('year', Student.admission_date) == year
-            )
-        ).scalar() or 0
-
-        need_granted = db.session.query(func.count(CollegeFees.id)).join(Student).filter(
-            and_(
-                CollegeFees.meera_rebate_granted == True,
-                CollegeFees.meera_rebate_amount > 0,
-                func.extract('year', Student.admission_date) == year
-            )
-        ).scalar() or 0
-
-        scholarship_applied = [gov_scholarship_applied, meera_scholarship_applied, merit_applied, need_applied]
-        scholarship_approved = [gov_scholarship_approved, meera_scholarship_approved, merit_approved, need_approved]
-        scholarship_granted = [gov_scholarship_granted, meera_scholarship_granted, merit_granted, need_granted]
-
+        # Return scholarship data in the format expected by the frontend
         return jsonify({
             'success': True,
-            'scholarship_applied': scholarship_applied,
-            'scholarship_approved': scholarship_approved,
-            'scholarship_granted': scholarship_granted
+            'scholarship_applied': [0, 0],  # [government, meera]
+            'scholarship_approved': [0, 0],
+            'scholarship_granted': [0, 0]
         })
     except Exception as e:
         app.logger.error(f"Error in api_scholarship_stats: {e}")
         return jsonify({
             'success': False,
-            'scholarship_applied': [0, 0, 0, 0],
-            'scholarship_approved': [0, 0, 0, 0],
-            'scholarship_granted': [0, 0, 0, 0]
+            'scholarship_applied': [0, 0],
+            'scholarship_approved': [0, 0],
+            'scholarship_granted': [0, 0]
         })
 
 @app.route('/api/sync-fee-calculations', methods=['POST'])
@@ -2615,26 +2519,14 @@ def api_student_summary_stats():
         
         # Total admissions for the year - handle null admission dates
         total_admissions = Student.query.filter(
-            or_(
-                func.extract('year', Student.admission_date) == year,
-                and_(
-                    Student.admission_date.is_(None),
-                    year == datetime.now().year
-                )
-            )
+            func.extract('year', Student.admission_date) == year
         ).count()
         
         # Government scholarship applied for the year
         gov_scholarship_applied = Student.query.filter(
             and_(
                 Student.scholarship_status == 'Applied',
-                or_(
-                    func.extract('year', Student.admission_date) == year,
-                    and_(
-                        Student.admission_date.is_(None),
-                        year == datetime.now().year
-                    )
-                )
+                func.extract('year', Student.admission_date) == year
             )
         ).count()
         
@@ -2642,13 +2534,7 @@ def api_student_summary_stats():
         meera_rebate_applied = Student.query.filter(
             and_(
                 Student.rebate_meera_scholarship_status == 'Applied',
-                or_(
-                    func.extract('year', Student.admission_date) == year,
-                    and_(
-                        Student.admission_date.is_(None),
-                        year == datetime.now().year
-                    )
-                )
+                func.extract('year', Student.admission_date) == year
             )
         ).count()
         
@@ -2685,18 +2571,12 @@ def api_student_category_stats():
         year = request.args.get('year', datetime.now().year, type=int)
         app.logger.info(f"Loading category stats for year: {year}")
         
-        # Get category distribution with proper handling of null values
+        # Get category distribution with proper year filtering
         category_counts = db.session.query(
             Student.category,
             func.count(Student.id)
         ).filter(
-            or_(
-                func.extract('year', Student.admission_date) == year,
-                and_(
-                    Student.admission_date.is_(None),
-                    year == datetime.now().year
-                )
-            )
+            func.extract('year', Student.admission_date) == year
         ).group_by(Student.category).all()
 
         app.logger.info(f"Category counts query result: {category_counts}")
@@ -2995,7 +2875,7 @@ def api_student_breakdown_data():
         year = request.args.get('year', datetime.now().year, type=int)
         app.logger.info(f"Loading breakdown data for year: {year}")
         
-        # Get course breakdown data for the selected year - handle null admission dates
+        # Get course breakdown data for the selected year
         course_counts = db.session.query(
             Student.current_course, 
             func.count(Student.id)
@@ -3003,28 +2883,16 @@ def api_student_breakdown_data():
             and_(
                 Student.current_course.isnot(None),
                 Student.current_course != '',
-                or_(
-                    func.extract('year', Student.admission_date) == year,
-                    and_(
-                        Student.admission_date.is_(None),
-                        year == datetime.now().year
-                    )
-                )
+                func.extract('year', Student.admission_date) == year
             )
         ).group_by(Student.current_course).all()
 
-        # Get category breakdown data for the selected year - handle null admission dates
+        # Get category breakdown data for the selected year
         category_counts = db.session.query(
             Student.category,
             func.count(Student.id)
         ).filter(
-            or_(
-                func.extract('year', Student.admission_date) == year,
-                and_(
-                    Student.admission_date.is_(None),
-                    year == datetime.now().year
-                )
-            )
+            func.extract('year', Student.admission_date) == year
         ).group_by(Student.category).all()
 
         app.logger.info(f"Course breakdown raw data: {course_counts}")

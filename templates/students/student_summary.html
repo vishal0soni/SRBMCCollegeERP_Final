@@ -282,7 +282,36 @@ function loadStudentSummaryData() {
         console.log('All student summary data loaded successfully');
     }).catch(error => {
         console.error('Error loading student summary data:', error);
+        // Show error message to user
+        showErrorMessage('Failed to load student data. Please refresh the page.');
     });
+}
+
+function showErrorMessage(message) {
+    // Create or update error notification
+    let errorDiv = document.getElementById('error-notification');
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.id = 'error-notification';
+        errorDiv.className = 'alert alert-danger alert-dismissible fade show';
+        errorDiv.style.position = 'fixed';
+        errorDiv.style.top = '10px';
+        errorDiv.style.right = '10px';
+        errorDiv.style.zIndex = '9999';
+        document.body.appendChild(errorDiv);
+    }
+    
+    errorDiv.innerHTML = `
+        <strong>Error:</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        if (errorDiv && errorDiv.parentNode) {
+            errorDiv.parentNode.removeChild(errorDiv);
+        }
+    }, 5000);
 }
 
 function loadBreakdownTables() {
@@ -361,7 +390,8 @@ function updateCategoryBreakdownTableFromAPI(categoryBreakdown) {
 
 function loadStudentStats() {
     console.log('Loading student stats for year:', currentYear);
-    return fetch(`/api/student-summary-stats?year=${currentYear}`)
+    const cacheBuster = new Date().getTime();
+    return fetch(`/api/student-summary-stats?year=${currentYear}&_=${cacheBuster}`)
         .then(response => response.json())
         .then(data => {
             console.log('Student stats received:', data);
@@ -389,7 +419,8 @@ function loadStudentStats() {
 
 function loadStudentDistributionChart() {
     console.log('Loading student distribution by course for year:', currentYear);
-    return fetch(`/api/student-stats?year=${currentYear}`)
+    const cacheBuster = new Date().getTime();
+    return fetch(`/api/student-stats?year=${currentYear}&_=${cacheBuster}`)
         .then(response => response.json())
         .then(data => {
             console.log('Student distribution by course data loaded:', data);
@@ -663,7 +694,8 @@ function createErrorChart(chartId, chartVariable) {
 
 function loadCategoryChart() {
     console.log('Loading category chart for year:', currentYear);
-    return fetch(`/api/student-category-stats?year=${currentYear}`)
+    const cacheBuster = new Date().getTime();
+    return fetch(`/api/student-category-stats?year=${currentYear}&_=${cacheBuster}`)
         .then(response => {
             console.log('Category API response status:', response.status);
             return response.json();
@@ -794,7 +826,8 @@ function loadCategoryChart() {
 
 function loadMonthlyAdmissionsChart() {
     console.log('Loading monthly admissions chart for year:', currentYear);
-    return fetch(`/api/monthly-admissions-stats?year=${currentYear}`)
+    const cacheBuster = new Date().getTime();
+    return fetch(`/api/monthly-admissions-stats?year=${currentYear}&_=${cacheBuster}`)
         .then(response => {
             console.log('Monthly admissions API response status:', response.status);
             return response.json();
