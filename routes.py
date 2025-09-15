@@ -1428,7 +1428,8 @@ def get_course_progression(course_full_name_base):
 @app.route('/students/promote/<int:student_id>', methods=['POST'])
 @login_required
 def promote_student(student_id):
-    if not can_edit_module(current_user, 'exams') or current_user.role.access_type != 'Edit':
+    # Check permissions
+    if not can_edit_module(current_user, 'students') or current_user.role.access_type != 'Edit':
         return jsonify({'error': 'Permission denied'}), 403
 
     student = Student.query.get_or_404(student_id)
@@ -1437,78 +1438,85 @@ def promote_student(student_id):
     if student.student_status in ['Graduated', 'Dropout']:
         return jsonify({'error': f'Cannot promote student with status: {student.student_status}'}), 400
 
+    # Start explicit transaction
     try:
-        current_course = student.current_course
-        if not current_course:
-            return jsonify({'error': 'Student has no current course assigned'}), 400
-        
-        # Get course progression
-        progression = get_course_progression(current_course)
-        if not progression:
-            return jsonify({'error': 'No course progression found'}), 400
-        
-        # Find current position in progression
-        current_index = None
-        for i, course_name in enumerate(progression):
-            if course_name == current_course:
-                current_index = i
-                break
-        
-        if current_index is None:
-            return jsonify({'error': 'Current course not found in progression sequence'}), 400
-        
-        # Check if this is the final level
-        if current_index >= len(progression) - 1:
-            # Get the course details to check if we've completed all years
-            base_name = current_course.split(' - ')[0] if ' - ' in current_course else current_course
-            course = Course.query.filter(Course.course_full_name.like(f"{base_name}%")).first()
+        with db.session.begin():
+            # Verify student has passing exam results for current course
+            latest_exam = db.session.query(Exam).filter_by(
+                student_id=student_id
+            ).order_by(Exam.created_at.desc()).first()
             
-            if course:
-                # Get current semester/year number
-                current_level = parse_year_semester(current_course.split(' - ')[-1] if ' - ' in current_course else "1")
-                duration_semesters = course.duration * 2  # Assuming 2 semesters per year
+            if not latest_exam or latest_exam.overall_status != 'Pass':
+                return jsonify({
+                    'error': 'Student must have passing exam results before promotion'
+                }), 400
+            
+            current_course = student.current_course
+            if not current_course:
+                return jsonify({'error': 'Student has no current course assigned'}), 400
+            
+            # Get course progression using more robust logic
+            progression = get_course_progression(current_course)
+            if not progression:
+                return jsonify({'error': 'No course progression found'}), 400
+            
+            # Find current position in progression
+            current_index = None
+            for i, course_name in enumerate(progression):
+                if course_name == current_course:
+                    current_index = i
+                    break
+            
+            if current_index is None:
+                return jsonify({'error': 'Current course not found in progression sequence'}), 400
+            
+            # Check if this is the final level
+            if current_index >= len(progression) - 1:
+                # Check if already at final level - graduate student
+                base_name = current_course.split(' - ')[0] if ' - ' in current_course else current_course
+                course = Course.query.filter_by(course_full_name=base_name).first()
                 
-                if current_level and current_level >= duration_semesters:
-                    # Graduate the student
-                    student.student_status = 'Graduated'
-                    db.session.commit()
-                    return jsonify({
-                        'success': True, 
-                        'message': f'Student {student.first_name} {student.last_name} has been graduated!',
-                        'action': 'graduated',
-                        'current_course': current_course,
-                        'student_status': 'Graduated'
-                    })
+                # Graduate the student
+                student.student_status = 'Graduated'
+                
+                # Log the graduation
+                app.logger.info(f"Student {student.student_unique_id} ({student.first_name} {student.last_name}) graduated from {current_course}")
+                
+                return jsonify({
+                    'success': True, 
+                    'message': f'Student {student.first_name} {student.last_name} has been graduated!',
+                    'action': 'graduated',
+                    'current_course': current_course,
+                    'student_status': 'Graduated'
+                })
             
-            # If we can't determine graduation, still graduate them as they're at final level
-            student.student_status = 'Graduated'
-            db.session.commit()
+            # Promote to next level
+            next_course = progression[current_index + 1]
+            
+            # Check for duplicate promotion (prevent promoting twice to same level)
+            if student.current_course == next_course:
+                return jsonify({'error': 'Student is already at this level'}), 400
+            
+            # Update student's course
+            old_course = student.current_course
+            student.current_course = next_course
+            
+            # Log the promotion
+            app.logger.info(f"Student {student.student_unique_id} ({student.first_name} {student.last_name}) promoted from {old_course} to {next_course}")
+            
             return jsonify({
                 'success': True, 
-                'message': f'Student {student.first_name} {student.last_name} has been graduated!',
-                'action': 'graduated',
-                'current_course': current_course,
-                'student_status': 'Graduated'
+                'message': f'Student {student.first_name} {student.last_name} promoted from {old_course} to {next_course}',
+                'action': 'promoted',
+                'previous_course': old_course,
+                'current_course': next_course,
+                'student_status': student.student_status
             })
-        
-        # Promote to next level
-        next_course = progression[current_index + 1]
-        student.current_course = next_course
-        db.session.commit()
-        
-        return jsonify({
-            'success': True, 
-            'message': f'Student {student.first_name} {student.last_name} promoted from {current_course} to {next_course}',
-            'action': 'promoted',
-            'previous_course': current_course,
-            'current_course': next_course,
-            'student_status': student.student_status
-        })
         
     except Exception as e:
         db.session.rollback()
         app.logger.error(f"Error promoting student {student_id}: {str(e)}")
-        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+        return jsonify({'error': f'An error occurred during promotion: {str(e)}'}), 500
 
 # Analytics Routes
 @app.route('/analytics')
