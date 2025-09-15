@@ -1447,8 +1447,9 @@ def api_get_course_fees(course_name):
 def api_student_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
+        app.logger.info(f"Loading student stats for year: {year}")
         
-        # Filter students based on admission year
+        # Filter students based on admission year - handle null admission dates
         course_counts = db.session.query(
             Student.current_course, 
             func.count(Student.id)
@@ -1456,9 +1457,17 @@ def api_student_stats():
             and_(
                 Student.current_course.isnot(None),
                 Student.current_course != '',
-                func.extract('year', Student.admission_date) == year
+                or_(
+                    func.extract('year', Student.admission_date) == year,
+                    and_(
+                        Student.admission_date.is_(None),
+                        year == datetime.now().year  # Include students with null dates in current year
+                    )
+                )
             )
         ).group_by(Student.current_course).all()
+
+        app.logger.info(f"Course counts query result: {course_counts}")
 
         # Create final courses and counts lists
         final_courses = []
@@ -1470,12 +1479,14 @@ def api_student_stats():
                 final_courses.append(course)
                 final_counts.append(int(count))
 
+        app.logger.info(f"Final courses: {final_courses}, counts: {final_counts}")
+
         # If no courses have students for the selected year, show default
         if not final_courses:
             return jsonify({
                 'success': True,
-                'courses': ['No Students Enrolled'],
-                'counts': [1]
+                'courses': [],
+                'counts': []
             })
 
         return jsonify({
@@ -1486,10 +1497,10 @@ def api_student_stats():
     except Exception as e:
         app.logger.error(f"Error in api_student_stats: {e}")
         return jsonify({
-            'success': True,
-            'error': 'Database connection issue',
-            'courses': ['Error Loading Data'],
-            'counts': [1]
+            'success': False,
+            'error': str(e),
+            'courses': [],
+            'counts': []
         })
 
 @app.route('/api/course-list')
@@ -2600,17 +2611,30 @@ def api_sync_fee_calculations():
 def api_student_summary_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
+        app.logger.info(f"Loading student summary stats for year: {year}")
         
-        # Total admissions for the year
+        # Total admissions for the year - handle null admission dates
         total_admissions = Student.query.filter(
-            func.extract('year', Student.admission_date) == year
+            or_(
+                func.extract('year', Student.admission_date) == year,
+                and_(
+                    Student.admission_date.is_(None),
+                    year == datetime.now().year
+                )
+            )
         ).count()
         
         # Government scholarship applied for the year
         gov_scholarship_applied = Student.query.filter(
             and_(
                 Student.scholarship_status == 'Applied',
-                func.extract('year', Student.admission_date) == year
+                or_(
+                    func.extract('year', Student.admission_date) == year,
+                    and_(
+                        Student.admission_date.is_(None),
+                        year == datetime.now().year
+                    )
+                )
             )
         ).count()
         
@@ -2618,12 +2642,20 @@ def api_student_summary_stats():
         meera_rebate_applied = Student.query.filter(
             and_(
                 Student.rebate_meera_scholarship_status == 'Applied',
-                func.extract('year', Student.admission_date) == year
+                or_(
+                    func.extract('year', Student.admission_date) == year,
+                    and_(
+                        Student.admission_date.is_(None),
+                        year == datetime.now().year
+                    )
+                )
             )
         ).count()
         
         # Total courses available
         courses_available = Course.query.count()
+
+        app.logger.info(f"Summary stats - Total: {total_admissions}, Gov: {gov_scholarship_applied}, Meera: {meera_rebate_applied}, Courses: {courses_available}")
 
         return jsonify({
             'success': True,
@@ -2651,17 +2683,23 @@ def api_student_summary_stats():
 def api_student_category_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
+        app.logger.info(f"Loading category stats for year: {year}")
         
         # Get category distribution with proper handling of null values
         category_counts = db.session.query(
             Student.category,
             func.count(Student.id)
         ).filter(
-            and_(
+            or_(
                 func.extract('year', Student.admission_date) == year,
-                Student.id.isnot(None)
+                and_(
+                    Student.admission_date.is_(None),
+                    year == datetime.now().year
+                )
             )
         ).group_by(Student.category).all()
+
+        app.logger.info(f"Category counts query result: {category_counts}")
 
         categories = []
         counts = []
@@ -2670,11 +2708,13 @@ def api_student_category_stats():
             categories.append(category if category else 'Not Specified')
             counts.append(int(count))
 
+        app.logger.info(f"Final categories: {categories}, counts: {counts}")
+
         if not categories:
             return jsonify({
                 'success': True,
-                'categories': ['No Students'],
-                'counts': [0]
+                'categories': [],
+                'counts': []
             })
 
         return jsonify({
@@ -2686,8 +2726,8 @@ def api_student_category_stats():
         app.logger.error(f"Error in api_student_category_stats: {e}")
         return jsonify({
             'success': False,
-            'categories': ['Error Loading'],
-            'counts': [0]
+            'categories': [],
+            'counts': []
         })
 
 @app.route('/api/monthly-admissions-stats')
@@ -2695,6 +2735,7 @@ def api_student_category_stats():
 def api_monthly_admissions_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
+        app.logger.info(f"Loading monthly admissions for year: {year}")
         
         # Get monthly admissions with proper filtering
         monthly_admissions = db.session.query(
@@ -2707,6 +2748,8 @@ def api_monthly_admissions_stats():
             )
         ).group_by(func.extract('month', Student.admission_date)).order_by(func.extract('month', Student.admission_date)).all()
 
+        app.logger.info(f"Monthly admissions query result: {monthly_admissions}")
+
         month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
         labels = []
         counts = []
@@ -2716,11 +2759,13 @@ def api_monthly_admissions_stats():
                 labels.append(f"{month_names[int(month)-1]} {year}")
                 counts.append(int(count))
 
+        app.logger.info(f"Final labels: {labels}, counts: {counts}")
+
         if not labels:
             return jsonify({
                 'success': True,
-                'labels': ['No Admissions'],
-                'counts': [0]
+                'labels': [],
+                'counts': []
             })
 
         return jsonify({
@@ -2732,8 +2777,8 @@ def api_monthly_admissions_stats():
         app.logger.error(f"Error in api_monthly_admissions_stats: {e}")
         return jsonify({
             'success': False,
-            'labels': ['Error Loading'],
-            'counts': [0]
+            'labels': [],
+            'counts': []
         })
 
 @app.route('/api/exam-summary-stats')
@@ -2948,8 +2993,9 @@ def api_semester_trend_stats():
 def api_student_breakdown_data():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
+        app.logger.info(f"Loading breakdown data for year: {year}")
         
-        # Get course breakdown data for the selected year
+        # Get course breakdown data for the selected year - handle null admission dates
         course_counts = db.session.query(
             Student.current_course, 
             func.count(Student.id)
@@ -2957,17 +3003,32 @@ def api_student_breakdown_data():
             and_(
                 Student.current_course.isnot(None),
                 Student.current_course != '',
-                func.extract('year', Student.admission_date) == year
+                or_(
+                    func.extract('year', Student.admission_date) == year,
+                    and_(
+                        Student.admission_date.is_(None),
+                        year == datetime.now().year
+                    )
+                )
             )
         ).group_by(Student.current_course).all()
 
-        # Get category breakdown data for the selected year
+        # Get category breakdown data for the selected year - handle null admission dates
         category_counts = db.session.query(
             Student.category,
             func.count(Student.id)
         ).filter(
-            func.extract('year', Student.admission_date) == year
+            or_(
+                func.extract('year', Student.admission_date) == year,
+                and_(
+                    Student.admission_date.is_(None),
+                    year == datetime.now().year
+                )
+            )
         ).group_by(Student.category).all()
+
+        app.logger.info(f"Course breakdown raw data: {course_counts}")
+        app.logger.info(f"Category breakdown raw data: {category_counts}")
 
         # Format course data
         course_breakdown = []
@@ -2990,6 +3051,9 @@ def api_student_breakdown_data():
                 'count': count,
                 'percentage': round(percentage, 1)
             })
+
+        app.logger.info(f"Final course breakdown: {course_breakdown}")
+        app.logger.info(f"Final category breakdown: {category_breakdown}")
 
         return jsonify({
             'success': True,

@@ -399,19 +399,80 @@ function loadStudentDistributionChart() {
                 studentDistributionChart.destroy();
             }
 
-            const courses = data.courses || ['No Data'];
-            const counts = data.counts || [0];
+            if (data.success && data.courses && data.courses.length > 0) {
+                const courses = data.courses;
+                const counts = data.counts;
 
+                studentDistributionChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: courses,
+                        datasets: [{
+                            data: counts,
+                            backgroundColor: [
+                                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796',
+                                '#5a5c69', '#f8f9fc', '#5777ba', '#1f9e6b'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: {
+                                        size: 10
+                                    },
+                                    padding: 10
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                // Show no data state
+                studentDistributionChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [`No Students for ${currentYear}-${(currentYear + 1).toString().slice(-2)}`],
+                        datasets: [{
+                            data: [1],
+                            backgroundColor: ['#e3e6f0']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: {
+                                        size: 10
+                                    },
+                                    padding: 10
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading student distribution by course:', error);
+            const ctx = document.getElementById('studentDistributionByCourseChart').getContext('2d');
+            if (studentDistributionChart) {
+                studentDistributionChart.destroy();
+            }
             studentDistributionChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: courses,
+                    labels: ['Error Loading Data'],
                     datasets: [{
-                        data: counts,
-                        backgroundColor: [
-                            '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796',
-                            '#5a5c69', '#f8f9fc', '#5777ba', '#1f9e6b'
-                        ]
+                        data: [1],
+                        backgroundColor: ['#e74a3b']
                     }]
                 },
                 options: {
@@ -419,23 +480,11 @@ function loadStudentDistributionChart() {
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: {
-                                    size: 10
-                                },
-                                padding: 10
-                            }
+                            position: 'bottom'
                         }
                     }
                 }
             });
-
-            // Course breakdown table will be updated by loadBreakdownTables()
-        })
-        .catch(error => {
-            console.error('Error loading student distribution by course:', error);
-            // Error state handled by loadBreakdownTables()
         });
 }
 
