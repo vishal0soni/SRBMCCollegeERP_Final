@@ -41,3 +41,7 @@ args = "python main.py"
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 41097
+externalPort = 3000

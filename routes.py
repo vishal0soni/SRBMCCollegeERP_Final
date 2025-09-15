@@ -1372,6 +1372,59 @@ def edit_exam(exam_id):
 
     return render_template('exams/exam_form.html', form=form, title='Edit Exam Results', exam=exam)
 
+def parse_year_semester(year_semester):
+    """Parse year_semester string to extract numeric order for progression"""
+    if not year_semester:
+        return None
+    
+    year_semester = year_semester.strip().lower()
+    
+    # Handle semester patterns (1st sem, 2nd sem, etc.)
+    import re
+    sem_match = re.search(r'(\d+)(?:st|nd|rd|th)?\s*sem', year_semester)
+    if sem_match:
+        return int(sem_match.group(1))
+    
+    # Handle year patterns (1st year, 2nd year, etc.)  
+    year_match = re.search(r'(\d+)(?:st|nd|rd|th)?\s*year', year_semester)
+    if year_match:
+        return int(year_match.group(1))
+    
+    # Handle direct numbers
+    if year_semester.isdigit():
+        return int(year_semester)
+    
+    # Handle special cases
+    special_cases = {
+        'fy': 1, 'sy': 2, 'ty': 3,
+        'final': 99, 'final year': 99
+    }
+    if year_semester in special_cases:
+        return special_cases[year_semester]
+    
+    return None
+
+def get_course_progression(course_full_name_base):
+    """Get ordered progression of course levels"""
+    # Extract the base course name (without semester/year info)
+    base_name = course_full_name_base.split(' - ')[0] if ' - ' in course_full_name_base else course_full_name_base
+    
+    # Find all course details for this base course
+    course_details = CourseDetails.query.filter(
+        CourseDetails.course_full_name.like(f"{base_name}%")
+    ).all()
+    
+    # Sort by parsed year_semester value
+    progression = []
+    for detail in course_details:
+        order = parse_year_semester(detail.year_semester)
+        if order is not None:
+            progression.append((order, detail.course_full_name, detail.year_semester))
+    
+    # Sort by order and return course names
+    progression.sort(key=lambda x: x[0])
+    return [item[1] for item in progression]
+
 @app.route('/students/promote/<int:student_id>', methods=['POST'])
 @login_required
 def promote_student(student_id):
@@ -1379,23 +1432,83 @@ def promote_student(student_id):
         return jsonify({'error': 'Permission denied'}), 403
 
     student = Student.query.get_or_404(student_id)
+    
+    # Check if student is already graduated or dropped out
+    if student.student_status in ['Graduated', 'Dropout']:
+        return jsonify({'error': f'Cannot promote student with status: {student.student_status}'}), 400
 
     try:
-        # Create new fee record for next class
-        course = Course.query.filter_by(course_full_name=student.current_course).first()
-        if course:
-            fee_record = CollegeFees(
-                student_id=student.id,
-                course_id=course.course_id
-            )
-            db.session.add(fee_record)
+        current_course = student.current_course
+        if not current_course:
+            return jsonify({'error': 'Student has no current course assigned'}), 400
+        
+        # Get course progression
+        progression = get_course_progression(current_course)
+        if not progression:
+            return jsonify({'error': 'No course progression found'}), 400
+        
+        # Find current position in progression
+        current_index = None
+        for i, course_name in enumerate(progression):
+            if course_name == current_course:
+                current_index = i
+                break
+        
+        if current_index is None:
+            return jsonify({'error': 'Current course not found in progression sequence'}), 400
+        
+        # Check if this is the final level
+        if current_index >= len(progression) - 1:
+            # Get the course details to check if we've completed all years
+            base_name = current_course.split(' - ')[0] if ' - ' in current_course else current_course
+            course = Course.query.filter(Course.course_full_name.like(f"{base_name}%")).first()
+            
+            if course:
+                # Get current semester/year number
+                current_level = parse_year_semester(current_course.split(' - ')[-1] if ' - ' in current_course else "1")
+                duration_semesters = course.duration * 2  # Assuming 2 semesters per year
+                
+                if current_level and current_level >= duration_semesters:
+                    # Graduate the student
+                    student.student_status = 'Graduated'
+                    db.session.commit()
+                    return jsonify({
+                        'success': True, 
+                        'message': f'Student {student.first_name} {student.last_name} has been graduated!',
+                        'action': 'graduated',
+                        'current_course': current_course,
+                        'student_status': 'Graduated'
+                    })
+            
+            # If we can't determine graduation, still graduate them as they're at final level
+            student.student_status = 'Graduated'
             db.session.commit()
-            return jsonify({'success': True, 'message': 'Student promoted successfully! New fee record created.'})
-        else:
-            return jsonify({'error': 'Course not found'}), 400
+            return jsonify({
+                'success': True, 
+                'message': f'Student {student.first_name} {student.last_name} has been graduated!',
+                'action': 'graduated',
+                'current_course': current_course,
+                'student_status': 'Graduated'
+            })
+        
+        # Promote to next level
+        next_course = progression[current_index + 1]
+        student.current_course = next_course
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Student {student.first_name} {student.last_name} promoted from {current_course} to {next_course}',
+            'action': 'promoted',
+            'previous_course': current_course,
+            'current_course': next_course,
+            'student_status': student.student_status
+        })
+        
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        app.logger.error(f"Error promoting student {student_id}: {str(e)}")
+        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
 
 # Analytics Routes
 @app.route('/analytics')
