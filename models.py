@@ -219,6 +219,8 @@ class Exam(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('courses.course_id'))
+    coursedetail_id = db.Column(db.Integer, db.ForeignKey('course_details.id'))
+    course_full_name = db.Column(db.String(200))  # Snapshot of course name at time of exam
     semester = db.Column(db.String(20))
     exam_name = db.Column(db.String(100), nullable=False)
 

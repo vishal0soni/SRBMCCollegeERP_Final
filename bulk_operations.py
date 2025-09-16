@@ -226,22 +226,26 @@ def get_invoices_export_data():
     return data, headers
 
 def get_exams_export_data():
-    """Get exams data for export"""
+    """Get exam data for export"""
     exams = db.session.query(Exam, Student).join(Student).all()
+
     headers = [
         'Student ID', 'Student Name', 'Course', 'Exam Name', 'Semester', 'Exam Date',
         'Subject 1', 'Subject 1 Max', 'Subject 1 Obtained',
         'Subject 2', 'Subject 2 Max', 'Subject 2 Obtained',
         'Subject 3', 'Subject 3 Max', 'Subject 3 Obtained',
+        'Subject 4', 'Subject 4 Max', 'Subject 4 Obtained',
+        'Subject 5', 'Subject 5 Max', 'Subject 5 Obtained',
+        'Subject 6', 'Subject 6 Max', 'Subject 6 Obtained',
         'Total Max Marks', 'Total Obtained', 'Percentage', 'Grade', 'Status'
     ]
 
     data = []
     for exam, student in exams:
-        data.append([
+        row = [
             student.student_unique_id,
             f"{student.first_name} {student.last_name}",
-            student.current_course or '',
+            exam.course_full_name or student.current_course,
             exam.exam_name,
             exam.semester or '',
             exam.exam_date.strftime('%Y-%m-%d') if exam.exam_date else '',
@@ -254,12 +258,22 @@ def get_exams_export_data():
             exam.subject3_name or '',
             exam.subject3_max_marks or 0,
             exam.subject3_obtained_marks or 0,
+            exam.subject4_name or '',
+            exam.subject4_max_marks or 0,
+            exam.subject4_obtained_marks or 0,
+            exam.subject5_name or '',
+            exam.subject5_max_marks or 0,
+            exam.subject5_obtained_marks or 0,
+            exam.subject6_name or '',
+            exam.subject6_max_marks or 0,
+            exam.subject6_obtained_marks or 0,
             exam.total_max_marks or 0,
             exam.total_obtained_marks or 0,
             float(exam.percentage) if exam.percentage else 0,
             exam.grade or '',
             exam.overall_status or ''
-        ])
+        ]
+        data.append(row)
 
     return data, headers
 
@@ -324,11 +338,11 @@ def _parse_admission_date(date_value):
     """Parse admission date from various formats (string, Timestamp, etc.)"""
     if not date_value:
         return date.today()
-    
+
     # If it's already a pandas Timestamp, convert to date
     if hasattr(date_value, 'date'):
         return date_value.date()
-    
+
     # If it's a string, try to parse it
     if isinstance(date_value, str):
         try:
@@ -340,11 +354,11 @@ def _parse_admission_date(date_value):
                     return datetime.strptime(date_value, fmt).date()
                 except ValueError:
                     continue
-    
+
     # If it's a datetime object, extract the date
     if isinstance(date_value, datetime):
         return date_value.date()
-    
+
     # Default fallback
     return date.today()
 
@@ -667,7 +681,7 @@ def import_fees_data(records):
             try:
                 # Validate required fields
                 student_id = str(record.get('Student ID', '')).strip()
-                
+
                 if not student_id:
                     errors.append(f"Row {i}: Student ID is required")
                     continue
@@ -737,11 +751,11 @@ def import_exams_data(records):
                 # Validate required fields
                 student_id = str(record.get('Student ID', '')).strip()
                 exam_name = str(record.get('Exam Name', '')).strip()
-                
+
                 if not student_id:
                     errors.append(f"Row {i}: Student ID is required")
                     continue
-                    
+
                 if not exam_name:
                     errors.append(f"Row {i}: Exam Name is required")
                     continue
@@ -815,11 +829,11 @@ def import_exams_data(records):
                         try:
                             max_marks = int(max_marks)
                             obtained_marks = int(obtained_marks)
-                            
+
                             if obtained_marks > max_marks:
                                 errors.append(f"Row {i}: Subject {j} obtained marks cannot exceed max marks")
                                 continue
-                                
+
                             subjects_data.append({
                                 'name': str(subject_name),
                                 'max': max_marks,
@@ -837,7 +851,7 @@ def import_exams_data(records):
 
                 # Calculate percentage and grade
                 percentage = (total_obtained / total_max * 100) if total_max > 0 else 0
-                
+
                 # Calculate grade based on percentage
                 if percentage >= 90:
                     grade = 'A+'
@@ -1174,4 +1188,3 @@ def import_subjects_data(records):
     except Exception as e:
         db.session.rollback()
         return False, f"Import failed: {str(e)}"
-

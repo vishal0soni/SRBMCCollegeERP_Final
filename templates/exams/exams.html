@@ -227,7 +227,7 @@
                                     <strong>{{ student.student_unique_id }}</strong><br>
                                     <small>{{ student.first_name }} {{ student.last_name }}</small>
                                 </td>
-                                <td>{{ student.current_course }}</td>
+                                <td>{{ exam.course_full_name or student.current_course }}</td>
                                 <td>{{ exam.exam_name }}</td>
                                 <td>{{ exam.semester }}</td>
                                 <td class="text-center">{{ exam.total_max_marks }}</td>

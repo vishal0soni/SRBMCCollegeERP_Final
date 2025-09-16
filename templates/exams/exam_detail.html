@@ -47,7 +47,7 @@
                             </tr>
                             <tr>
                                 <td><strong>Course:</strong></td>
-                                <td>{{ exam.student.current_course }}</td>
+                                <td>{{ exam.course_full_name or exam.student.current_course }}</td>
                             </tr>
                             <tr>
                                 <td><strong>Exam Name:</strong></td>

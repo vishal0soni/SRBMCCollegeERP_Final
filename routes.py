@@ -1216,11 +1216,16 @@ def add_exam():
         student_id = request.form.get('student_id')
         student = Student.query.get(student_id)
 
-        # Get course_id from student's course
+        # Get course_id, coursedetail_id, and course_full_name from student's course
         course_id = None
+        coursedetail_id = None
+        course_full_name = None
+        
         if student and student.current_course:
             course_detail = CourseDetails.query.filter_by(course_full_name=student.current_course).first()
             if course_detail:
+                coursedetail_id = course_detail.id
+                course_full_name = course_detail.course_full_name
                 course = Course.query.filter_by(course_short_name=course_detail.course_short_name).first()
                 if course:
                     course_id = course.course_id
@@ -1257,6 +1262,8 @@ def add_exam():
         exam = Exam(
             student_id=student_id,
             course_id=course_id,
+            coursedetail_id=coursedetail_id,
+            course_full_name=course_full_name,
             exam_name=exam_name,
             exam_date=exam_date,
             subject1_name=subject1_name,
@@ -1333,18 +1340,17 @@ def edit_exam(exam_id):
         grade = calculate_grade(percentage)
         status = 'Pass' if percentage >= 40 else 'Fail'
 
-        # Get course_id from student's course (student info remains unchanged)
-        student = exam.student
-        course_id = None
-        if student and student.current_course:
-            course_detail = CourseDetails.query.filter_by(course_full_name=student.current_course).first()
+        # Preserve existing course information (don't update from student's current course)
+        # This maintains historical accuracy even if student has been promoted
+        # Only update if the exam doesn't have course information yet
+        if not exam.course_full_name and exam.student and exam.student.current_course:
+            course_detail = CourseDetails.query.filter_by(course_full_name=exam.student.current_course).first()
             if course_detail:
+                exam.coursedetail_id = course_detail.id
+                exam.course_full_name = course_detail.course_full_name
                 course = Course.query.filter_by(course_short_name=course_detail.course_short_name).first()
                 if course:
-                    course_id = course.course_id
-
-        # Update exam (student info remains unchanged)
-        exam.course_id = course_id
+                    exam.course_id = course.course_id
         exam.exam_name = form.exam_name.data
         exam.exam_date = form.exam_date.data
         exam.subject1_name = subject1_name
