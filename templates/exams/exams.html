@@ -274,9 +274,7 @@
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         {% if exam.overall_status == 'Pass' %}
-                                            {% set exam_course = exam.student.current_course %}
-                                            {% set current_student_course = student.current_course %}
-                                            {% if exam_course == current_student_course %}
+                                            {% if not exam.promotion_processed %}
                                         <button class="btn btn-outline-success" onclick="promoteStudent({{ student.id }})">
                                             <i class="fas fa-level-up-alt"></i> Promote
                                         </button>

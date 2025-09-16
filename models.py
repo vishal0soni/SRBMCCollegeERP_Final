@@ -253,4 +253,5 @@ class Exam(db.Model):
     grade = db.Column(db.String(5))
     overall_status = db.Column(db.String(20))  # Pass/Fail
     exam_date = db.Column(db.Date)
+    promotion_processed = db.Column(db.Boolean, default=False)  # Track if promotion has been processed for this exam
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

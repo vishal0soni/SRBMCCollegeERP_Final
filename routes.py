@@ -1439,14 +1439,16 @@ def promote_student(student_id):
         return jsonify({'error': f'Cannot promote student with status: {student.student_status}'}), 400
 
     try:
-        # Verify student has passing exam results for current course
+        # Verify student has passing exam results for current course that haven't been used for promotion
         latest_exam = db.session.query(Exam).filter_by(
-            student_id=student_id
+            student_id=student_id,
+            overall_status='Pass',
+            promotion_processed=False
         ).order_by(Exam.created_at.desc()).first()
         
-        if not latest_exam or latest_exam.overall_status != 'Pass':
+        if not latest_exam:
             return jsonify({
-                'error': 'Student must have passing exam results before promotion'
+                'error': 'Student must have unprocessed passing exam results before promotion'
             }), 400
         
         current_course = student.current_course
@@ -1474,8 +1476,9 @@ def promote_student(student_id):
             base_name = current_course.split(' - ')[0] if ' - ' in current_course else current_course
             course = Course.query.filter_by(course_full_name=base_name).first()
             
-            # Graduate the student
+            # Graduate the student and mark exam as processed
             student.student_status = 'Graduated'
+            latest_exam.promotion_processed = True
             db.session.commit()
             
             # Log the graduation
@@ -1496,9 +1499,10 @@ def promote_student(student_id):
         if student.current_course == next_course:
             return jsonify({'error': 'Student is already at this level'}), 400
         
-        # Update student's course
+        # Update student's course and mark exam as processed
         old_course = student.current_course
         student.current_course = next_course
+        latest_exam.promotion_processed = True
         db.session.commit()
         
         # Log the promotion
