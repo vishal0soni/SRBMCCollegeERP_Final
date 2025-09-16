@@ -342,6 +342,13 @@ function viewExamDetails(examId) {
 
 function promoteStudent(studentId) {
     if (confirm('Are you sure you want to promote this student to next class?')) {
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        
+        // Show loading state
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        button.disabled = true;
+        
         fetch(`/students/promote/${studentId}`, {
             method: 'POST',
             headers: {
@@ -351,15 +358,31 @@ function promoteStudent(studentId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
-                location.reload();
+                // Show success message
+                alert(data.message + '\n\nThe student\'s record has been updated in the Student Management page.');
+                
+                // Update button to show promotion completed
+                if (data.action === 'graduated') {
+                    button.innerHTML = '<i class="fas fa-graduation-cap"></i> Graduated';
+                    button.className = 'btn btn-outline-warning';
+                } else {
+                    button.innerHTML = '<i class="fas fa-check"></i> Promoted';
+                    button.className = 'btn btn-outline-success';
+                }
+                button.disabled = true;
             } else {
                 alert('Error: ' + data.error);
+                // Restore original button state
+                button.innerHTML = originalText;
+                button.disabled = false;
             }
         })
         .catch(error => {
             console.error('Error:', error);
             alert('An error occurred while promoting the student.');
+            // Restore original button state
+            button.innerHTML = originalText;
+            button.disabled = false;
         });
     }
 }
