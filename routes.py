@@ -1439,12 +1439,25 @@ def promote_student(student_id):
         return jsonify({'error': f'Cannot promote student with status: {student.student_status}'}), 400
 
     try:
-        # Verify student has passing exam results for current course that haven't been used for promotion
-        latest_exam = db.session.query(Exam).filter_by(
-            student_id=student_id,
-            overall_status='Pass',
-            promotion_processed=False
-        ).order_by(Exam.created_at.desc()).first()
+        # Get exam ID from request data if provided
+        data = request.get_json() or {}
+        exam_id = data.get('exam_id')
+        
+        if exam_id:
+            # Use specific exam if provided
+            latest_exam = db.session.query(Exam).filter_by(
+                id=exam_id,
+                student_id=student_id,
+                overall_status='Pass',
+                promotion_processed=False
+            ).first()
+        else:
+            # Fallback to latest unprocessed exam
+            latest_exam = db.session.query(Exam).filter_by(
+                student_id=student_id,
+                overall_status='Pass',
+                promotion_processed=False
+            ).order_by(Exam.created_at.desc()).first()
         
         if not latest_exam:
             return jsonify({

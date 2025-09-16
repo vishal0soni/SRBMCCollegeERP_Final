@@ -275,7 +275,7 @@
                                         </a>
                                         {% if exam.overall_status == 'Pass' %}
                                             {% if not exam.promotion_processed %}
-                                        <button class="btn btn-outline-success" onclick="promoteStudent({{ student.id }})">
+                                        <button class="btn btn-outline-success" onclick="promoteStudent({{ student.id }}, {{ exam.id }})">
                                             <i class="fas fa-level-up-alt"></i> Promote
                                         </button>
                                             {% else %}
@@ -346,7 +346,7 @@ function viewExamDetails(examId) {
     alert('View exam details for ID: ' + examId);
 }
 
-function promoteStudent(studentId) {
+function promoteStudent(studentId, examId) {
     if (confirm('Are you sure you want to promote this student to next class?')) {
         const button = event.target.closest('button');
         const originalText = button.innerHTML;
@@ -359,7 +359,10 @@ function promoteStudent(studentId) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-            }
+            },
+            body: JSON.stringify({
+                'exam_id': examId
+            })
         })
         .then(response => response.json())
         .then(data => {
@@ -370,10 +373,10 @@ function promoteStudent(studentId) {
                 // Update button to show promotion completed
                 if (data.action === 'graduated') {
                     button.innerHTML = '<i class="fas fa-graduation-cap"></i> Graduated';
-                    button.className = 'btn btn-outline-warning';
+                    button.className = 'btn btn-outline-warning disabled';
                 } else {
-                    button.innerHTML = '<i class="fas fa-check"></i> Promoted';
-                    button.className = 'btn btn-outline-success';
+                    button.innerHTML = '<i class="fas fa-check"></i> Already Promoted';
+                    button.className = 'btn btn-outline-secondary disabled';
                 }
                 button.disabled = true;
             } else {
