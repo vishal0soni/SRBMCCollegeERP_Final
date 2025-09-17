@@ -52,9 +52,11 @@
                     {% else %}
                     <!-- Add mode - show search functionality -->
                     <div class="col-md-6 mb-3">
-                        <input type="text" class="form-control mb-2" id="studentSearch" placeholder="Search by Student Name or ID..." onkeyup="searchStudents()">
+                        <label class="form-label">Select Student <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control mb-2" id="studentSearch" placeholder="Search by Student Name or ID (Active students only)..." onkeyup="searchStudents()">
                         <div id="studentResults" class="list-group" style="display: none; max-height: 200px; overflow-y: auto;"></div>
                         <input type="hidden" name="student_id" id="selectedStudentId" required>
+                        <small class="form-text text-muted">Only active students (not graduated) are available for exam entry.</small>
                         {% if form.student_id.errors %}
                             <div class="text-danger">
                                 {% for error in form.student_id.errors %}

@@ -1157,7 +1157,7 @@ def exams():
     sort_by = request.args.get('sort', 'exam_name')
     sort_order = request.args.get('order', 'asc')
 
-    query = db.session.query(Exam, Student).join(Student)
+    query = db.session.query(Exam, Student).join(Student).filter(Student.student_status != 'Graduated')
 
     # Search filters
     if search:
@@ -1210,6 +1210,8 @@ def add_exam():
         return redirect(url_for('dashboard'))
 
     form = ExamForm()
+    # Set student choices excluding graduated students
+    form.student_id.choices = [(s.id, f"{s.student_unique_id} - {s.first_name} {s.last_name}") for s in Student.query.filter(Student.student_status != 'Graduated').all()]
 
     if request.method == 'POST':
         # Get data from form
@@ -1757,12 +1759,15 @@ def api_search_students():
         return jsonify({'success': False, 'students': []})
 
     try:
-        # Search students by name or ID
-        search_filter = or_(
-            Student.first_name.ilike(f'%{query}%'),
-            Student.last_name.ilike(f'%{query}%'),
-            Student.student_unique_id.ilike(f'%{query}%'),
-            func.concat(Student.first_name, ' ', Student.last_name).ilike(f'%{query}%')
+        # Search students by name or ID, excluding graduated students
+        search_filter = and_(
+            or_(
+                Student.first_name.ilike(f'%{query}%'),
+                Student.last_name.ilike(f'%{query}%'),
+                Student.student_unique_id.ilike(f'%{query}%'),
+                func.concat(Student.first_name, ' ', Student.last_name).ilike(f'%{query}%')
+            ),
+            Student.student_status != 'Graduated'
         )
 
         students = Student.query.filter(search_filter).limit(10).all()
