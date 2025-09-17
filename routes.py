@@ -3278,36 +3278,52 @@ def api_student_breakdown_data():
 def api_update_fee_field(fee_id):
     """API endpoint to update fee field values"""
     if not can_edit_module(current_user, 'fees') or current_user.role.access_type != 'Edit':
-        return jsonify({'error': 'Permission denied'}), 403
+        app.logger.warning(f"Permission denied for user {current_user.id} updating fee field {fee_id}")
+        return jsonify({'success': False, 'error': 'Permission denied'}), 403
 
     try:
         data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+
         field = data.get('field')
         value = data.get('value')
+
+        app.logger.info(f"Updating fee field {field} for fee_id {fee_id} to {value}")
 
         # Validate field name
         allowed_fields = ['pending_dues_for_libraries', 'pending_dues_for_hostel', 'exam_admit_card_issued']
         if field not in allowed_fields:
-            return jsonify({'error': 'Invalid field name'}), 400
+            app.logger.error(f"Invalid field name: {field}")
+            return jsonify({'success': False, 'error': f'Invalid field name: {field}'}), 400
 
         # Get the fee record
-        fee_record = CollegeFees.query.get_or_404(fee_id)
+        fee_record = CollegeFees.query.get(fee_id)
+        if not fee_record:
+            app.logger.error(f"Fee record not found: {fee_id}")
+            return jsonify({'success': False, 'error': 'Fee record not found'}), 404
 
         # Update the field
-        setattr(fee_record, field, value)
+        old_value = getattr(fee_record, field)
+        setattr(fee_record, field, bool(value))
         db.session.commit()
+
+        app.logger.info(f"Successfully updated {field} from {old_value} to {value} for fee_id {fee_id}")
 
         return jsonify({
             'success': True,
-            'message': f'Field {field} updated successfully'
+            'message': f'Field {field} updated successfully',
+            'field': field,
+            'new_value': bool(value),
+            'old_value': old_value
         })
 
     except Exception as e:
         db.session.rollback()
-        app.logger.error(f"Error updating fee field: {str(e)}")
+        app.logger.error(f"Error updating fee field {fee_id}: {str(e)}")
         return jsonify({
             'success': False,
-            'error': f'Error updating field: {str(e)}'
+            'error': f'Database error: {str(e)}'
         }), 500
 
 @app.route('/report-card/<int:exam_id>/pdf')

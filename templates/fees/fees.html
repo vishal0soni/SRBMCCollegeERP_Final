@@ -235,24 +235,27 @@
                                         {% if current_user.role.access_type == 'Edit' %}
                                             <div class="form-check form-check-inline">
                                                 <input class="form-check-input dues-checkbox" type="checkbox"
+                                                       id="library_dues_{{ fee_record.id }}"
                                                        data-fee-id="{{ fee_record.id }}"
                                                        data-field="pending_dues_for_libraries"
                                                        {% if fee_record.pending_dues_for_libraries %}checked{% endif %}>
-                                                <label class="form-check-label"><i class="fas fa-book"></i> Library Dues</label>
+                                                <label class="form-check-label" for="library_dues_{{ fee_record.id }}"><i class="fas fa-book"></i> Library Dues</label>
                                             </div>
                                             <div class="form-check form-check-inline">
                                                 <input class="form-check-input dues-checkbox" type="checkbox"
+                                                       id="hostel_dues_{{ fee_record.id }}"
                                                        data-fee-id="{{ fee_record.id }}"
                                                        data-field="pending_dues_for_hostel"
                                                        {% if fee_record.pending_dues_for_hostel %}checked{% endif %}>
-                                                <label class="form-check-label"><i class="fas fa-bed"></i> Hostel Dues</label>
+                                                <label class="form-check-label" for="hostel_dues_{{ fee_record.id }}"><i class="fas fa-bed"></i> Hostel Dues</label>
                                             </div>
                                             <div class="form-check form-check-inline">
                                                 <input class="form-check-input dues-checkbox" type="checkbox"
+                                                       id="admit_card_{{ fee_record.id }}"
                                                        data-fee-id="{{ fee_record.id }}"
                                                        data-field="exam_admit_card_issued"
                                                        {% if fee_record.exam_admit_card_issued %}checked{% endif %}>
-                                                <label class="form-check-label"><i class="fas fa-id-card"></i> Admit Card Issued</label>
+                                                <label class="form-check-label" for="admit_card_{{ fee_record.id }}"><i class="fas fa-id-card"></i> Admit Card Issued</label>
                                             </div>
                                         {% else %}
                                             {% if fee_record.pending_dues_for_libraries %}
@@ -344,11 +347,17 @@ $(document).ready(function() {
     // Initialize tooltips
     $('[data-bs-toggle="tooltip"]').tooltip();
 
-    // Fee status update
-    $('.dues-checkbox').change(function() { // Changed from .fee-status-checkbox to .dues-checkbox to match the actual class name
+    // Fee status update - Use event delegation for dynamically loaded content
+    $(document).on('change', '.dues-checkbox', function() {
         const feeId = $(this).data('fee-id');
         const field = $(this).data('field');
         const value = this.checked;
+        const checkbox = $(this);
+
+        console.log('Updating fee field:', {feeId, field, value});
+
+        // Show loading state
+        checkbox.prop('disabled', true);
 
         // Update via AJAX
         $.ajax({
@@ -360,29 +369,41 @@ $(document).ready(function() {
                 value: value
             }),
             success: function(response) {
+                console.log('API Response:', response);
                 if (response.success) {
                     showAlert('Field updated successfully', 'success');
                 } else {
-                    showAlert('Error updating field: ' + response.error, 'error');
+                    showAlert('Error updating field: ' + (response.error || 'Unknown error'), 'error');
+                    // Revert checkbox state on error
+                    checkbox.prop('checked', !value);
                 }
             },
-            error: function() {
-                showAlert('Error updating field', 'error');
+            error: function(xhr, status, error) {
+                console.error('AJAX Error:', {xhr, status, error});
+                showAlert('Error updating field: ' + error, 'error');
+                // Revert checkbox state on error
+                checkbox.prop('checked', !value);
+            },
+            complete: function() {
+                // Re-enable checkbox
+                checkbox.prop('disabled', false);
             }
         });
     });
 });
 
 function showAlert(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+    
     const alert = $(`
-        <div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show" role="alert">
-            ${message}
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" role="alert" style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+            <i class="${icon} me-2"></i>${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     `);
 
-    // Prepend to the container-fluid element as it's likely a wrapper for the whole page content
-    $('.container-fluid').prepend(alert);
+    $('body').append(alert);
 
     setTimeout(() => {
         alert.alert('close');
