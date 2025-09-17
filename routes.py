@@ -3303,20 +3303,38 @@ def api_update_fee_field(fee_id):
             app.logger.error(f"Fee record not found: {fee_id}")
             return jsonify({'success': False, 'error': 'Fee record not found'}), 404
 
-        # Update the field
+        # Convert value to boolean
+        bool_value = bool(value)
+        
+        # Get old value for logging
         old_value = getattr(fee_record, field)
-        setattr(fee_record, field, bool(value))
-        db.session.commit()
-
-        app.logger.info(f"Successfully updated {field} from {old_value} to {value} for fee_id {fee_id}")
-
-        return jsonify({
-            'success': True,
-            'message': f'Field {field} updated successfully',
-            'field': field,
-            'new_value': bool(value),
-            'old_value': old_value
-        })
+        
+        # Only update if there's actually a change
+        if old_value != bool_value:
+            # Update the field
+            setattr(fee_record, field, bool_value)
+            db.session.commit()
+            
+            app.logger.info(f"Successfully updated {field} from {old_value} to {bool_value} for fee_id {fee_id}")
+            
+            return jsonify({
+                'success': True,
+                'message': f'Field {field} updated successfully',
+                'field': field,
+                'new_value': bool_value,
+                'old_value': old_value,
+                'changed': True
+            })
+        else:
+            app.logger.info(f"No change needed for {field} (already {bool_value}) for fee_id {fee_id}")
+            return jsonify({
+                'success': True,
+                'message': f'Field {field} already has the correct value',
+                'field': field,
+                'new_value': bool_value,
+                'old_value': old_value,
+                'changed': False
+            })
 
     except Exception as e:
         db.session.rollback()
