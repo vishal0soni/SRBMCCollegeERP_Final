@@ -2840,7 +2840,8 @@ def api_student_category_stats():
         ).filter(
             and_(
                 func.extract('year', Student.admission_date) == year,
-                Student.admission_date.isnot(None)
+                Student.admission_date.isnot(None),
+                Student.category.isnot(None)
             )
         ).group_by(Student.category).order_by(func.count(Student.id).desc()).all()
 
@@ -2855,6 +2856,34 @@ def api_student_category_stats():
                 total_students += count
 
         app.logger.info(f"Category data - Categories: {categories}, Counts: {counts}, Total: {total_students}")
+
+        # If no data found for the specific year, return empty but successful response
+        if total_students == 0:
+            app.logger.info(f"No students with category data found for year {year}")
+            # Try to get any students for the year regardless of category
+            any_students = db.session.query(func.count(Student.id)).filter(
+                and_(
+                    func.extract('year', Student.admission_date) == year,
+                    Student.admission_date.isnot(None)
+                )
+            ).scalar() or 0
+            
+            if any_students > 0:
+                # Students exist but no category data
+                return jsonify({
+                    'success': True,
+                    'categories': ['No Category Data'],
+                    'counts': [any_students],
+                    'total_students': any_students
+                })
+            else:
+                # No students at all for this year
+                return jsonify({
+                    'success': True,
+                    'categories': [],
+                    'counts': [],
+                    'total_students': 0
+                })
 
         return jsonify({
             'success': True,
