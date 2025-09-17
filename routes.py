@@ -2833,63 +2833,69 @@ def api_student_category_stats():
         year = request.args.get('year', datetime.now().year, type=int)
         app.logger.info(f"Loading category stats for year: {year}")
         
-        # Get category distribution with proper handling of null values for the selected year
+        # Get all students for the selected year first
+        all_students_query = db.session.query(Student).filter(
+            and_(
+                func.extract('year', Student.admission_date) == year,
+                Student.admission_date.isnot(None)
+            )
+        )
+        
+        total_students_for_year = all_students_query.count()
+        app.logger.info(f"Total students for year {year}: {total_students_for_year}")
+        
+        if total_students_for_year == 0:
+            app.logger.info(f"No students found for year {year}")
+            return jsonify({
+                'success': True,
+                'categories': [],
+                'counts': [],
+                'total_students': 0
+            })
+        
+        # Get category distribution with proper handling - include students with null/empty categories
         category_counts = db.session.query(
             Student.category,
             func.count(Student.id)
         ).filter(
             and_(
                 func.extract('year', Student.admission_date) == year,
-                Student.admission_date.isnot(None),
-                Student.category.isnot(None)
+                Student.admission_date.isnot(None)
             )
         ).group_by(Student.category).order_by(func.count(Student.id).desc()).all()
 
         categories = []
         counts = []
-        total_students = 0
+        total_counted = 0
         
         for category, count in category_counts:
             if count > 0:  # Only include categories with actual students
-                categories.append(category if category else 'Not Specified')
+                # Handle null/empty categories
+                category_name = category if category and category.strip() else 'Not Specified'
+                categories.append(category_name)
                 counts.append(int(count))
-                total_students += count
+                total_counted += count
 
-        app.logger.info(f"Category data - Categories: {categories}, Counts: {counts}, Total: {total_students}")
+        app.logger.info(f"Category breakdown - Categories: {categories}, Counts: {counts}")
+        app.logger.info(f"Total counted: {total_counted}, Total students for year: {total_students_for_year}")
 
-        # If no data found for the specific year, return empty but successful response
-        if total_students == 0:
-            app.logger.info(f"No students with category data found for year {year}")
-            # Try to get any students for the year regardless of category
-            any_students = db.session.query(func.count(Student.id)).filter(
-                and_(
-                    func.extract('year', Student.admission_date) == year,
-                    Student.admission_date.isnot(None)
-                )
-            ).scalar() or 0
-            
-            if any_students > 0:
-                # Students exist but no category data
+        # Validate that we've counted all students
+        if total_counted != total_students_for_year:
+            app.logger.warning(f"Mismatch in student count: counted {total_counted}, expected {total_students_for_year}")
+            # This shouldn't happen with proper SQL, but let's handle it
+            if total_counted == 0:
                 return jsonify({
                     'success': True,
-                    'categories': ['No Category Data'],
-                    'counts': [any_students],
-                    'total_students': any_students
-                })
-            else:
-                # No students at all for this year
-                return jsonify({
-                    'success': True,
-                    'categories': [],
-                    'counts': [],
-                    'total_students': 0
+                    'categories': ['All Students'],
+                    'counts': [total_students_for_year],
+                    'total_students': total_students_for_year
                 })
 
         return jsonify({
             'success': True,
             'categories': categories,
             'counts': counts,
-            'total_students': total_students
+            'total_students': total_counted
         })
     except Exception as e:
         app.logger.error(f"Error in api_student_category_stats: {e}")
