@@ -627,35 +627,37 @@ function loadCategoryChart() {
                 categoryChart.destroy();
             }
 
-            if (data.success && data.categories && data.categories.length > 0) {
+            if (data.success && data.categories && data.categories.length > 0 && data.total_students > 0) {
                 const categories = data.categories;
                 const counts = data.counts;
                 
                 console.log('Categories:', categories);
                 console.log('Counts:', counts);
+                console.log('Total students:', data.total_students);
 
-                // Filter out zero counts and prepare data
+                // Prepare data with all categories that have students
                 const validData = [];
                 const validLabels = [];
-                const validColors = ['#1cc88a', '#4e73df', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'];
+                const validColors = ['#1cc88a', '#4e73df', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#17a2b8', '#ffc107'];
                 
                 categories.forEach((category, index) => {
                     if (counts[index] > 0) {
                         validData.push(counts[index]);
-                        validLabels.push(category);
+                        validLabels.push(category || 'Not Specified');
                     }
                 });
 
                 if (validData.length > 0) {
                     categoryChart = new Chart(ctx, {
-                        type: 'pie',
+                        type: 'doughnut',
                         data: {
                             labels: validLabels,
                             datasets: [{
                                 data: validData,
                                 backgroundColor: validColors.slice(0, validData.length),
                                 borderWidth: 2,
-                                borderColor: '#fff'
+                                borderColor: '#fff',
+                                hoverOffset: 4
                             }]
                         },
                         options: {
@@ -690,110 +692,95 @@ function loadCategoryChart() {
                             animation: {
                                 animateRotate: true,
                                 animateScale: true,
-                                duration: 1000
-                            }
+                                duration: 1200
+                            },
+                            cutout: '40%'
                         }
                     });
                 } else {
-                    // Show no data state when all counts are zero
-                    categoryChart = new Chart(ctx, {
-                        type: 'pie',
-                        data: {
-                            labels: [`No Students for ${currentYear}-${(currentYear + 1).toString().slice(-2)}`],
-                            datasets: [{
-                                data: [1],
-                                backgroundColor: ['#e3e6f0']
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        font: {
-                                            size: 10
-                                        },
-                                        padding: 10
-                                    }
-                                },
-                                tooltip: {
-                                    enabled: false
-                                }
-                            }
-                        }
-                    });
+                    createNoCategoryDataChart(ctx);
                 }
             } else {
                 console.log('No category data available for year:', currentYear);
-                // Show no data state
-                categoryChart = new Chart(ctx, {
-                    type: 'pie',
-                    data: {
-                        labels: [`No Students for ${currentYear}-${(currentYear + 1).toString().slice(-2)}`],
-                        datasets: [{
-                            data: [1],
-                            backgroundColor: ['#e3e6f0']
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    font: {
-                                        size: 10
-                                    },
-                                    padding: 10
-                                }
-                            },
-                            tooltip: {
-                                enabled: false
-                            }
-                        }
-                    }
-                });
+                createNoCategoryDataChart(ctx);
             }
         })
         .catch(error => {
             console.error('Error loading category data:', error);
-            // Show error state chart
-            const ctx = document.getElementById('categoryDistributionChart').getContext('2d');
-            if (categoryChart) {
-                categoryChart.destroy();
-            }
-            categoryChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['Error Loading Data'],
-                    datasets: [{
-                        data: [1],
-                        backgroundColor: ['#e74a3b']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: {
-                                    size: 10
-                                },
-                                padding: 10
-                            }
-                        },
-                        tooltip: {
-                            enabled: false
-                        }
-                    }
-                }
-            });
+            createErrorCategoryChart();
         });
+}
+
+function createNoCategoryDataChart(ctx) {
+    categoryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: [`No Students for ${currentYear}-${(currentYear + 1).toString().slice(-2)}`],
+            datasets: [{
+                data: [1],
+                backgroundColor: ['#e3e6f0'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            size: 10
+                        },
+                        padding: 10,
+                        color: '#6c757d'
+                    }
+                },
+                tooltip: {
+                    enabled: false
+                }
+            },
+            cutout: '40%'
+        }
+    });
+}
+
+function createErrorCategoryChart() {
+    const ctx = document.getElementById('categoryDistributionChart').getContext('2d');
+    if (categoryChart) {
+        categoryChart.destroy();
+    }
+    categoryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Error Loading Data'],
+            datasets: [{
+                data: [1],
+                backgroundColor: ['#e74a3b'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            size: 10
+                        },
+                        padding: 10,
+                        color: '#e74a3b'
+                    }
+                },
+                tooltip: {
+                    enabled: false
+                }
+            },
+            cutout: '40%'
+        }
+    });
 }
 
 // Table update functions moved to loadBreakdownTables() section above
