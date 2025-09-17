@@ -2831,8 +2831,9 @@ def api_student_summary_stats():
 def api_student_category_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
+        app.logger.info(f"Loading category stats for year: {year}")
         
-        # Get category distribution with proper handling of null values
+        # Get category distribution with proper handling of null values for the selected year
         category_counts = db.session.query(
             Student.category,
             func.count(Student.id)
@@ -2841,33 +2842,43 @@ def api_student_category_stats():
                 func.extract('year', Student.admission_date) == year,
                 Student.id.isnot(None)
             )
-        ).group_by(Student.category).all()
+        ).group_by(Student.category).order_by(func.count(Student.id).desc()).all()
 
         categories = []
         counts = []
+        total_students = 0
         
         for category, count in category_counts:
-            categories.append(category if category else 'Not Specified')
-            counts.append(int(count))
+            if count > 0:  # Only include categories with actual students
+                categories.append(category if category else 'Not Specified')
+                counts.append(int(count))
+                total_students += count
 
-        if not categories:
+        app.logger.info(f"Category data - Categories: {categories}, Counts: {counts}, Total: {total_students}")
+
+        # If no students found for the year
+        if not categories or total_students == 0:
+            app.logger.info(f"No students found for year {year}")
             return jsonify({
                 'success': True,
-                'categories': ['No Students'],
-                'counts': [0]
+                'categories': [],
+                'counts': [],
+                'total_students': 0
             })
 
         return jsonify({
             'success': True,
             'categories': categories,
-            'counts': counts
+            'counts': counts,
+            'total_students': total_students
         })
     except Exception as e:
         app.logger.error(f"Error in api_student_category_stats: {e}")
         return jsonify({
             'success': False,
             'categories': ['Error Loading'],
-            'counts': [0]
+            'counts': [0],
+            'total_students': 0
         })
 
 @app.route('/api/monthly-admissions-stats')

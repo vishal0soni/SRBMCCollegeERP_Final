@@ -637,7 +637,7 @@ function loadCategoryChart() {
                 // Filter out zero counts and prepare data
                 const validData = [];
                 const validLabels = [];
-                const validColors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'];
+                const validColors = ['#1cc88a', '#4e73df', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'];
                 
                 categories.forEach((category, index) => {
                     if (counts[index] > 0) {
@@ -648,7 +648,7 @@ function loadCategoryChart() {
 
                 if (validData.length > 0) {
                     categoryChart = new Chart(ctx, {
-                        type: 'doughnut',
+                        type: 'pie',
                         data: {
                             labels: validLabels,
                             datasets: [{
@@ -666,13 +666,16 @@ function loadCategoryChart() {
                                     position: 'bottom',
                                     labels: {
                                         font: {
-                                            size: 10
+                                            size: 11
                                         },
-                                        padding: 10,
+                                        padding: 12,
                                         usePointStyle: true
                                     }
                                 },
                                 tooltip: {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                    titleColor: '#fff',
+                                    bodyColor: '#fff',
                                     callbacks: {
                                         label: function(context) {
                                             const label = context.label || '';
@@ -682,23 +685,19 @@ function loadCategoryChart() {
                                             return `${label}: ${value} students (${percentage}%)`;
                                         }
                                     }
-                                },
-                                title: {
-                                    display: true,
-                                    text: `Category Distribution for ${currentYear}-${(currentYear + 1).toString().slice(-2)}`,
-                                    font: {
-                                        size: 12,
-                                        weight: 'bold'
-                                    }
                                 }
                             },
-                            cutout: '50%'
+                            animation: {
+                                animateRotate: true,
+                                animateScale: true,
+                                duration: 1000
+                            }
                         }
                     });
                 } else {
                     // Show no data state when all counts are zero
                     categoryChart = new Chart(ctx, {
-                        type: 'doughnut',
+                        type: 'pie',
                         data: {
                             labels: [`No Students for ${currentYear}-${(currentYear + 1).toString().slice(-2)}`],
                             datasets: [{
@@ -730,7 +729,7 @@ function loadCategoryChart() {
                 console.log('No category data available for year:', currentYear);
                 // Show no data state
                 categoryChart = new Chart(ctx, {
-                    type: 'doughnut',
+                    type: 'pie',
                     data: {
                         labels: [`No Students for ${currentYear}-${(currentYear + 1).toString().slice(-2)}`],
                         datasets: [{
@@ -767,7 +766,7 @@ function loadCategoryChart() {
                 categoryChart.destroy();
             }
             categoryChart = new Chart(ctx, {
-                type: 'doughnut',
+                type: 'pie',
                 data: {
                     labels: ['Error Loading Data'],
                     datasets: [{
