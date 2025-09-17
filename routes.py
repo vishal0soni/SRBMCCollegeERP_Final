@@ -448,6 +448,8 @@ def add_student():
                 fee_record = CollegeFees(
                     student_id=student.id,
                     course_id=course.course_id,
+                    coursedetail_id=course_detail.id,
+                    course_full_name=course_detail.course_full_name,
                     total_course_fees=total_course_fees,
                     enrollment_fee=enrollment_fee,
                     eligibility_certificate_fee=eligibility_certificate_fee,
@@ -946,7 +948,7 @@ def payment():
     student_id = request.args.get('student_id', type=int)
 
     form = PaymentForm()
-    form.student_id.choices = [(s.id, f"{s.student_unique_id} - {s.first_name} {s.last_name}") for s in Student.query.all()]
+    form.student_id.choices = [(s.id, f"{s.student_unique_id} - {s.first_name} {s.last_name}") for s in Student.query.filter(Student.student_status != 'Graduated').all()]
 
     # Pre-select student if coming from "+Pay" button
     if student_id and request.method == 'GET':
@@ -961,6 +963,20 @@ def payment():
         if not fee_record:
             flash('No fee record found for this student.', 'error')
             return redirect(url_for('payment'))
+
+        # Capture current course information as snapshot if not already set
+        if not fee_record.course_full_name and student.current_course:
+            fee_record.course_full_name = student.current_course
+            
+            # Find and set coursedetail_id and course_id based on current course
+            course_detail = CourseDetails.query.filter_by(course_full_name=student.current_course).first()
+            if course_detail:
+                fee_record.coursedetail_id = course_detail.id
+                
+                # Get course_id from course_detail's course_short_name
+                course = Course.query.filter_by(course_short_name=course_detail.course_short_name).first()
+                if course:
+                    fee_record.course_id = course.course_id
 
         # Find next available installment slot
         installments = [
@@ -982,7 +998,7 @@ def payment():
             flash('All installment slots are filled for this student.', 'error')
             return redirect(url_for('payment'))
 
-        # Generate invoice
+        # Generate invoice - use the historical course information from fee record
         invoice_number = generate_invoice_number()
         invoice = Invoice(
             student_id=student.id,

@@ -117,6 +117,8 @@ class CollegeFees(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('courses.course_id'))
+    coursedetail_id = db.Column(db.Integer, db.ForeignKey('course_details.id'))
+    course_full_name = db.Column(db.String(200))  # Snapshot of course name at time of fee record creation
     total_course_fees = db.Column(db.Numeric(10, 2), default=0)
     enrollment_fee = db.Column(db.Numeric(10, 2), default=0)
     eligibility_certificate_fee = db.Column(db.Numeric(10, 2), default=0)

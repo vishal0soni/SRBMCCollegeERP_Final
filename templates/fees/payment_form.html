@@ -72,7 +72,10 @@
                                         <div class="col-md-6">
                                             <p><strong>Student ID:</strong> <span id="studentId">{{ selected_student.student_unique_id }}</span></p>
                                             <p><strong>Name:</strong> <span id="studentName">{{ selected_student.first_name }} {{ selected_student.last_name }}</span></p>
-                                            <p><strong>Course:</strong> <span id="studentCourse">{{ selected_student.current_course or 'N/A' }}</span></p>
+                                            <p><strong>Course:</strong> <span id="studentCourse">{{ selected_fee_record.course_full_name or selected_student.current_course or 'N/A' }}</span></p>
+                                            {% if selected_fee_record.course_full_name and selected_fee_record.course_full_name != selected_student.current_course %}
+                                            <p><strong>Current Course:</strong> {{ selected_student.current_course or 'N/A' }}</p>
+                                            {% endif %}
                                         </div>
                                         <div class="col-md-6">
                                             {% if selected_fee_record %}

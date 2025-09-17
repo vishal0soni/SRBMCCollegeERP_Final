@@ -194,7 +194,7 @@
                                     <strong>{{ student.student_unique_id }}</strong><br>
                                     <small class="text-muted">{{ student.first_name }} {{ student.last_name }}</small>
                                 </td>
-                                <td>{{ student.current_course }}</td>
+                                <td>{{ fee_record.course_full_name or student.current_course }}</td>
                                 <td>
                                     <strong>₹{{ "%.2f"|format(fee_record.total_amount_after_rebate or 0) }}</strong>
                                 </td>
