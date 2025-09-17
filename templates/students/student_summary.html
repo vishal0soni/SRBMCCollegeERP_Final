@@ -634,48 +634,98 @@ function loadCategoryChart() {
                 console.log('Categories:', categories);
                 console.log('Counts:', counts);
 
-                categoryChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: categories,
-                        datasets: [{
-                            data: counts,
-                            backgroundColor: [
-                                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'
-                            ],
-                            borderWidth: 2,
-                            borderColor: '#fff'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    font: {
-                                        size: 10
-                                    },
-                                    padding: 10,
-                                    usePointStyle: true
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const label = context.label || '';
-                                        const value = context.parsed;
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = ((value / total) * 100).toFixed(1);
-                                        return `${label}: ${value} (${percentage}%)`;
-                                    }
-                                }
-                            }
-                        },
-                        cutout: '50%'
+                // Filter out zero counts and prepare data
+                const validData = [];
+                const validLabels = [];
+                const validColors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'];
+                
+                categories.forEach((category, index) => {
+                    if (counts[index] > 0) {
+                        validData.push(counts[index]);
+                        validLabels.push(category);
                     }
                 });
+
+                if (validData.length > 0) {
+                    categoryChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: validLabels,
+                            datasets: [{
+                                data: validData,
+                                backgroundColor: validColors.slice(0, validData.length),
+                                borderWidth: 2,
+                                borderColor: '#fff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        font: {
+                                            size: 10
+                                        },
+                                        padding: 10,
+                                        usePointStyle: true
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.parsed;
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((value / total) * 100).toFixed(1);
+                                            return `${label}: ${value} students (${percentage}%)`;
+                                        }
+                                    }
+                                },
+                                title: {
+                                    display: true,
+                                    text: `Category Distribution for ${currentYear}-${(currentYear + 1).toString().slice(-2)}`,
+                                    font: {
+                                        size: 12,
+                                        weight: 'bold'
+                                    }
+                                }
+                            },
+                            cutout: '50%'
+                        }
+                    });
+                } else {
+                    // Show no data state when all counts are zero
+                    categoryChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: [`No Students for ${currentYear}-${(currentYear + 1).toString().slice(-2)}`],
+                            datasets: [{
+                                data: [1],
+                                backgroundColor: ['#e3e6f0']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        font: {
+                                            size: 10
+                                        },
+                                        padding: 10
+                                    }
+                                },
+                                tooltip: {
+                                    enabled: false
+                                }
+                            }
+                        }
+                    });
+                }
             } else {
                 console.log('No category data available for year:', currentYear);
                 // Show no data state
@@ -700,6 +750,9 @@ function loadCategoryChart() {
                                     },
                                     padding: 10
                                 }
+                            },
+                            tooltip: {
+                                enabled: false
                             }
                         }
                     }
@@ -734,6 +787,9 @@ function loadCategoryChart() {
                                 },
                                 padding: 10
                             }
+                        },
+                        tooltip: {
+                            enabled: false
                         }
                     }
                 }
