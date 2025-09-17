@@ -347,152 +347,7 @@ $(document).ready(function() {
     // Initialize tooltips
     $('[data-bs-toggle="tooltip"]').tooltip();
 
-    // Fee status update - Handle checkbox changes
-    $(document).on('change', '.dues-checkbox', function() {
-        const feeId = $(this).data('fee-id');
-        const field = $(this).data('field');
-        const value = this.checked;
-        const checkbox = $(this);
-
-        console.log('Updating fee field:', {feeId, field, value});
-
-        // Show loading state
-        checkbox.prop('disabled', true);
-        const label = $(`label[for="${checkbox.attr('id')}"]`);
-        label.append(' <span class="spinner-border spinner-border-sm ms-1"></span>');
-
-        // Update via AJAX with CSRF token if available
-        const csrfToken = $('meta[name=csrf-token]').attr('content');
-        const ajaxData = {
-            url: `/api/update-fee-field/${feeId}`,
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                field: field,
-                value: value
-            }),
-            timeout: 15000, // 15 second timeout
-            success: function(response) {
-                console.log('API Response:', response);
-                if (response.success) {
-                    showAlert(`${field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} updated successfully`, 'success');
-                    
-                    // Ensure checkbox reflects the actual database value
-                    checkbox.prop('checked', response.new_value);
-                    
-                    // Remove from localStorage on successful update
-                    const storageKey = `fee_${feeId}_${field}`;
-                    localStorage.removeItem(storageKey);
-                } else {
-                    showAlert('Error updating field: ' + (response.error || 'Unknown error'), 'error');
-                    // Revert checkbox state on error
-                    checkbox.prop('checked', !value);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('AJAX Error:', {xhr, status, error, responseText: xhr.responseText});
-                let errorMessage = 'Error updating field: ';
-                
-                try {
-                    const response = JSON.parse(xhr.responseText);
-                    if (response && response.error) {
-                        errorMessage += response.error;
-                    } else {
-                        errorMessage += `HTTP ${xhr.status}: ${xhr.statusText}`;
-                    }
-                } catch (e) {
-                    if (xhr.responseText) {
-                        errorMessage += xhr.responseText;
-                    } else {
-                        errorMessage += `${status}: ${error}`;
-                    }
-                }
-                
-                showAlert(errorMessage, 'error');
-                // Revert checkbox state on error
-                checkbox.prop('checked', !value);
-            },
-            complete: function() {
-                // Re-enable checkbox and remove loading spinner
-                checkbox.prop('disabled', false);
-                label.find('.spinner-border').remove();
-            }
-        };
-
-        // Add CSRF token if available
-        if (csrfToken) {
-            ajaxData.headers = {
-                'X-CSRFToken': csrfToken
-            };
-        }
-
-        $.ajax(ajaxData);
-    });
-
-    // Verify checkbox states on page load by fetching from server
-    $('.dues-checkbox').each(function() {
-        const feeId = $(this).data('fee-id');
-        const field = $(this).data('field');
-        const checkbox = $(this);
-        
-        // Verify current state with server
-        $.ajax({
-            url: `/api/verify-fee-field/${feeId}/${field}`,
-            method: 'GET',
-            success: function(response) {
-                if (response.success) {
-                    checkbox.prop('checked', response.current_value);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.warn(`Failed to verify ${field} for fee ${feeId}:`, error);
-            }
-        });
-    });
-});
-
-function showAlert(message, type) {
-    const alertClass = type === 'success' ? 'alert-success' : 
-                     type === 'warning' ? 'alert-warning' : 'alert-danger';
-    const icon = type === 'success' ? 'fas fa-check-circle' : 
-                type === 'warning' ? 'fas fa-exclamation-triangle' : 'fas fa-exclamation-circle';
-    
-    const alert = $(`
-        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" role="alert" style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
-            <i class="${icon} me-2"></i>${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `);
-
-    $('body').append(alert);
-
-    setTimeout(() => {
-        alert.alert('close');
-    }, 5000);
-}
-
-// Add visual feedback when checkboxes are being updated
-$(document).on('click', '.dues-checkbox', function() {
-    const checkbox = $(this);
-    const row = checkbox.closest('tr');
-    
-    // Debug logging
-    console.log('Checkbox clicked:', {
-        feeId: checkbox.data('fee-id'),
-        field: checkbox.data('field'),
-        checked: checkbox.is(':checked'),
-        element: checkbox[0]
-    });
-    
-    // Add a subtle highlight to show the row is being updated
-    row.addClass('table-warning');
-    setTimeout(() => {
-        row.removeClass('table-warning');
-    }, 2000);
-});
-
-// Debug: Log all checkboxes on page load
-$(document).ready(function() {
+    // Debug: Log all checkboxes on page load
     console.log('=== Fee Checkboxes Debug Info ===');
     $('.dues-checkbox').each(function(index) {
         const checkbox = $(this);
@@ -504,6 +359,184 @@ $(document).ready(function() {
             disabled: checkbox.is(':disabled')
         });
     });
+
+    // Fee status update - Handle checkbox changes
+    $(document).on('change', '.dues-checkbox', function() {
+        const feeId = $(this).data('fee-id');
+        const field = $(this).data('field');
+        const value = this.checked;
+        const checkbox = $(this);
+        
+        console.log('=== CHECKBOX CHANGE EVENT ===');
+        console.log('Fee ID:', feeId);
+        console.log('Field:', field);
+        console.log('New Value:', value);
+        console.log('Checkbox Element:', checkbox[0]);
+
+        // Validate required data
+        if (!feeId || !field) {
+            console.error('Missing required data:', {feeId, field});
+            showAlert('Error: Missing fee ID or field name', 'error');
+            return;
+        }
+
+        // Show loading state
+        checkbox.prop('disabled', true);
+        const label = $(`label[for="${checkbox.attr('id')}"]`);
+        const originalLabelText = label.html();
+        label.append(' <span class="loading-spinner spinner-border spinner-border-sm ms-1"></span>');
+
+        // Prepare request data
+        const requestData = {
+            field: field,
+            value: value
+        };
+        
+        console.log('Request Data:', requestData);
+        console.log('Making AJAX request to:', `/api/update-fee-field/${feeId}`);
+
+        // Make AJAX request
+        $.ajax({
+            url: `/api/update-fee-field/${feeId}`,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(requestData),
+            timeout: 30000, // 30 second timeout
+            beforeSend: function(xhr, settings) {
+                console.log('=== AJAX REQUEST ===');
+                console.log('URL:', settings.url);
+                console.log('Method:', settings.type);
+                console.log('Data:', settings.data);
+                console.log('Content-Type:', settings.contentType);
+            },
+            success: function(response, textStatus, xhr) {
+                console.log('=== AJAX SUCCESS ===');
+                console.log('Status:', textStatus);
+                console.log('Response:', response);
+                console.log('XHR Status:', xhr.status);
+                
+                if (response && response.success) {
+                    const fieldDisplayName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    showAlert(`${fieldDisplayName} updated successfully`, 'success');
+                    
+                    // Ensure checkbox reflects the actual database value
+                    const actualValue = response.new_value !== undefined ? response.new_value : value;
+                    checkbox.prop('checked', actualValue);
+                    
+                    console.log('Updated checkbox to:', actualValue);
+                } else {
+                    console.error('API returned success=false:', response);
+                    const errorMsg = response ? response.error || response.message || 'Unknown error' : 'No response data';
+                    showAlert('Error updating field: ' + errorMsg, 'error');
+                    // Revert checkbox state on error
+                    checkbox.prop('checked', !value);
+                }
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                console.log('=== AJAX ERROR ===');
+                console.log('Status Text:', textStatus);
+                console.log('Error Thrown:', errorThrown);
+                console.log('XHR Status:', xhr.status);
+                console.log('XHR Status Text:', xhr.statusText);
+                console.log('Response Text:', xhr.responseText);
+                
+                let errorMessage = 'Error updating field: ';
+                
+                try {
+                    if (xhr.responseText) {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response && response.error) {
+                            errorMessage += response.error;
+                        } else {
+                            errorMessage += xhr.responseText;
+                        }
+                    } else {
+                        errorMessage += `${xhr.status} ${xhr.statusText}`;
+                    }
+                } catch (parseError) {
+                    console.log('Failed to parse error response:', parseError);
+                    errorMessage += `HTTP ${xhr.status}: ${textStatus}`;
+                }
+                
+                showAlert(errorMessage, 'error');
+                // Revert checkbox state on error
+                checkbox.prop('checked', !value);
+            },
+            complete: function(xhr, textStatus) {
+                console.log('=== AJAX COMPLETE ===');
+                console.log('Final Status:', textStatus);
+                
+                // Re-enable checkbox and remove loading spinner
+                checkbox.prop('disabled', false);
+                label.find('.loading-spinner').remove();
+            }
+        });
+    });
+
+    // Test API endpoint availability
+    console.log('Testing API endpoint availability...');
+    $.ajax({
+        url: '/api/verify-fee-field/1/pending_dues_for_libraries',
+        method: 'GET',
+        timeout: 5000,
+        success: function(response) {
+            console.log('✓ API endpoint is accessible:', response);
+        },
+        error: function(xhr, status, error) {
+            console.log('✗ API endpoint test failed:', {
+                status: xhr.status,
+                statusText: xhr.statusText,
+                error: error,
+                responseText: xhr.responseText
+            });
+        }
+    });
+});
+
+function showAlert(message, type) {
+    // Remove any existing alerts first
+    $('.fee-alert').remove();
+    
+    const alertClass = type === 'success' ? 'alert-success' : 
+                     type === 'warning' ? 'alert-warning' : 'alert-danger';
+    const icon = type === 'success' ? 'fas fa-check-circle' : 
+                type === 'warning' ? 'fas fa-exclamation-triangle' : 'fas fa-exclamation-circle';
+    
+    const alert = $(`
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed fee-alert" role="alert" style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+            <i class="${icon} me-2"></i>${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `);
+
+    $('body').append(alert);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        alert.alert('close');
+    }, 5000);
+    
+    console.log('Alert shown:', {message, type});
+}
+
+// Add visual feedback when checkboxes are clicked
+$(document).on('click', '.dues-checkbox', function(e) {
+    const checkbox = $(this);
+    const row = checkbox.closest('tr');
+    
+    console.log('=== CHECKBOX CLICK EVENT ===');
+    console.log('Clicked checkbox:', {
+        feeId: checkbox.data('fee-id'),
+        field: checkbox.data('field'),
+        checked: checkbox.is(':checked'),
+        willBe: !checkbox.is(':checked') // Because change event hasn't fired yet
+    });
+    
+    // Add visual feedback
+    row.addClass('table-warning');
+    setTimeout(() => {
+        row.removeClass('table-warning');
+    }, 3000);
 });
 </script>
 {% endblock %}
