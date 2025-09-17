@@ -347,35 +347,18 @@ $(document).ready(function() {
     // Initialize tooltips
     $('[data-bs-toggle="tooltip"]').tooltip();
 
-    // Store initial checkbox states to detect changes
-    const initialStates = {};
-    $('.dues-checkbox').each(function() {
-        const feeId = $(this).data('fee-id');
-        const field = $(this).data('field');
-        const key = `${feeId}_${field}`;
-        initialStates[key] = this.checked;
-    });
-
-    // Fee status update - Use event delegation for dynamically loaded content
+    // Fee status update - Handle checkbox changes
     $(document).on('change', '.dues-checkbox', function() {
         const feeId = $(this).data('fee-id');
         const field = $(this).data('field');
         const value = this.checked;
         const checkbox = $(this);
-        const key = `${feeId}_${field}`;
 
         console.log('Updating fee field:', {feeId, field, value});
-
-        // Check if this is actually a change from initial state
-        if (initialStates[key] === value) {
-            console.log('No change detected, skipping update');
-            return;
-        }
 
         // Show loading state
         checkbox.prop('disabled', true);
         const label = $(`label[for="${checkbox.attr('id')}"]`);
-        const originalText = label.text();
         label.append(' <span class="spinner-border spinner-border-sm ms-1"></span>');
 
         // Update via AJAX
@@ -387,32 +370,37 @@ $(document).ready(function() {
                 field: field,
                 value: value
             }),
+            timeout: 10000, // 10 second timeout
             success: function(response) {
                 console.log('API Response:', response);
                 if (response.success) {
-                    showAlert('Field updated successfully', 'success');
-                    // Update the initial state to reflect the new value
-                    initialStates[key] = value;
+                    showAlert(`${field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} updated successfully`, 'success');
                     
-                    // Update the checkbox state to ensure it matches the database
-                    checkbox.prop('checked', value);
+                    // Ensure checkbox reflects the actual database value
+                    checkbox.prop('checked', response.new_value);
+                    
+                    // Store the current state in localStorage for persistence
+                    const storageKey = `fee_${feeId}_${field}`;
+                    localStorage.setItem(storageKey, response.new_value);
                 } else {
                     showAlert('Error updating field: ' + (response.error || 'Unknown error'), 'error');
                     // Revert checkbox state on error
-                    checkbox.prop('checked', initialStates[key]);
+                    checkbox.prop('checked', !value);
                 }
             },
             error: function(xhr, status, error) {
-                console.error('AJAX Error:', {xhr, status, error});
+                console.error('AJAX Error:', {xhr, status, error, responseText: xhr.responseText});
                 let errorMessage = 'Error updating field: ';
                 if (xhr.responseJSON && xhr.responseJSON.error) {
                     errorMessage += xhr.responseJSON.error;
+                } else if (xhr.responseText) {
+                    errorMessage += xhr.responseText;
                 } else {
                     errorMessage += error;
                 }
                 showAlert(errorMessage, 'error');
                 // Revert checkbox state on error
-                checkbox.prop('checked', initialStates[key]);
+                checkbox.prop('checked', !value);
             },
             complete: function() {
                 // Re-enable checkbox and remove loading spinner
@@ -422,13 +410,31 @@ $(document).ready(function() {
         });
     });
 
-    // Handle form submission to prevent page reload issues
-    $('form').on('submit', function(e) {
-        // Check if there are any pending AJAX requests
-        if ($.active > 0) {
-            e.preventDefault();
-            showAlert('Please wait for all changes to be saved before submitting.', 'warning');
-            return false;
+    // Load saved states from localStorage on page load
+    $('.dues-checkbox').each(function() {
+        const feeId = $(this).data('fee-id');
+        const field = $(this).data('field');
+        const storageKey = `fee_${feeId}_${field}`;
+        const savedState = localStorage.getItem(storageKey);
+        
+        if (savedState !== null) {
+            const isChecked = savedState === 'true';
+            // Only update if different from current state
+            if (this.checked !== isChecked) {
+                console.log(`Loading saved state for ${storageKey}:`, isChecked);
+                $(this).prop('checked', isChecked);
+            }
+        }
+    });
+
+    // Clear localStorage when navigating away to avoid stale data
+    $(window).on('beforeunload', function() {
+        // Clear fee-related localStorage items older than 1 minute
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('fee_')) {
+                localStorage.removeItem(key);
+            }
         }
     });
 });

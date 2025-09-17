@@ -3175,6 +3175,37 @@ def api_semester_trend_stats():
             'semester_averages': [0]
         })
 
+@app.route('/api/verify-fee-field/<int:fee_id>/<field>')
+@login_required
+def api_verify_fee_field(fee_id, field):
+    """API endpoint to verify fee field values from database"""
+    try:
+        # Validate field name
+        allowed_fields = ['pending_dues_for_libraries', 'pending_dues_for_hostel', 'exam_admit_card_issued']
+        if field not in allowed_fields:
+            return jsonify({'success': False, 'error': f'Invalid field name: {field}'}), 400
+
+        # Get the fee record
+        fee_record = CollegeFees.query.get(fee_id)
+        if not fee_record:
+            return jsonify({'success': False, 'error': 'Fee record not found'}), 404
+
+        # Get current value from database
+        current_value = getattr(fee_record, field)
+        
+        return jsonify({
+            'success': True,
+            'fee_id': fee_id,
+            'field': field,
+            'current_value': current_value
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Database error: {str(e)}'
+        }), 500
+
 @app.route('/api/debug-student-data')
 @login_required
 def api_debug_student_data():
@@ -3309,32 +3340,25 @@ def api_update_fee_field(fee_id):
         # Get old value for logging
         old_value = getattr(fee_record, field)
         
-        # Only update if there's actually a change
-        if old_value != bool_value:
-            # Update the field
-            setattr(fee_record, field, bool_value)
-            db.session.commit()
-            
-            app.logger.info(f"Successfully updated {field} from {old_value} to {bool_value} for fee_id {fee_id}")
-            
-            return jsonify({
-                'success': True,
-                'message': f'Field {field} updated successfully',
-                'field': field,
-                'new_value': bool_value,
-                'old_value': old_value,
-                'changed': True
-            })
-        else:
-            app.logger.info(f"No change needed for {field} (already {bool_value}) for fee_id {fee_id}")
-            return jsonify({
-                'success': True,
-                'message': f'Field {field} already has the correct value',
-                'field': field,
-                'new_value': bool_value,
-                'old_value': old_value,
-                'changed': False
-            })
+        # Always update the field and commit
+        setattr(fee_record, field, bool_value)
+        db.session.add(fee_record)  # Explicitly add to session
+        db.session.commit()
+        
+        # Verify the update by fetching fresh data
+        db.session.refresh(fee_record)
+        actual_value = getattr(fee_record, field)
+        
+        app.logger.info(f"Updated {field} from {old_value} to {actual_value} for fee_id {fee_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Field {field} updated successfully',
+            'field': field,
+            'new_value': actual_value,
+            'old_value': old_value,
+            'changed': old_value != actual_value
+        })
 
     except Exception as e:
         db.session.rollback()
