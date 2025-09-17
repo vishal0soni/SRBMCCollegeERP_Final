@@ -964,8 +964,9 @@ def payment():
             flash('No fee record found for this student.', 'error')
             return redirect(url_for('payment'))
 
-        # Capture current course information as snapshot if not already set
-        if not fee_record.course_full_name and student.current_course:
+        # Always ensure course information is captured as snapshot when processing payment
+        if student.current_course:
+            # Update course_full_name as snapshot regardless of existing value
             fee_record.course_full_name = student.current_course
             
             # Find and set coursedetail_id and course_id based on current course
@@ -977,6 +978,20 @@ def payment():
                 course = Course.query.filter_by(course_short_name=course_detail.course_short_name).first()
                 if course:
                     fee_record.course_id = course.course_id
+            
+            # If no exact match found, try to find by course short name pattern
+            elif not course_detail:
+                # Extract potential course short name from full name
+                course_parts = student.current_course.split(' ')
+                if course_parts:
+                    potential_short_name = course_parts[0]
+                    course = Course.query.filter_by(course_short_name=potential_short_name).first()
+                    if course:
+                        fee_record.course_id = course.course_id
+                        # Try to find a matching course detail
+                        course_detail = CourseDetails.query.filter_by(course_short_name=potential_short_name).first()
+                        if course_detail:
+                            fee_record.coursedetail_id = course_detail.id
 
         # Find next available installment slot
         installments = [
@@ -1002,7 +1017,7 @@ def payment():
         invoice_number = generate_invoice_number()
         invoice = Invoice(
             student_id=student.id,
-            course_id=fee_record.course_id,
+            course_id=fee_record.course_id,  # Use the course_id from fee record snapshot
             invoice_number=invoice_number,
             invoice_amount=amount,
             installment_number=next_slot[0]
