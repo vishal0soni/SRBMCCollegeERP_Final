@@ -248,11 +248,11 @@ function loadYearOptions() {
         const option = document.createElement("option");
         option.value = year;
         option.textContent = `${year}-${(year + 1).toString().slice(-2)}`;
-        
+
         if (year === currentYear) {
             option.selected = true;
         }
-        
+
         yearFilter.appendChild(option);
     }
 }
@@ -260,10 +260,10 @@ function loadYearOptions() {
 function applyYearFilter() {
     const selectedYear = parseInt(document.getElementById("yearFilter").value);
     currentYear = selectedYear;
-    
+
     const yearFilter = document.getElementById("yearFilter");
     yearFilter.disabled = true;
-    
+
     loadStudentSummaryData().finally(() => {
         yearFilter.disabled = false;
     });
@@ -309,12 +309,12 @@ function loadBreakdownTables() {
 
 function updateCourseBreakdownTableFromAPI(courseBreakdown) {
     const tbody = document.querySelector('#courseBreakdownTable tbody');
-    
+
     if (!tbody) {
         console.error('Course breakdown table body not found');
         return;
     }
-    
+
     tbody.innerHTML = '';
 
     if (!courseBreakdown || courseBreakdown.length === 0) {
@@ -335,12 +335,12 @@ function updateCourseBreakdownTableFromAPI(courseBreakdown) {
 
 function updateCategoryBreakdownTableFromAPI(categoryBreakdown) {
     const tbody = document.querySelector('#categoryBreakdownTable tbody');
-    
+
     if (!tbody) {
         console.error('Category breakdown table body not found');
         return;
     }
-    
+
     tbody.innerHTML = '';
 
     if (!categoryBreakdown || categoryBreakdown.length === 0) {
@@ -394,7 +394,7 @@ function loadStudentDistributionChart() {
         .then(data => {
             console.log('Student distribution by course data loaded:', data);
             const ctx = document.getElementById('studentDistributionByCourseChart').getContext('2d');
-            
+
             if (studentDistributionChart) {
                 studentDistributionChart.destroy();
             }
@@ -441,7 +441,7 @@ function loadStudentDistributionChart() {
 
 function loadScholarshipCharts() {
     console.log('Loading scholarship charts for year:', currentYear);
-    
+
     // Get government scholarship counts directly by counting student records
     Promise.all([
         fetch(`/api/student-summary-stats?year=${currentYear}`),
@@ -451,7 +451,7 @@ function loadScholarshipCharts() {
         return Promise.all(responses.map(r => r.json()));
     }).then(([summaryData, scholarshipData]) => {
         console.log('Scholarship data loaded:', summaryData, scholarshipData);
-        
+
         // Government Scholarship Chart
         const govCtx = document.getElementById('govScholarshipChart').getContext('2d');
         if (govScholarshipChart) {
@@ -625,7 +625,7 @@ function loadCategoryChart() {
         .then(data => {
             console.log('Category distribution data loaded:', data);
             const ctx = document.getElementById('categoryDistributionChart').getContext('2d');
-            
+
             if (categoryChart) {
                 categoryChart.destroy();
             }
@@ -634,7 +634,7 @@ function loadCategoryChart() {
                 if (data.categories && data.categories.length > 0 && data.total_students > 0) {
                     const categories = data.categories;
                     const counts = data.counts;
-                    
+
                     console.log('Categories:', categories);
                     console.log('Counts:', counts);
                     console.log('Total students:', data.total_students);
@@ -643,7 +643,7 @@ function loadCategoryChart() {
                     const validData = [];
                     const validLabels = [];
                     const validColors = ['#1cc88a', '#4e73df', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#17a2b8', '#ffc107'];
-                    
+
                     categories.forEach((category, index) => {
                         if (counts[index] > 0) {
                             validData.push(counts[index]);
@@ -736,6 +736,10 @@ function loadCategoryChart() {
                                 }
                             }
                         });
+
+                        // Store chart reference
+                        window.analyticsCharts = window.analyticsCharts || {};
+                        window.analyticsCharts.categoryDistributionChart = categoryChart;
                     } else {
                         createNoCategoryDataChart(ctx);
                     }
@@ -809,6 +813,10 @@ function createNoCategoryDataChart(ctx) {
             }
         }
     });
+
+    // Store chart reference
+    window.analyticsCharts = window.analyticsCharts || {};
+    window.analyticsCharts.categoryDistributionChart = categoryChart;
 }
 
 function createErrorCategoryChart() {
@@ -870,6 +878,10 @@ function createErrorCategoryChart() {
             }
         }
     });
+
+    // Store chart reference
+    window.analyticsCharts = window.analyticsCharts || {};
+    window.analyticsCharts.categoryDistributionChart = categoryChart;
 }
 
 // Table update functions moved to loadBreakdownTables() section above
@@ -884,7 +896,7 @@ function loadMonthlyAdmissionsChart() {
         .then(data => {
             console.log('Monthly admissions data loaded:', data);
             const ctx = document.getElementById('monthlyAdmissionsChart').getContext('2d');
-            
+
             if (monthlyChart) {
                 monthlyChart.destroy();
             }
@@ -893,7 +905,7 @@ function loadMonthlyAdmissionsChart() {
                 const labels = data.labels;
                 const counts = data.counts;
                 const totalAdmissions = data.total_admissions || 0;
-                
+
                 console.log('Monthly labels:', labels);
                 console.log('Monthly counts:', counts);
                 console.log('Total admissions:', totalAdmissions);

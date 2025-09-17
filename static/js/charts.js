@@ -512,6 +512,97 @@ function initCategoryChart() {
     });
 }
 
+// Category Distribution Chart for Student Summary
+function initCategoryDistributionChart() {
+    const ctx = document.getElementById('categoryDistributionChart');
+    if (!ctx) return;
+    
+    window.analyticsCharts.categoryDistributionChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['General', 'OBC', 'SC', 'ST'],
+            datasets: [{
+                label: 'Students',
+                data: [125, 85, 25, 10],
+                backgroundColor: chartColors.college.primary,
+                borderRadius: 4,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 11
+                        },
+                        padding: 12,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed.y;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value} students (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        precision: 0,
+                        callback: function(value) {
+                            if (value % 1 === 0) {
+                                return value;
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Number of Students',
+                        font: {
+                            size: 11,
+                            weight: 'bold'
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Category',
+                        font: {
+                            size: 11,
+                            weight: 'bold'
+                        }
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            animation: {
+                duration: 1200
+            }
+        }
+    });
+}
+
 // Attendance Trends Chart
 function initAttendanceChart() {
     const ctx = document.getElementById('attendanceChart');
@@ -689,29 +780,8 @@ function initStudentSummaryCharts() {
         });
     }
 
-    // Category Distribution Chart
-    const categoryDistributionCtx = document.getElementById('categoryDistributionChart');
-    if (categoryDistributionCtx) {
-        window.analyticsCharts.studentCategoryDistribution = new Chart(categoryDistributionCtx, {
-            type: 'bar',
-            data: {
-                labels: ['General', 'OBC', 'SC', 'ST'],
-                datasets: [{
-                    label: 'Students',
-                    data: [125, 85, 25, 10],
-                    backgroundColor: chartColors.college.primary
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    }
+    // Initialize Category Distribution Chart
+    initCategoryDistributionChart();
 
     // Monthly Admissions Chart
     const monthlyAdmissionsCtx = document.getElementById('monthlyAdmissionsChart');
