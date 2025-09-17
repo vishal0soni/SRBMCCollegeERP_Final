@@ -617,6 +617,9 @@ function loadCategoryChart() {
     return fetch(`/api/student-category-stats?year=${currentYear}`)
         .then(response => {
             console.log('Category API response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
             return response.json();
         })
         .then(data => {
@@ -701,7 +704,7 @@ function loadCategoryChart() {
                     createNoCategoryDataChart(ctx);
                 }
             } else {
-                console.log('No category data available for year:', currentYear);
+                console.log('No category data available for year:', currentYear, 'Data:', data);
                 createNoCategoryDataChart(ctx);
             }
         })

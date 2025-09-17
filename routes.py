@@ -2840,7 +2840,7 @@ def api_student_category_stats():
         ).filter(
             and_(
                 func.extract('year', Student.admission_date) == year,
-                Student.id.isnot(None)
+                Student.admission_date.isnot(None)
             )
         ).group_by(Student.category).order_by(func.count(Student.id).desc()).all()
 
@@ -2855,16 +2855,6 @@ def api_student_category_stats():
                 total_students += count
 
         app.logger.info(f"Category data - Categories: {categories}, Counts: {counts}, Total: {total_students}")
-
-        # If no students found for the year
-        if not categories or total_students == 0:
-            app.logger.info(f"No students found for year {year}")
-            return jsonify({
-                'success': True,
-                'categories': [],
-                'counts': [],
-                'total_students': 0
-            })
 
         return jsonify({
             'success': True,
@@ -3150,6 +3140,40 @@ def api_semester_trend_stats():
             'semester_averages': [0]
         })
 
+@app.route('/api/debug-student-data')
+@login_required
+def api_debug_student_data():
+    """Debug route to check student data"""
+    try:
+        year = request.args.get('year', datetime.now().year, type=int)
+        
+        # Get all students for debugging
+        all_students = Student.query.all()
+        students_for_year = Student.query.filter(
+            func.extract('year', Student.admission_date) == year
+        ).all()
+        
+        debug_info = {
+            'total_students_in_db': len(all_students),
+            'students_for_year': len(students_for_year),
+            'year_filter': year,
+            'sample_students': []
+        }
+        
+        # Add sample student data
+        for student in students_for_year[:5]:  # First 5 students
+            debug_info['sample_students'].append({
+                'id': student.id,
+                'name': f"{student.first_name} {student.last_name}",
+                'admission_date': student.admission_date.strftime('%Y-%m-%d') if student.admission_date else None,
+                'category': student.category,
+                'current_course': student.current_course
+            })
+        
+        return jsonify(debug_info)
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
 @app.route('/api/student-breakdown-data')
 @login_required
 def api_student_breakdown_data():
@@ -3173,7 +3197,10 @@ def api_student_breakdown_data():
             Student.category,
             func.count(Student.id)
         ).filter(
-            func.extract('year', Student.admission_date) == year
+            and_(
+                func.extract('year', Student.admission_date) == year,
+                Student.admission_date.isnot(None)
+            )
         ).group_by(Student.category).all()
 
         # Format course data
