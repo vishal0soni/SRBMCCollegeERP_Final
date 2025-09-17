@@ -3185,8 +3185,8 @@ def api_verify_fee_field(fee_id, field):
         if field not in allowed_fields:
             return jsonify({'success': False, 'error': f'Invalid field name: {field}'}), 400
 
-        # Get the fee record
-        fee_record = CollegeFees.query.get(fee_id)
+        # Get the fee record with explicit query
+        fee_record = CollegeFees.query.filter_by(id=fee_id).first()
         if not fee_record:
             return jsonify({'success': False, 'error': 'Fee record not found'}), 404
 
@@ -3197,10 +3197,75 @@ def api_verify_fee_field(fee_id, field):
             'success': True,
             'fee_id': fee_id,
             'field': field,
-            'current_value': current_value
+            'current_value': bool(current_value) if current_value is not None else False
         })
 
     except Exception as e:
+        app.logger.error(f"Error verifying fee field {fee_id}.{field}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'Database error: {str(e)}'
+        }), 500
+
+@app.route('/api/test-fee-field-update/<int:fee_id>', methods=['POST'])
+@login_required
+def api_test_fee_field_update(fee_id):
+    """Test endpoint to debug fee field updates"""
+    if not can_edit_module(current_user, 'fees') or current_user.role.access_type != 'Edit':
+        return jsonify({'success': False, 'error': 'Permission denied'}), 403
+
+    try:
+        # Get the fee record
+        fee_record = CollegeFees.query.filter_by(id=fee_id).first()
+        if not fee_record:
+            return jsonify({'success': False, 'error': 'Fee record not found'}), 404
+
+        # Test all three fields
+        results = {}
+        fields = ['pending_dues_for_libraries', 'pending_dues_for_hostel', 'exam_admit_card_issued']
+        
+        for field in fields:
+            try:
+                # Get current value
+                old_value = getattr(fee_record, field)
+                
+                # Toggle the value
+                new_value = not bool(old_value)
+                setattr(fee_record, field, new_value)
+                
+                results[field] = {
+                    'old_value': bool(old_value),
+                    'new_value': new_value,
+                    'success': True
+                }
+            except Exception as field_error:
+                results[field] = {
+                    'old_value': None,
+                    'new_value': None,
+                    'success': False,
+                    'error': str(field_error)
+                }
+
+        # Commit all changes
+        db.session.commit()
+        
+        # Verify changes
+        updated_record = CollegeFees.query.filter_by(id=fee_id).first()
+        for field in fields:
+            if results[field]['success']:
+                actual_value = getattr(updated_record, field)
+                results[field]['actual_value'] = bool(actual_value)
+                results[field]['verified'] = (actual_value == results[field]['new_value'])
+
+        return jsonify({
+            'success': True,
+            'fee_id': fee_id,
+            'results': results
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error in test fee field update {fee_id}: {str(e)}")
         return jsonify({
             'success': False,
             'error': f'Database error: {str(e)}'
@@ -3315,10 +3380,15 @@ def api_update_fee_field(fee_id):
     try:
         data = request.get_json()
         if not data:
+            app.logger.error("No JSON data provided in request")
             return jsonify({'success': False, 'error': 'No data provided'}), 400
 
         field = data.get('field')
         value = data.get('value')
+
+        if field is None or value is None:
+            app.logger.error(f"Missing field or value in request data: {data}")
+            return jsonify({'success': False, 'error': 'Missing field or value'}), 400
 
         app.logger.info(f"Updating fee field {field} for fee_id {fee_id} to {value}")
 
@@ -3328,8 +3398,8 @@ def api_update_fee_field(fee_id):
             app.logger.error(f"Invalid field name: {field}")
             return jsonify({'success': False, 'error': f'Invalid field name: {field}'}), 400
 
-        # Get the fee record
-        fee_record = CollegeFees.query.get(fee_id)
+        # Get the fee record with explicit query
+        fee_record = CollegeFees.query.filter_by(id=fee_id).first()
         if not fee_record:
             app.logger.error(f"Fee record not found: {fee_id}")
             return jsonify({'success': False, 'error': 'Fee record not found'}), 404
@@ -3340,16 +3410,26 @@ def api_update_fee_field(fee_id):
         # Get old value for logging
         old_value = getattr(fee_record, field)
         
-        # Always update the field and commit
+        # Update the field
         setattr(fee_record, field, bool_value)
-        db.session.add(fee_record)  # Explicitly add to session
-        db.session.commit()
         
-        # Verify the update by fetching fresh data
-        db.session.refresh(fee_record)
-        actual_value = getattr(fee_record, field)
+        # Commit the transaction
+        try:
+            db.session.commit()
+            app.logger.info(f"Successfully committed {field} change for fee_id {fee_id}")
+        except Exception as commit_error:
+            db.session.rollback()
+            app.logger.error(f"Failed to commit {field} change for fee_id {fee_id}: {str(commit_error)}")
+            raise commit_error
+        
+        # Verify the update by refetching the record
+        updated_record = CollegeFees.query.filter_by(id=fee_id).first()
+        actual_value = getattr(updated_record, field)
         
         app.logger.info(f"Updated {field} from {old_value} to {actual_value} for fee_id {fee_id}")
+        
+        if actual_value != bool_value:
+            app.logger.warning(f"Value mismatch after update: expected {bool_value}, got {actual_value}")
         
         return jsonify({
             'success': True,

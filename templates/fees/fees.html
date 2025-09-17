@@ -361,8 +361,9 @@ $(document).ready(function() {
         const label = $(`label[for="${checkbox.attr('id')}"]`);
         label.append(' <span class="spinner-border spinner-border-sm ms-1"></span>');
 
-        // Update via AJAX
-        $.ajax({
+        // Update via AJAX with CSRF token if available
+        const csrfToken = $('meta[name=csrf-token]').attr('content');
+        const ajaxData = {
             url: `/api/update-fee-field/${feeId}`,
             method: 'POST',
             contentType: 'application/json',
@@ -370,7 +371,7 @@ $(document).ready(function() {
                 field: field,
                 value: value
             }),
-            timeout: 10000, // 10 second timeout
+            timeout: 15000, // 15 second timeout
             success: function(response) {
                 console.log('API Response:', response);
                 if (response.success) {
@@ -379,9 +380,9 @@ $(document).ready(function() {
                     // Ensure checkbox reflects the actual database value
                     checkbox.prop('checked', response.new_value);
                     
-                    // Store the current state in localStorage for persistence
+                    // Remove from localStorage on successful update
                     const storageKey = `fee_${feeId}_${field}`;
-                    localStorage.setItem(storageKey, response.new_value);
+                    localStorage.removeItem(storageKey);
                 } else {
                     showAlert('Error updating field: ' + (response.error || 'Unknown error'), 'error');
                     // Revert checkbox state on error
@@ -391,13 +392,22 @@ $(document).ready(function() {
             error: function(xhr, status, error) {
                 console.error('AJAX Error:', {xhr, status, error, responseText: xhr.responseText});
                 let errorMessage = 'Error updating field: ';
-                if (xhr.responseJSON && xhr.responseJSON.error) {
-                    errorMessage += xhr.responseJSON.error;
-                } else if (xhr.responseText) {
-                    errorMessage += xhr.responseText;
-                } else {
-                    errorMessage += error;
+                
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response && response.error) {
+                        errorMessage += response.error;
+                    } else {
+                        errorMessage += `HTTP ${xhr.status}: ${xhr.statusText}`;
+                    }
+                } catch (e) {
+                    if (xhr.responseText) {
+                        errorMessage += xhr.responseText;
+                    } else {
+                        errorMessage += `${status}: ${error}`;
+                    }
                 }
+                
                 showAlert(errorMessage, 'error');
                 // Revert checkbox state on error
                 checkbox.prop('checked', !value);
@@ -407,35 +417,37 @@ $(document).ready(function() {
                 checkbox.prop('disabled', false);
                 label.find('.spinner-border').remove();
             }
-        });
+        };
+
+        // Add CSRF token if available
+        if (csrfToken) {
+            ajaxData.headers = {
+                'X-CSRFToken': csrfToken
+            };
+        }
+
+        $.ajax(ajaxData);
     });
 
-    // Load saved states from localStorage on page load
+    // Verify checkbox states on page load by fetching from server
     $('.dues-checkbox').each(function() {
         const feeId = $(this).data('fee-id');
         const field = $(this).data('field');
-        const storageKey = `fee_${feeId}_${field}`;
-        const savedState = localStorage.getItem(storageKey);
+        const checkbox = $(this);
         
-        if (savedState !== null) {
-            const isChecked = savedState === 'true';
-            // Only update if different from current state
-            if (this.checked !== isChecked) {
-                console.log(`Loading saved state for ${storageKey}:`, isChecked);
-                $(this).prop('checked', isChecked);
+        // Verify current state with server
+        $.ajax({
+            url: `/api/verify-fee-field/${feeId}/${field}`,
+            method: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    checkbox.prop('checked', response.current_value);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.warn(`Failed to verify ${field} for fee ${feeId}:`, error);
             }
-        }
-    });
-
-    // Clear localStorage when navigating away to avoid stale data
-    $(window).on('beforeunload', function() {
-        // Clear fee-related localStorage items older than 1 minute
-        for (let i = localStorage.length - 1; i >= 0; i--) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('fee_')) {
-                localStorage.removeItem(key);
-            }
-        }
+        });
     });
 });
 
@@ -464,11 +476,34 @@ $(document).on('click', '.dues-checkbox', function() {
     const checkbox = $(this);
     const row = checkbox.closest('tr');
     
+    // Debug logging
+    console.log('Checkbox clicked:', {
+        feeId: checkbox.data('fee-id'),
+        field: checkbox.data('field'),
+        checked: checkbox.is(':checked'),
+        element: checkbox[0]
+    });
+    
     // Add a subtle highlight to show the row is being updated
     row.addClass('table-warning');
     setTimeout(() => {
         row.removeClass('table-warning');
     }, 2000);
+});
+
+// Debug: Log all checkboxes on page load
+$(document).ready(function() {
+    console.log('=== Fee Checkboxes Debug Info ===');
+    $('.dues-checkbox').each(function(index) {
+        const checkbox = $(this);
+        console.log(`Checkbox ${index + 1}:`, {
+            id: checkbox.attr('id'),
+            feeId: checkbox.data('fee-id'),
+            field: checkbox.data('field'),
+            checked: checkbox.is(':checked'),
+            disabled: checkbox.is(':disabled')
+        });
+    });
 });
 </script>
 {% endblock %}
