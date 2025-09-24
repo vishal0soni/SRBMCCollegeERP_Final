@@ -215,7 +215,7 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             {{ form.scholarship_status.label(class="form-label") }}
                             {% if current_user.role.role_name == 'Admission Officer' %}
                                 {{ form.scholarship_status(class="form-select", disabled=true, readonly=true) }}
@@ -232,7 +232,7 @@
                             {% endif %}
                         </div>
 
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             {{ form.rebate_meera_scholarship_status.label(class="form-label") }}
                             {% if current_user.role.role_name == 'Admission Officer' %}
                                 {{ form.rebate_meera_scholarship_status(class="form-select", disabled=true, readonly=true) }}
@@ -247,6 +247,19 @@
                                     {% endfor %}
                                 </div>
                             {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            {{ form.student_status.label(class="form-label") }}
+                            {{ form.student_status(class="form-select") }}
+                            {% if form.student_status.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.student_status.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">Current enrollment status of the student</small>
                         </div>
                     </div>
 
