@@ -320,6 +320,7 @@ def process_import_file(file, data_type):
 
         # Call the appropriate import function and ensure consistent return format
         try:
+            result = None
             if data_type == 'students':
                 result = import_students_data(records)
             elif data_type == 'courses':
@@ -340,11 +341,21 @@ def process_import_file(file, data_type):
                 return False, "Invalid data type specified."
             
             # Ensure result is a tuple with exactly 2 values
-            if isinstance(result, tuple) and len(result) >= 2:
-                return result[0], result[1]
+            if result is None:
+                return False, f"Import function for {data_type} returned None"
+            elif isinstance(result, tuple):
+                if len(result) == 2:
+                    return bool(result[0]), str(result[1])
+                elif len(result) > 2:
+                    # Take first two values if more than 2 returned
+                    return bool(result[0]), str(result[1])
+                else:
+                    return False, f"Import function returned incomplete tuple: {result}"
             else:
-                return False, f"Import function returned unexpected format: {result}"
+                return False, f"Import function returned non-tuple: {type(result)} - {result}"
                 
+        except ValueError as ve:
+            return False, f"Value error during {data_type} import: {str(ve)}"
         except Exception as import_error:
             return False, f"Error during {data_type} import: {str(import_error)}"
 
@@ -615,7 +626,10 @@ def import_invoices_data(records):
                     continue
 
                 # Parse date
-                invoice_date = datetime.strptime(record.get('Invoice Date', ''), '%Y-%m-%d') if record.get('Invoice Date') else datetime.now()
+                try:
+                    invoice_date = datetime.strptime(record.get('Invoice Date', ''), '%Y-%m-%d') if record.get('Invoice Date') else datetime.now()
+                except ValueError:
+                    invoice_date = datetime.now()
 
                 # Create new invoice
                 invoice = Invoice(
@@ -638,7 +652,7 @@ def import_invoices_data(records):
 
         message = f"Successfully imported {imported_count} invoices."
         if errors:
-            message += f" {len(errors)} errors occurred."
+            message += f" {len(errors)} errors occurred:\n" + "\n".join(errors)
 
         return True, message
 
@@ -1119,53 +1133,3 @@ def import_subjects_data(records):
 
 
 
-def import_subjects_data(records):
-    """Import subjects data from records"""
-    try:
-        imported_count = 0
-        errors = []
-
-        for i, record in enumerate(records, 1):
-            try:
-                course_short_name = record.get('Course Short Name', '')
-                subject_name = record.get('Subject Name', '')
-                subject_type = record.get('Subject Type', 'Compulsory')
-
-                if not course_short_name or not subject_name:
-                    errors.append(f"Row {i}: Course Short Name and Subject Name are required.")
-                    continue
-
-                # Check if subject already exists
-                existing_subject = Subject.query.filter_by(
-                    course_short_name=course_short_name,
-                    subject_name=subject_name
-                ).first()
-
-                if existing_subject:
-                    errors.append(f"Row {i}: Subject with name {subject_name} already exists for course {course_short_name}.")
-                    continue
-
-                # Create new subject
-                subject = Subject(
-                    course_short_name=course_short_name,
-                    subject_name=subject_name,
-                    subject_type=subject_type,
-                )
-
-                db.session.add(subject)
-                imported_count += 1
-
-            except Exception as e:
-                errors.append(f"Row {i}: {str(e)}")
-
-        db.session.commit()
-
-        message = f"Successfully imported {imported_count} subjects."
-        if errors:
-            message += f" {len(errors)} errors occurred."
-
-        return True, message
-
-    except Exception as e:
-        db.session.rollback()
-        return False, f"Import failed: {str(e)}"

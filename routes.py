@@ -3640,19 +3640,26 @@ def bulk_import(data_type):
             result = process_import_file(file, data_type)
             
             # Safely unpack the result
-            if isinstance(result, tuple) and len(result) >= 2:
-                success, message = result[0], result[1]
-                if success:
-                    flash(message, 'success')
+            if result is None:
+                flash('Import failed: No result returned from import process', 'error')
+            elif isinstance(result, tuple):
+                if len(result) >= 2:
+                    success, message = bool(result[0]), str(result[1])
+                    if success:
+                        flash(message, 'success')
+                    else:
+                        flash(message, 'error')
                 else:
-                    flash(message, 'error')
+                    flash(f'Import failed: Incomplete result tuple - got {len(result)} values, expected 2', 'error')
             else:
-                flash(f'Import failed: Unexpected result format from import process', 'error')
+                flash(f'Import failed: Expected tuple result, got {type(result)}: {result}', 'error')
                 
         except ValueError as ve:
-            flash(f'Import failed: Error unpacking result - {str(ve)}', 'error')
+            flash(f'Import failed: Value error - {str(ve)}', 'error')
+        except TypeError as te:
+            flash(f'Import failed: Type error - {str(te)}', 'error')
         except Exception as import_error:
-            flash(f'Import failed: {str(import_error)}', 'error')
+            flash(f'Import failed: Unexpected error - {str(import_error)}', 'error')
 
     except Exception as e:
         flash(f'Import failed: {str(e)}', 'error')
