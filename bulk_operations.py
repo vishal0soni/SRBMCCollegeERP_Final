@@ -318,18 +318,35 @@ def process_import_file(file, data_type):
         # Convert DataFrame to records
         records = df.to_dict('records')
 
-        if data_type == 'students':
-            return import_students_data(records)
-        elif data_type == 'courses':
-            return import_courses_data(records)
-        elif data_type == 'course_details':
-            return import_course_details_data(records)
-        elif data_type == 'users':
-            return import_users_data(records)
-        elif data_type == 'invoices':
-            return import_invoices_data(records)
-        else:
-            return False, "Invalid data type specified."
+        # Call the appropriate import function and ensure consistent return format
+        try:
+            if data_type == 'students':
+                result = import_students_data(records)
+            elif data_type == 'courses':
+                result = import_courses_data(records)
+            elif data_type == 'course_details':
+                result = import_course_details_data(records)
+            elif data_type == 'users':
+                result = import_users_data(records)
+            elif data_type == 'fees':
+                result = import_fees_data(records)
+            elif data_type == 'invoices':
+                result = import_invoices_data(records)
+            elif data_type == 'exams':
+                result = import_exams_data(records)
+            elif data_type == 'subjects':
+                result = import_subjects_data(records)
+            else:
+                return False, "Invalid data type specified."
+            
+            # Ensure result is a tuple with exactly 2 values
+            if isinstance(result, tuple) and len(result) >= 2:
+                return result[0], result[1]
+            else:
+                return False, f"Import function returned unexpected format: {result}"
+                
+        except Exception as import_error:
+            return False, f"Error during {data_type} import: {str(import_error)}"
 
     except Exception as e:
         return False, f"Error processing file: {str(e)}"
@@ -405,7 +422,7 @@ def import_students_data(records):
                     school_name=record.get('School Name', ''),
                     scholarship_status=record.get('Scholarship Status', 'Applied'),
                     rebate_meera_scholarship_status=record.get('Meera Rebate Status', 'Applied'),
-                    student_status=record.get('Student Status', 'Active'), # Changed from dropout_status
+                    student_status=record.get('Student Status', 'Active'),
                     admission_date=_parse_admission_date(record.get('Admission Date'))
                 )
 
@@ -1100,43 +1117,7 @@ def import_subjects_data(records):
         db.session.rollback()
         return False, f"Import failed: {str(e)}"
 
-def process_import_file(file, data_type):
-    """Process uploaded file for import"""
-    try:
-        filename = secure_filename(file.filename)
-        file_ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
 
-        if file_ext == 'csv':
-            df = pd.read_csv(file)
-        elif file_ext in ['xlsx', 'xls']:
-            df = pd.read_excel(file)
-        else:
-            return False, "Unsupported file format. Please use CSV or Excel files."
-
-        # Convert DataFrame to records
-        records = df.to_dict('records')
-
-        if data_type == 'students':
-            return import_students_data(records)
-        elif data_type == 'courses':
-            return import_courses_data(records)
-        elif data_type == 'course_details':
-            return import_course_details_data(records)
-        elif data_type == 'users':
-            return import_users_data(records)
-        elif data_type == 'fees':
-            return import_fees_data(records)
-        elif data_type == 'invoices':
-            return import_invoices_data(records)
-        elif data_type == 'exams':
-            return import_exams_data(records)
-        elif data_type == 'subjects':
-            return import_subjects_data(records)
-        else:
-            return False, "Invalid data type specified."
-
-    except Exception as e:
-        return False, f"Error processing file: {str(e)}"
 
 def import_subjects_data(records):
     """Import subjects data from records"""

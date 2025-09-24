@@ -3635,13 +3635,24 @@ def bulk_import(data_type):
             flash('No file selected for import.', 'error')
             return redirect(request.referrer or url_for('dashboard'))
 
-        # Process the import
-        success, message = process_import_file(file, data_type)
-
-        if success:
-            flash(message, 'success')
-        else:
-            flash(message, 'error')
+        # Process the import with safe unpacking
+        try:
+            result = process_import_file(file, data_type)
+            
+            # Safely unpack the result
+            if isinstance(result, tuple) and len(result) >= 2:
+                success, message = result[0], result[1]
+                if success:
+                    flash(message, 'success')
+                else:
+                    flash(message, 'error')
+            else:
+                flash(f'Import failed: Unexpected result format from import process', 'error')
+                
+        except ValueError as ve:
+            flash(f'Import failed: Error unpacking result - {str(ve)}', 'error')
+        except Exception as import_error:
+            flash(f'Import failed: {str(import_error)}', 'error')
 
     except Exception as e:
         flash(f'Import failed: {str(e)}', 'error')
