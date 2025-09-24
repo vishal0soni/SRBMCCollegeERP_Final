@@ -191,7 +191,7 @@ def admin_add_user():
 
             # Store password before hashing for display
             temp_password = form.password.data or 'password123'
-            
+
             # Send welcome email
             if user.email:
                 send_email(user.email, 'Welcome to SRBMC ERP', 
@@ -418,32 +418,33 @@ def add_student():
                 scholarship_approved = request.form.get('fee_scholarship_approved') == 'true'
                 scholarship_granted = request.form.get('fee_scholarship_granted') == 'true'
                 government_scholarship_amount = float(request.form.get('fee_government_scholarship_amount', 0) or 0)
-
-                # Synchronize student dropdown values with checkbox states
-                if meera_rebate_granted:
-                    student.rebate_meera_scholarship_status = 'Granted'
-                elif meera_rebate_approved:
-                    student.rebate_meera_scholarship_status = 'Approved'
-                elif meera_rebate_applied:
-                    student.rebate_meera_scholarship_status = 'Applied'
-                elif student.rebate_meera_scholarship_status == 'Rejected':
-                    # If rejected, ensure amount is 0
-                    meera_rebate_amount = 0
-
-                if scholarship_granted:
-                    student.scholarship_status = 'Granted'
-                elif scholarship_approved:
-                    student.scholarship_status = 'Approved'
-                elif scholarship_applied:
-                    student.scholarship_status = 'Applied'
-                elif student.scholarship_status == 'Rejected':
-                    # If rejected, ensure amount is 0
-                    government_scholarship_amount = 0
                 total_amount_due = float(request.form.get('fee_total_amount_due', 0) or 0)
                 total_amount_after_rebate = float(request.form.get('fee_total_amount_after_rebate', 0) or 0)
                 pending_dues_for_libraries = request.form.get('fee_pending_dues_for_libraries') == 'true'
                 pending_dues_for_hostel = request.form.get('fee_pending_dues_for_hostel') == 'true'
                 exam_admit_card_issued = request.form.get('fee_exam_admit_card_issued') == 'true'
+
+                # Synchronize student dropdown values with checkbox states - but not for Admission Officers
+                if current_user.role.role_name != 'Admission Officer':
+                    if meera_rebate_granted:
+                        student.rebate_meera_scholarship_status = 'Granted'
+                    elif meera_rebate_approved:
+                        student.rebate_meera_scholarship_status = 'Approved'
+                    elif meera_rebate_applied:
+                        student.rebate_meera_scholarship_status = 'Applied'
+                    elif student.rebate_meera_scholarship_status == 'Rejected':
+                        # If rejected, ensure amount is 0
+                        meera_rebate_amount = 0
+
+                    if scholarship_granted:
+                        student.scholarship_status = 'Granted'
+                    elif scholarship_approved:
+                        student.scholarship_status = 'Approved'
+                    elif scholarship_applied:
+                        student.scholarship_status = 'Applied'
+                    elif student.scholarship_status == 'Rejected':
+                        # If rejected, ensure amount is 0
+                        government_scholarship_amount = 0
 
                 fee_record = CollegeFees(
                     student_id=student.id,
@@ -968,17 +969,17 @@ def payment():
         if student.current_course:
             # Update course_full_name as snapshot regardless of existing value
             fee_record.course_full_name = student.current_course
-            
+
             # Find and set coursedetail_id and course_id based on current course
             course_detail = CourseDetails.query.filter_by(course_full_name=student.current_course).first()
             if course_detail:
                 fee_record.coursedetail_id = course_detail.id
-                
+
                 # Get course_id from course_detail's course_short_name
                 course = Course.query.filter_by(course_short_name=course_detail.course_short_name).first()
                 if course:
                     fee_record.course_id = course.course_id
-            
+
             # If no exact match found, try to find by course short name pattern
             elif not course_detail:
                 # Extract potential course short name from full name
@@ -1140,13 +1141,13 @@ def exam_summary():
             x.split()[1] if len(x.split()) > 1 else x,  # Sort by year/number
             x.split()[0] if len(x.split()) > 1 else x   # Then by semester name
         ))
-        
+
         for semester in sorted_semesters:
             scores = semester_data[semester]
             if scores:  # Only include semesters with actual exam data
                 semester_labels.append(semester)
                 semester_averages.append(round(sum(scores) / len(scores), 1))
-    
+
     # If no semester data, provide default
     if not semester_labels:
         semester_labels = ['No Semester Data']
@@ -1253,7 +1254,7 @@ def add_exam():
         course_id = None
         coursedetail_id = None
         course_full_name = None
-        
+
         if student and student.current_course:
             course_detail = CourseDetails.query.filter_by(course_full_name=student.current_course).first()
             if course_detail:
@@ -1415,24 +1416,24 @@ def parse_year_semester(year_semester):
     """Parse year_semester string to extract numeric order for progression"""
     if not year_semester:
         return None
-    
+
     year_semester = year_semester.strip().lower()
-    
+
     # Handle semester patterns (1st sem, 2nd sem, etc.)
     import re
     sem_match = re.search(r'(\d+)(?:st|nd|rd|th)?\s*sem', year_semester)
     if sem_match:
         return int(sem_match.group(1))
-    
+
     # Handle year patterns (1st year, 2nd year, etc.)  
     year_match = re.search(r'(\d+)(?:st|nd|rd|th)?\s*year', year_semester)
     if year_match:
         return int(year_match.group(1))
-    
+
     # Handle direct numbers
     if year_semester.isdigit():
         return int(year_semester)
-    
+
     # Handle special cases
     special_cases = {
         'fy': 1, 'sy': 2, 'ty': 3,
@@ -1440,26 +1441,26 @@ def parse_year_semester(year_semester):
     }
     if year_semester in special_cases:
         return special_cases[year_semester]
-    
+
     return None
 
 def get_course_progression(course_full_name_base):
     """Get ordered progression of course levels"""
     # Extract the base course name (without semester/year info)
     base_name = course_full_name_base.split(' - ')[0] if ' - ' in course_full_name_base else course_full_name_base
-    
+
     # Find all course details for this base course
     course_details = CourseDetails.query.filter(
         CourseDetails.course_full_name.like(f"{base_name}%")
     ).all()
-    
+
     # Sort by parsed year_semester value
     progression = []
     for detail in course_details:
         order = parse_year_semester(detail.year_semester)
         if order is not None:
             progression.append((order, detail.course_full_name, detail.year_semester))
-    
+
     # Sort by order and return course names
     progression.sort(key=lambda x: x[0])
     return [item[1] for item in progression]
@@ -1472,7 +1473,7 @@ def promote_student(student_id):
         return jsonify({'error': 'Permission denied'}), 403
 
     student = Student.query.get_or_404(student_id)
-    
+
     # Check if student is already graduated or dropped out
     if student.student_status in ['Graduated', 'Dropout']:
         return jsonify({'error': f'Cannot promote student with status: {student.student_status}'}), 400
@@ -1481,7 +1482,7 @@ def promote_student(student_id):
         # Get exam ID from request data if provided
         data = request.get_json() or {}
         exam_id = data.get('exam_id')
-        
+
         if exam_id:
             # Use specific exam if provided
             latest_exam = db.session.query(Exam).filter_by(
@@ -1497,45 +1498,45 @@ def promote_student(student_id):
                 overall_status='Pass',
                 promotion_processed=False
             ).order_by(Exam.created_at.desc()).first()
-        
+
         if not latest_exam:
             return jsonify({
                 'error': 'Student must have unprocessed passing exam results before promotion'
             }), 400
-        
+
         current_course = student.current_course
         if not current_course:
             return jsonify({'error': 'Student has no current course assigned'}), 400
-        
+
         # Get course progression using more robust logic
         progression = get_course_progression(current_course)
         if not progression:
             return jsonify({'error': 'No course progression found'}), 400
-        
+
         # Find current position in progression
         current_index = None
         for i, course_name in enumerate(progression):
             if course_name == current_course:
                 current_index = i
                 break
-        
+
         if current_index is None:
             return jsonify({'error': 'Current course not found in progression sequence'}), 400
-        
+
         # Check if this is the final level
         if current_index >= len(progression) - 1:
             # Check if already at final level - graduate student
             base_name = current_course.split(' - ')[0] if ' - ' in current_course else current_course
             course = Course.query.filter_by(course_full_name=base_name).first()
-            
+
             # Graduate the student and mark exam as processed
             student.student_status = 'Graduated'
             latest_exam.promotion_processed = True
             db.session.commit()
-            
+
             # Log the graduation
             app.logger.info(f"Student {student.student_unique_id} ({student.first_name} {student.last_name}) graduated from {current_course}")
-            
+
             return jsonify({
                 'success': True, 
                 'message': f'Student {student.first_name} {student.last_name} has been graduated!',
@@ -1543,23 +1544,23 @@ def promote_student(student_id):
                 'current_course': current_course,
                 'student_status': 'Graduated'
             })
-        
+
         # Promote to next level
         next_course = progression[current_index + 1]
-        
+
         # Check for duplicate promotion (prevent promoting twice to same level)
         if student.current_course == next_course:
             return jsonify({'error': 'Student is already at this level'}), 400
-        
+
         # Update student's course and mark exam as processed
         old_course = student.current_course
         student.current_course = next_course
         latest_exam.promotion_processed = True
         db.session.commit()
-        
+
         # Log the promotion
         app.logger.info(f"Student {student.student_unique_id} ({student.first_name} {student.last_name}) promoted from {old_course} to {next_course}")
-        
+
         return jsonify({
             'success': True, 
             'message': f'Student {student.first_name} {student.last_name} promoted from {old_course} to {next_course}',
@@ -1568,7 +1569,7 @@ def promote_student(student_id):
             'current_course': next_course,
             'student_status': student.student_status
         })
-        
+
     except Exception as e:
         db.session.rollback()
         app.logger.error(f"Error promoting student {student_id}: {str(e)}")
@@ -1624,7 +1625,7 @@ def api_get_course_fees(course_name):
 def api_student_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
-        
+
         # Filter students based on admission year
         course_counts = db.session.query(
             Student.current_course, 
@@ -1687,12 +1688,12 @@ def api_course_list():
 def api_dashboard_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
-        
+
         # Filter students based on admission year
         total_students = Student.query.filter(
             func.extract('year', Student.admission_date) == year
         ).count()
-        
+
         active_students = Student.query.filter(
             and_(
                 Student.student_status == 'Active',
@@ -2122,36 +2123,31 @@ def edit_student(student_id):
                         # Update total_course_fees from course_details to ensure consistency
                         fee_record.total_course_fees = float(course_detail.total_course_fees or 0)
 
-                # Get checkbox states
-                meera_rebate_applied = request.form.get('fee_meera_rebate_applied') == 'true'
-                meera_rebate_approved = request.form.get('fee_meera_rebate_approved') == 'true'
-                meera_rebate_granted = request.form.get('fee_meera_rebate_granted') == 'true'
-                meera_rebate_amount = float(request.form.get('fee_meera_rebate_amount', fee_record.meera_rebate_amount) or 0)
-                scholarship_applied = request.form.get('fee_scholarship_applied') == 'true'
-                scholarship_approved = request.form.get('fee_scholarship_approved') == 'true'
-                scholarship_granted = request.form.get('fee_scholarship_granted') == 'true'
-                government_scholarship_amount = float(request.form.get('fee_government_scholarship_amount', fee_record.government_scholarship_amount) or 0)
+                # Get checkbox states - but only allow changes if user is not Admission Officer
+                if current_user.role.role_name == 'Admission Officer':
+                    # Admission Officers cannot modify scholarship fields - preserve existing values
+                    meera_rebate_applied = form.rebate_meera_scholarship_status.data == 'Applied'
+                    meera_rebate_approved = form.rebate_meera_scholarship_status.data == 'Approved'
+                    meera_rebate_granted = form.rebate_meera_scholarship_status.data == 'Granted'
+                    meera_rebate_amount = float(request.form.get('fee_meera_rebate_amount', 0) or 0)
+                    scholarship_applied = form.scholarship_status.data == 'Applied'
+                    scholarship_approved = form.scholarship_status.data == 'Approved'
+                    scholarship_granted = form.scholarship_status.data == 'Granted'
+                    government_scholarship_amount = float(request.form.get('fee_government_scholarship_amount', 0) or 0)
 
-                # Synchronize student dropdown values with checkbox states
-                if meera_rebate_granted:
-                    student.rebate_meera_scholarship_status = 'Granted'
-                elif meera_rebate_approved:
-                    student.rebate_meera_scholarship_status = 'Approved'  
-                elif meera_rebate_applied:
-                    student.rebate_meera_scholarship_status = 'Applied'
-                elif student.rebate_meera_scholarship_status == 'Rejected':
-                    # If rejected, ensure amount is 0
-                    meera_rebate_amount = 0
-
-                if scholarship_granted:
-                    student.scholarship_status = 'Granted'
-                elif scholarship_approved:
-                    student.scholarship_status = 'Approved'
-                elif scholarship_applied:
-                    student.scholarship_status = 'Applied'
-                elif student.scholarship_status == 'Rejected':
-                    # If rejected, ensure amount is 0
-                    government_scholarship_amount = 0
+                    # Reset dropdown values to original to prevent changes
+                    student.scholarship_status = form.scholarship_status.object_data
+                    student.rebate_meera_scholarship_status = form.rebate_meera_scholarship_status.object_data
+                else:
+                    # Other roles can modify scholarship fields normally
+                    meera_rebate_applied = request.form.get('fee_meera_rebate_applied') == 'true'
+                    meera_rebate_approved = request.form.get('fee_meera_rebate_approved') == 'true'
+                    meera_rebate_granted = request.form.get('fee_meera_rebate_granted') == 'true'
+                    meera_rebate_amount = float(request.form.get('fee_meera_rebate_amount', 0) or 0)
+                    scholarship_applied = request.form.get('fee_scholarship_applied') == 'true'
+                    scholarship_approved = request.form.get('fee_scholarship_approved') == 'true'
+                    scholarship_granted = request.form.get('fee_scholarship_granted') == 'true'
+                    government_scholarship_amount = float(request.form.get('fee_government_scholarship_amount', 0) or 0)
 
                 # Update existing fee record with new fee management fields
                 fee_record.meera_rebate_applied = meera_rebate_applied
@@ -2486,18 +2482,18 @@ def api_student_subjects(student_id):
 def api_fee_summary_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
-        
+
         # Calculate total fees due, collected, and pending for selected year
         total_fees_due = db.session.query(func.sum(CollegeFees.total_fee)).join(Student).filter(
             func.extract('year', Student.admission_date) == year
         ).scalar() or 0
-        
+
         total_fees_collected = db.session.query(func.sum(CollegeFees.total_fees_paid)).join(Student).filter(
             func.extract('year', Student.admission_date) == year
         ).scalar() or 0
-        
+
         total_pending_dues = max(0, total_fees_due - total_fees_collected)
-        
+
         students_with_dues = db.session.query(func.count(CollegeFees.id)).join(Student).filter(
             and_(
                 CollegeFees.total_fees_paid < CollegeFees.total_fee,
@@ -2532,7 +2528,7 @@ def api_fee_summary_stats():
 def api_payment_mode_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
-        
+
         # Get actual payment mode distribution from fee records for students admitted in selected year
         payment_mode_data = db.session.query(
             CollegeFees.payment_mode,
@@ -2544,22 +2540,22 @@ def api_payment_mode_stats():
                 func.extract('year', Student.admission_date) == year
             )
         ).group_by(CollegeFees.payment_mode).all()
-        
+
         # Initialize payment mode counts
         payment_mode_dict = {'Cash': 0, 'Online': 0, 'Cheque': 0, 'DD': 0}
-        
+
         # Fill in actual data
         for mode, count in payment_mode_data:
             if mode and mode in payment_mode_dict:
                 payment_mode_dict[mode] = count
-        
+
         # If no payment mode data exists, use invoice count with realistic distribution
         total_actual = sum(payment_mode_dict.values())
         if total_actual == 0:
             total_invoices = db.session.query(func.count(Invoice.id)).join(Student).filter(
                 func.extract('year', Student.admission_date) == year
             ).scalar() or 0
-            
+
             if total_invoices > 0:
                 payment_mode_dict['Cash'] = int(total_invoices * 0.65)
                 payment_mode_dict['Online'] = int(total_invoices * 0.25) 
@@ -2587,11 +2583,11 @@ def api_payment_mode_stats():
 def api_course_fee_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
-        
+
         # Get all available courses from CourseDetails
         all_courses = db.session.query(CourseDetails.course_full_name).distinct().all()
         all_course_names = [course[0] for course in all_courses if course[0]]
-        
+
         # Course-wise fee collection for selected year
         course_collections_data = db.session.query(
             Student.current_course,
@@ -2605,15 +2601,15 @@ def api_course_fee_stats():
 
         # Create a dictionary for easy lookup
         collections_dict = {course[0]: float(course[1]) for course in course_collections_data if course[1]}
-        
+
         # Prepare final data with all courses
         course_names = []
         course_collections = []
-        
+
         for course_name in all_course_names:
             course_names.append(course_name)
             course_collections.append(collections_dict.get(course_name, 0))
-        
+
         # Add any courses that have collections but aren't in CourseDetails
         for course, amount in course_collections_data:
             if course and course not in all_course_names:
@@ -2642,7 +2638,7 @@ def api_course_fee_stats():
 def api_scholarship_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
-        
+
         # Government scholarship data for selected year
         gov_scholarship_applied = db.session.query(func.count(Student.id)).filter(
             and_(
@@ -2650,14 +2646,14 @@ def api_scholarship_stats():
                 func.extract('year', Student.admission_date) == year
             )
         ).scalar() or 0
-        
+
         gov_scholarship_approved = db.session.query(func.count(Student.id)).filter(
             and_(
                 Student.scholarship_status == 'Approved',
                 func.extract('year', Student.admission_date) == year
             )
         ).scalar() or 0
-        
+
         gov_scholarship_granted = db.session.query(func.count(Student.id)).filter(
             and_(
                 Student.scholarship_status == 'Granted',
@@ -2672,14 +2668,14 @@ def api_scholarship_stats():
                 func.extract('year', Student.admission_date) == year
             )
         ).scalar() or 0
-        
+
         meera_scholarship_approved = db.session.query(func.count(Student.id)).filter(
             and_(
                 Student.rebate_meera_scholarship_status == 'Approved',
                 func.extract('year', Student.admission_date) == year
             )
         ).scalar() or 0
-        
+
         meera_scholarship_granted = db.session.query(func.count(Student.id)).filter(
             and_(
                 Student.rebate_meera_scholarship_status == 'Granted',
@@ -2780,12 +2776,12 @@ def api_sync_fee_calculations():
 def api_student_summary_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
-        
+
         # Total admissions for the year
         total_admissions = Student.query.filter(
             func.extract('year', Student.admission_date) == year
         ).count()
-        
+
         # Government scholarship applied for the year
         gov_scholarship_applied = Student.query.filter(
             and_(
@@ -2793,7 +2789,7 @@ def api_student_summary_stats():
                 func.extract('year', Student.admission_date) == year
             )
         ).count()
-        
+
         # Meera rebate applied for the year
         meera_rebate_applied = Student.query.filter(
             and_(
@@ -2801,7 +2797,7 @@ def api_student_summary_stats():
                 func.extract('year', Student.admission_date) == year
             )
         ).count()
-        
+
         # Total courses available
         courses_available = Course.query.count()
 
@@ -2832,7 +2828,7 @@ def api_student_category_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
         app.logger.info(f"Loading category stats for year: {year}")
-        
+
         # Get all students for the selected year first
         all_students_query = db.session.query(Student).filter(
             and_(
@@ -2840,10 +2836,10 @@ def api_student_category_stats():
                 Student.admission_date.isnot(None)
             )
         )
-        
+
         total_students_for_year = all_students_query.count()
         app.logger.info(f"Total students for year {year}: {total_students_for_year}")
-        
+
         if total_students_for_year == 0:
             app.logger.info(f"No students found for year {year}")
             return jsonify({
@@ -2852,7 +2848,7 @@ def api_student_category_stats():
                 'counts': [],
                 'total_students': 0
             })
-        
+
         # Get category distribution with proper handling - include students with null/empty categories
         category_counts = db.session.query(
             Student.category,
@@ -2867,7 +2863,7 @@ def api_student_category_stats():
         categories = []
         counts = []
         total_counted = 0
-        
+
         for category, count in category_counts:
             if count > 0:  # Only include categories with actual students
                 # Handle null/empty categories
@@ -2911,7 +2907,7 @@ def api_student_category_stats():
 def api_monthly_admissions_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
-        
+
         # Get monthly admissions with proper filtering - get all 12 months
         monthly_admissions = db.session.query(
             func.extract('month', Student.admission_date).label('month'),
@@ -2924,20 +2920,20 @@ def api_monthly_admissions_stats():
         ).group_by(func.extract('month', Student.admission_date)).all()
 
         month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        
+
         # Create a dictionary to store month-wise counts
         month_counts = {i: 0 for i in range(1, 13)}
-        
+
         # Fill in actual data
         for month, count in monthly_admissions:
             if month and 1 <= int(month) <= 12:
                 month_counts[int(month)] = int(count)
-        
+
         # Prepare labels and counts for all 12 months
         labels = []
         counts = []
         total_admissions = 0
-        
+
         for month_num in range(1, 13):
             labels.append(f"{month_names[month_num-1]} {year}")
             count = month_counts[month_num]
@@ -2973,7 +2969,7 @@ def api_monthly_admissions_stats():
 def api_exam_summary_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
-        
+
         # Get exams for students admitted in the selected year
         all_exams = Exam.query.join(Student).filter(
             func.extract('year', Student.admission_date) == year
@@ -3013,7 +3009,7 @@ def api_exam_summary_stats():
 def api_grade_distribution_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
-        
+
         all_exams = Exam.query.join(Student).filter(
             func.extract('year', Student.admission_date) == year
         ).all()
@@ -3041,7 +3037,7 @@ def api_grade_distribution_stats():
 def api_subject_performance_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
-        
+
         all_exams = Exam.query.join(Student).filter(
             func.extract('year', Student.admission_date) == year
         ).all()
@@ -3089,7 +3085,7 @@ def api_subject_performance_stats():
 def api_course_performance_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
-        
+
         all_exams = Exam.query.join(Student).filter(
             func.extract('year', Student.admission_date) == year
         ).all()
@@ -3131,7 +3127,7 @@ def api_course_performance_stats():
 def api_semester_trend_stats():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
-        
+
         all_exams = Exam.query.join(Student).filter(
             func.extract('year', Student.admission_date) == year
         ).all()
@@ -3151,7 +3147,7 @@ def api_semester_trend_stats():
                 x.split()[1] if len(x.split()) > 1 else x,
                 x.split()[0] if len(x.split()) > 1 else x
             ))
-            
+
             for semester in sorted_semesters:
                 scores = semester_data[semester]
                 if scores:
@@ -3192,7 +3188,7 @@ def api_verify_fee_field(fee_id, field):
 
         # Get current value from database
         current_value = getattr(fee_record, field)
-        
+
         return jsonify({
             'success': True,
             'fee_id': fee_id,
@@ -3223,16 +3219,16 @@ def api_test_fee_field_update(fee_id):
         # Test all three fields
         results = {}
         fields = ['pending_dues_for_libraries', 'pending_dues_for_hostel', 'exam_admit_card_issued']
-        
+
         for field in fields:
             try:
                 # Get current value
                 old_value = getattr(fee_record, field)
-                
+
                 # Toggle the value
                 new_value = not bool(old_value)
                 setattr(fee_record, field, new_value)
-                
+
                 results[field] = {
                     'old_value': bool(old_value),
                     'new_value': new_value,
@@ -3248,7 +3244,7 @@ def api_test_fee_field_update(fee_id):
 
         # Commit all changes
         db.session.commit()
-        
+
         # Verify changes
         updated_record = CollegeFees.query.filter_by(id=fee_id).first()
         for field in fields:
@@ -3277,20 +3273,20 @@ def api_debug_student_data():
     """Debug route to check student data"""
     try:
         year = request.args.get('year', datetime.now().year, type=int)
-        
+
         # Get all students for debugging
         all_students = Student.query.all()
         students_for_year = Student.query.filter(
             func.extract('year', Student.admission_date) == year
         ).all()
-        
+
         debug_info = {
             'total_students_in_db': len(all_students),
             'students_for_year': len(students_for_year),
             'year_filter': year,
             'sample_students': []
         }
-        
+
         # Add sample student data
         for student in students_for_year[:5]:  # First 5 students
             debug_info['sample_students'].append({
@@ -3300,7 +3296,7 @@ def api_debug_student_data():
                 'category': student.category,
                 'current_course': student.current_course
             })
-        
+
         return jsonify(debug_info)
     except Exception as e:
         return jsonify({'error': str(e)})
@@ -3310,7 +3306,7 @@ def api_debug_student_data():
 def api_student_breakdown_data():
     try:
         year = request.args.get('year', datetime.now().year, type=int)
-        
+
         # Get course breakdown data for the selected year
         course_counts = db.session.query(
             Student.current_course, 
@@ -3406,13 +3402,13 @@ def api_update_fee_field(fee_id):
 
         # Convert value to boolean
         bool_value = bool(value)
-        
+
         # Get old value for logging
         old_value = getattr(fee_record, field)
-        
+
         # Update the field
         setattr(fee_record, field, bool_value)
-        
+
         # Commit the transaction
         try:
             db.session.commit()
@@ -3421,16 +3417,16 @@ def api_update_fee_field(fee_id):
             db.session.rollback()
             app.logger.error(f"Failed to commit {field} change for fee_id {fee_id}: {str(commit_error)}")
             raise commit_error
-        
+
         # Verify the update by refetching the record
         updated_record = CollegeFees.query.filter_by(id=fee_id).first()
         actual_value = getattr(updated_record, field)
-        
+
         app.logger.info(f"Updated {field} from {old_value} to {actual_value} for fee_id {fee_id}")
-        
+
         if actual_value != bool_value:
             app.logger.warning(f"Value mismatch after update: expected {bool_value}, got {actual_value}")
-        
+
         return jsonify({
             'success': True,
             'message': f'Field {field} updated successfully',
@@ -3638,7 +3634,7 @@ def bulk_import(data_type):
         # Process the import with safe unpacking
         try:
             result = process_import_file(file, data_type)
-            
+
             # Safely unpack the result
             if result is None:
                 flash('Import failed: No result returned from import process', 'error')
@@ -3653,7 +3649,7 @@ def bulk_import(data_type):
                     flash(f'Import failed: Incomplete result tuple - got {len(result)} values, expected 2', 'error')
             else:
                 flash(f'Import failed: Expected tuple result, got {type(result)}: {result}', 'error')
-                
+
         except ValueError as ve:
             flash(f'Import failed: Value error - {str(ve)}', 'error')
         except TypeError as te:
