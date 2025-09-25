@@ -27,14 +27,14 @@ class UserForm(FlaskForm):
 
 class StudentForm(FlaskForm):
     external_id = StringField('External ID', validators=[Optional(), Length(max=50)])
-    first_name = StringField('First Name', validators=[DataRequired(), Length(max=100)])
-    last_name = StringField('Last Name', validators=[DataRequired(), Length(max=100)])
+    first_name = StringField('First Name', validators=[Optional(), Length(max=100)])
+    last_name = StringField('Last Name', validators=[Optional(), Length(max=100)])
     father_name = StringField('Father Name', validators=[Optional(), Length(max=200)])
     mother_name = StringField('Mother Name', validators=[Optional(), Length(max=200)])
-    gender = SelectField('Gender', choices=[('', 'Select Gender'), ('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')], validators=[DataRequired()])
+    gender = SelectField('Gender', choices=[('', 'Select Gender'), ('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')], validators=[Optional()])
     category = SelectField('Category', choices=[('', 'Select Category'), ('General', 'General'), ('SC', 'SC'), ('ST', 'ST'), ('OBC', 'OBC')], validators=[Optional()])
     email = StringField('Email', validators=[Optional(), Email(), Length(max=120)])
-    current_course = SelectField('Current Course', choices=[('', 'Select Course')], validators=[DataRequired()])
+    current_course = SelectField('Current Course', choices=[('', 'Select Course')], validators=[Optional()])
     subject_1_name = SelectField('Subject 1', choices=[('', 'Select Subject')], validators=[Optional()])
     subject_2_name = SelectField('Subject 2', choices=[('', 'Select Subject')], validators=[Optional()])
     subject_3_name = SelectField('Subject 3', choices=[('', 'Select Subject')], validators=[Optional()])
@@ -49,7 +49,7 @@ class StudentForm(FlaskForm):
     school_name = StringField('School Name', validators=[Optional(), Length(max=200)])
     scholarship_status = SelectField('Government Scholarship', choices=[('Not Applied', 'Not Applied'), ('Applied', 'Applied'), ('Approved', 'Approved'), ('Rejected', 'Rejected'), ('Granted', 'Granted')], default='Not Applied')
     rebate_meera_scholarship_status = SelectField('Meera Rebate', choices=[('Not Applied', 'Not Applied'), ('Applied', 'Applied'), ('Approved', 'Approved'), ('Rejected', 'Rejected'), ('Granted', 'Granted')], default='Not Applied')
-    admission_date = DateField('Admission Date', validators=[DataRequired()])
+    admission_date = DateField('Admission Date', validators=[Optional()])
     student_status = SelectField('Student Status', choices=[('Active', 'Active'), ('Dropout', 'Dropout'), ('Graduated', 'Graduated')], default='Active')
     submit = SubmitField('Save Student')
 
