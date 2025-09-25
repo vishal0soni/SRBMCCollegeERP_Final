@@ -325,7 +325,10 @@ def add_student():
         return redirect(url_for('dashboard'))
 
     form = StudentForm()
-    form.current_course.choices = [(cd.course_full_name, cd.course_full_name) for cd in CourseDetails.query.all()]
+    # Populate course choices from CourseDetails
+    course_choices = [('', 'Select Course')]
+    course_choices.extend([(cd.course_full_name, cd.course_full_name) for cd in CourseDetails.query.all()])
+    form.current_course.choices = course_choices
 
     # Get subjects for the selected course
     subjects = Subject.query.all()
@@ -2089,7 +2092,10 @@ def edit_student(student_id):
 
     student = Student.query.get_or_404(student_id)
     form = StudentForm(obj=student)
-    form.current_course.choices = [(cd.course_full_name, cd.course_full_name) for cd in CourseDetails.query.all()]
+    # Populate course choices from CourseDetails
+    course_choices = [('', 'Select Course')]
+    course_choices.extend([(cd.course_full_name, cd.course_full_name) for cd in CourseDetails.query.all()])
+    form.current_course.choices = course_choices
 
     # Get all subjects and populate choices
     subjects = Subject.query.all()
