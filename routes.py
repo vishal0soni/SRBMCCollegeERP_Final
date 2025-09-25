@@ -329,6 +329,9 @@ def add_student():
     course_choices = [('', 'Select Course')]
     course_choices.extend([(cd.course_full_name, cd.course_full_name) for cd in CourseDetails.query.all()])
     form.current_course.choices = course_choices
+    
+    # Set gender choices to prevent validation issues
+    form.gender.choices = [('', 'Select Gender'), ('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')]
 
     # Get subjects for the selected course
     subjects = Subject.query.all()
@@ -2096,6 +2099,9 @@ def edit_student(student_id):
     course_choices = [('', 'Select Course')]
     course_choices.extend([(cd.course_full_name, cd.course_full_name) for cd in CourseDetails.query.all()])
     form.current_course.choices = course_choices
+    
+    # Set gender choices to prevent validation issues
+    form.gender.choices = [('', 'Select Gender'), ('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')]
 
     # Get all subjects and populate choices
     subjects = Subject.query.all()
