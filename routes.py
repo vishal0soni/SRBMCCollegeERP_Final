@@ -332,6 +332,11 @@ def add_student():
     form.subject_1_name.choices = [('', 'Select Subject')] + [(s.subject_name, s.subject_name) for s in subjects]
     form.subject_2_name.choices = [('', 'Select Subject')] + [(s.subject_name, s.subject_name) for s in subjects]
     form.subject_3_name.choices = [('', 'Select Subject')] + [(s.subject_name, s.subject_name) for s in subjects]
+    
+    # Set default values for scholarship and rebate statuses
+    form.scholarship_status.default = 'Not Applied'
+    form.rebate_meera_scholarship_status.default = 'Not Applied'
+    form.process(None) # Process the form to set defaults
 
     if form.validate_on_submit():
         # Generate student unique ID

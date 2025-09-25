@@ -100,8 +100,8 @@ class Student(db.Model):
     aadhaar_card_number = db.Column(db.String(20))
     apaar_id = db.Column(db.String(20))
     school_name = db.Column(db.String(200))
-    scholarship_status = db.Column(db.String(20), default='Applied')  # Applied, Approved, Rejected
-    rebate_meera_scholarship_status = db.Column(db.String(20), default='Applied')
+    scholarship_status = db.Column(db.String(20), default='Not Applied')  # Not Applied, Applied, Approved, Rejected, Granted
+    rebate_meera_scholarship_status = db.Column(db.String(20), default='Not Applied')
     student_status = db.Column(db.String(20), default='Active')  # Active, Dropout, Graduated
     admission_date = db.Column(db.Date, default=datetime.utcnow().date())
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

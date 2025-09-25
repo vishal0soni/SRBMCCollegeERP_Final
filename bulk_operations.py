@@ -431,8 +431,8 @@ def import_students_data(records):
                     aadhaar_card_number=record.get('Aadhaar Number', ''),
                     apaar_id=record.get('APAAR ID', ''),
                     school_name=record.get('School Name', ''),
-                    scholarship_status=record.get('Scholarship Status', 'Applied'),
-                    rebate_meera_scholarship_status=record.get('Meera Rebate Status', 'Applied'),
+                    scholarship_status=record.get('Scholarship Status', 'Not Applied'),
+                    rebate_meera_scholarship_status=record.get('Meera Rebate Status', 'Not Applied'),
                     student_status=record.get('Student Status', 'Active'),
                     admission_date=_parse_admission_date(record.get('Admission Date'))
                 )

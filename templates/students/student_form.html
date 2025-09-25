@@ -218,10 +218,14 @@
                         <div class="col-md-4 mb-3">
                             {{ form.scholarship_status.label(class="form-label") }}
                             {% if current_user.role.role_name == 'Admission Officer' %}
-                                {{ form.scholarship_status(class="form-select", disabled=true, readonly=true) }}
-                                <small class="text-muted">You can only view this field - contact Accountant to modify</small>
+                                <select class="form-select" id="{{ form.scholarship_status.id }}" name="{{ form.scholarship_status.name }}">
+                                    <option value="Not Applied" {% if form.scholarship_status.data == 'Not Applied' %}selected{% endif %}>Not Applied</option>
+                                    <option value="Applied" {% if form.scholarship_status.data == 'Applied' %}selected{% endif %}>Applied</option>
+                                </select>
+                                <small class="text-muted">Admission Officers can only select 'Not Applied' or 'Applied'</small>
                             {% else %}
                                 {{ form.scholarship_status(class="form-select") }}
+                                <small class="text-muted">Admin has full access to all scholarship status options</small>
                             {% endif %}
                             {% if form.scholarship_status.errors %}
                                 <div class="text-danger">
@@ -235,10 +239,14 @@
                         <div class="col-md-4 mb-3">
                             {{ form.rebate_meera_scholarship_status.label(class="form-label") }}
                             {% if current_user.role.role_name == 'Admission Officer' %}
-                                {{ form.rebate_meera_scholarship_status(class="form-select", disabled=true, readonly=true) }}
-                                <small class="text-muted">You can only view this field - contact Accountant to modify</small>
+                                <select class="form-select" id="{{ form.rebate_meera_scholarship_status.id }}" name="{{ form.rebate_meera_scholarship_status.name }}">
+                                    <option value="Not Applied" {% if form.rebate_meera_scholarship_status.data == 'Not Applied' %}selected{% endif %}>Not Applied</option>
+                                    <option value="Applied" {% if form.rebate_meera_scholarship_status.data == 'Applied' %}selected{% endif %}>Applied</option>
+                                </select>
+                                <small class="text-muted">Admission Officers can only select 'Not Applied' or 'Applied'</small>
                             {% else %}
                                 {{ form.rebate_meera_scholarship_status(class="form-select") }}
+                                <small class="text-muted">Admin has full access to all rebate status options</small>
                             {% endif %}
                             {% if form.rebate_meera_scholarship_status.errors %}
                                 <div class="text-danger">
