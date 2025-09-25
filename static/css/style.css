@@ -876,3 +876,32 @@ body {
         padding-right: 1rem;
     }
 }
+
+/* Additional custom styles */
+.navbar-brand img {
+    height: 40px;
+    width: auto;
+}
+
+/* Required field styles */
+.form-label.required::after {
+    content: " *";
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.form-control:required:invalid {
+    border-color: #dc3545;
+}
+
+.form-select:required:invalid {
+    border-color: #dc3545;
+}
+
+.form-control:required:valid {
+    border-color: #198754;
+}
+
+.form-select:required:valid {
+    border-color: #198754;
+}

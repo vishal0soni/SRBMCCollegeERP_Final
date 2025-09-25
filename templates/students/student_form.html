@@ -33,8 +33,8 @@
                     <h6 class="text-primary mb-3">Personal Information</h6>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            {{ form.first_name.label(class="form-label") }}
-                            {{ form.first_name(class="form-control") }}
+                            {{ form.first_name.label(class="form-label required") }}
+                            {{ form.first_name(class="form-control", required=true) }}
                             {% if form.first_name.errors %}
                                 <div class="text-danger">
                                     {% for error in form.first_name.errors %}
@@ -45,8 +45,8 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            {{ form.last_name.label(class="form-label") }}
-                            {{ form.last_name(class="form-control") }}
+                            {{ form.last_name.label(class="form-label required") }}
+                            {{ form.last_name(class="form-control", required=true) }}
                             {% if form.last_name.errors %}
                                 <div class="text-danger">
                                     {% for error in form.last_name.errors %}
@@ -71,8 +71,8 @@
 
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            {{ form.gender.label(class="form-label") }}
-                            {{ form.gender(class="form-select") }}
+                            {{ form.gender.label(class="form-label required") }}
+                            {{ form.gender(class="form-select", required=true) }}
                             {% if form.gender.errors %}
                                 <div class="text-danger">
                                     {% for error in form.gender.errors %}
@@ -85,6 +85,13 @@
                         <div class="col-md-4 mb-3">
                             {{ form.category.label(class="form-label") }}
                             {{ form.category(class="form-select") }}
+                            {% if form.category.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.category.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
 
                         <div class="col-md-4 mb-3">
@@ -141,8 +148,8 @@
                     <h6 class="text-primary mb-3 mt-4">Academic Information</h6>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            {{ form.current_course.label(class="form-label") }}
-                            {{ form.current_course(class="form-select") }}
+                            {{ form.current_course.label(class="form-label required") }}
+                            {{ form.current_course(class="form-select", required=true) }}
                             {% if form.current_course.errors %}
                                 <div class="text-danger">
                                     {% for error in form.current_course.errors %}
@@ -153,11 +160,11 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            {{ form.admission_date.label(class="form-label") }}
+                            {{ form.admission_date.label(class="form-label required") }}
                             {% if student %}
-                                {{ form.admission_date(class="form-control") }}
+                                {{ form.admission_date(class="form-control", required=true) }}
                             {% else %}
-                                {{ form.admission_date(class="form-control", value=today_date) }}
+                                {{ form.admission_date(class="form-control", value=today_date, required=true) }}
                             {% endif %}
                             {% if form.admission_date.errors %}
                                 <div class="text-danger">
@@ -948,9 +955,45 @@ document.addEventListener('DOMContentLoaded', function() {
     {% endif %}
 
 
+    // Add form validation before submission
+    function validateRequiredFields() {
+        const requiredFields = [
+            { id: '{{ form.first_name.id }}', name: 'First Name' },
+            { id: '{{ form.last_name.id }}', name: 'Last Name' },
+            { id: '{{ form.gender.id }}', name: 'Gender' },
+            { id: '{{ form.current_course.id }}', name: 'Current Course' },
+            { id: '{{ form.admission_date.id }}', name: 'Admission Date' }
+        ];
+
+        let isValid = true;
+        let missingFields = [];
+
+        requiredFields.forEach(field => {
+            const element = document.getElementById(field.id);
+            if (element && (!element.value || element.value.trim() === '')) {
+                isValid = false;
+                missingFields.push(field.name);
+                element.classList.add('is-invalid');
+            } else if (element) {
+                element.classList.remove('is-invalid');
+            }
+        });
+
+        if (!isValid) {
+            alert('Please fill in the following required fields: ' + missingFields.join(', '));
+        }
+
+        return isValid;
+    }
+
     // Override form submission to include fee data
     const form = document.querySelector('form');
     form.addEventListener('submit', function(e) {
+        // First validate required fields
+        if (!validateRequiredFields()) {
+            e.preventDefault();
+            return false;
+        }
         // Manually calculate and update the grand total before submission
         calculateTotalFees();
 
