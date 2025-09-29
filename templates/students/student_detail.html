@@ -100,10 +100,14 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <strong>Status:</strong> 
-                        {% if student.dropout_status == 'Active' %}
+                        {% if student.student_status == 'Active' %}
                             <span class="badge bg-success">Active</span>
-                        {% else %}
+                        {% elif student.student_status == 'Dropout' %}
                             <span class="badge bg-danger">Dropout</span>
+                        {% elif student.student_status == 'Graduated' %}
+                            <span class="badge bg-info">Graduated</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ student.student_status }}</span>
                         {% endif %}
                     </div>
                 </div>
