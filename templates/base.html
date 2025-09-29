@@ -47,7 +47,7 @@
                     </li>
                     {% endif %}
 
-                    {% if current_user.role.role_name in ['Administrator', 'Admission Officer', 'Admission Assistant'] %}
+                    {% if current_user.role.role_name in ['Administrator', 'Admission Officer', 'Admission Assistant', 'Manager'] %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="studentsDropdown" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-graduation-cap"></i> Students
@@ -79,7 +79,7 @@
                     </li>
                     {% endif %}
 
-                    {% if current_user.role.role_name in ['Administrator', 'Accountant', 'Accountant Assistant'] %}
+                    {% if current_user.role.role_name in ['Administrator', 'Accountant', 'Accountant Assistant', 'Manager'] %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="feesDropdown" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-money-bill"></i> Fees
