@@ -421,8 +421,8 @@ def import_students_data(records):
 
                 # If individual address fields are empty but concatenated address exists, split it
                 if not any([street, area_village, city_tehsil, state]) and concatenated_address:
-                    # Split concatenated address
-                    address_parts = [part.strip() for part in concatenated_address.split(' | ')]
+                    # Split concatenated address by comma
+                    address_parts = [part.strip() for part in concatenated_address.split(', ') if part.strip() and part.strip().lower() != 'nan']
                     street = address_parts[0] if len(address_parts) > 0 else ''
                     area_village = address_parts[1] if len(address_parts) > 1 else ''
                     city_tehsil = address_parts[2] if len(address_parts) > 2 else ''

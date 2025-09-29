@@ -114,21 +114,27 @@ class Student(db.Model):
 
     def update_concatenated_address(self):
         """Update concatenated address from individual address fields"""
-        address_parts = [
-            self.street or '',
-            self.area_village or '',
-            self.city_tehsil or '',
-            self.state or ''
-        ]
-        self.concatenated_address = ' | '.join(part.strip() for part in address_parts if part.strip())
+        address_parts = []
+        
+        # Only add non-empty, non-NaN values
+        if self.street and str(self.street).strip() and str(self.street).strip().lower() != 'nan':
+            address_parts.append(str(self.street).strip())
+        if self.area_village and str(self.area_village).strip() and str(self.area_village).strip().lower() != 'nan':
+            address_parts.append(str(self.area_village).strip())
+        if self.city_tehsil and str(self.city_tehsil).strip() and str(self.city_tehsil).strip().lower() != 'nan':
+            address_parts.append(str(self.city_tehsil).strip())
+        if self.state and str(self.state).strip() and str(self.state).strip().lower() != 'nan':
+            address_parts.append(str(self.state).strip())
+        
+        self.concatenated_address = ', '.join(address_parts)
 
     def split_concatenated_address(self, concatenated_address):
         """Split concatenated address into individual address fields"""
         if not concatenated_address:
             return
         
-        # Split by ' | ' delimiter
-        parts = concatenated_address.split(' | ')
+        # Split by ', ' delimiter
+        parts = concatenated_address.split(', ')
         
         # Assign to respective fields (pad with empty strings if needed)
         parts += [''] * (4 - len(parts))  # Ensure we have at least 4 parts
