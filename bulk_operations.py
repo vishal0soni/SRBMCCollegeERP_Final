@@ -76,14 +76,6 @@ def get_students_export_data():
 
     data = []
     for student in students:
-        # Concatenate address fields for export
-        concatenated_address = "|".join(filter(None, [
-            student.street,
-            student.area_village,
-            student.city_tehsil,
-            student.state
-        ]))
-
         data.append([
             student.student_unique_id,
             student.external_id or '',
@@ -99,7 +91,10 @@ def get_students_export_data():
             student.subject_2_name or '',
             student.subject_3_name or '',
             float(student.percentage) if student.percentage else '',
-            concatenated_address,
+            student.street or '',
+            student.area_village or '',
+            student.city_tehsil or '',
+            student.state or '',
             student.phone or '',
             student.aadhaar_card_number or '',
             student.apaar_id or '',
@@ -412,13 +407,11 @@ def import_students_data(records):
                     errors.append(f"Row {i}: Student with ID {record.get('Student ID')} already exists")
                     continue
 
-                # Split concatenated address
-                concatenated_address = record.get('Concatenated Address', '')
-                address_parts = [part.strip() for part in concatenated_address.split('|')]
-                street = address_parts[0] if len(address_parts) > 0 else ''
-                area_village = address_parts[1] if len(address_parts) > 1 else ''
-                city_tehsil = address_parts[2] if len(address_parts) > 2 else ''
-                state = address_parts[3] if len(address_parts) > 3 else ''
+                # Get address fields directly (not from concatenated address)
+                street = record.get('Street', '')
+                area_village = record.get('Area/Village', '')
+                city_tehsil = record.get('City/Tehsil', '')
+                state = record.get('State', '')
 
                 # Create new student
                 student = Student(
@@ -449,6 +442,9 @@ def import_students_data(records):
                     student_status=record.get('Student Status', 'Active'),
                     admission_date=_parse_admission_date(record.get('Admission Date'))
                 )
+
+                # Update concatenated address after setting individual fields
+                student.update_concatenated_address()
 
                 db.session.add(student)
                 imported_count += 1
