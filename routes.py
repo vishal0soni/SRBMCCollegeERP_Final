@@ -1059,7 +1059,7 @@ def payment():
             run_fee_calculation_sync()
 
             flash('Payment processed successfully!', 'success')
-            return redirect(url_for('fees'))
+            return redirect(url_for('view_fee_detail', fee_id=fee_record.id))
         except Exception as e:
             db.session.rollback()
             flash(f'Error processing payment: {str(e)}', 'error')
