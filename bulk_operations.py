@@ -76,6 +76,14 @@ def get_students_export_data():
 
     data = []
     for student in students:
+        # Concatenate address fields for export
+        concatenated_address = "|".join(filter(None, [
+            student.street,
+            student.area_village,
+            student.city_tehsil,
+            student.state
+        ]))
+
         data.append([
             student.student_unique_id,
             student.external_id or '',
@@ -91,10 +99,7 @@ def get_students_export_data():
             student.subject_2_name or '',
             student.subject_3_name or '',
             float(student.percentage) if student.percentage else '',
-            student.street or '',
-            student.area_village or '',
-            student.city_tehsil or '',
-            student.state or '',
+            concatenated_address,
             student.phone or '',
             student.aadhaar_card_number or '',
             student.apaar_id or '',
@@ -339,7 +344,7 @@ def process_import_file(file, data_type):
                 result = import_subjects_data(records)
             else:
                 return False, "Invalid data type specified."
-            
+
             # Ensure result is a tuple with exactly 2 values
             if result is None:
                 return False, f"Import function for {data_type} returned None"
@@ -353,7 +358,7 @@ def process_import_file(file, data_type):
                     return False, f"Import function returned incomplete tuple: {result}"
             else:
                 return False, f"Import function returned non-tuple: {type(result)} - {result}"
-                
+
         except ValueError as ve:
             return False, f"Value error during {data_type} import: {str(ve)}"
         except Exception as import_error:
@@ -407,6 +412,14 @@ def import_students_data(records):
                     errors.append(f"Row {i}: Student with ID {record.get('Student ID')} already exists")
                     continue
 
+                # Split concatenated address
+                concatenated_address = record.get('Concatenated Address', '')
+                address_parts = [part.strip() for part in concatenated_address.split('|')]
+                street = address_parts[0] if len(address_parts) > 0 else ''
+                area_village = address_parts[1] if len(address_parts) > 1 else ''
+                city_tehsil = address_parts[2] if len(address_parts) > 2 else ''
+                state = address_parts[3] if len(address_parts) > 3 else ''
+
                 # Create new student
                 student = Student(
                     student_unique_id=record.get('Student ID', ''),
@@ -423,10 +436,10 @@ def import_students_data(records):
                     subject_2_name=record.get('Subject 2', ''),
                     subject_3_name=record.get('Subject 3', ''),
                     percentage=float(record.get('Percentage', 0)) if record.get('Percentage') else None,
-                    street=record.get('Street', ''),
-                    area_village=record.get('Area/Village', ''),
-                    city_tehsil=record.get('City/Tehsil', ''),
-                    state=record.get('State', ''),
+                    street=street,
+                    area_village=area_village,
+                    city_tehsil=city_tehsil,
+                    state=state,
                     phone=record.get('Phone', ''),
                     aadhaar_card_number=record.get('Aadhaar Number', ''),
                     apaar_id=record.get('APAAR ID', ''),
@@ -1130,6 +1143,3 @@ def import_subjects_data(records):
     except Exception as e:
         db.session.rollback()
         return False, f"Import failed: {str(e)}"
-
-
-

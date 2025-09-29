@@ -400,6 +400,9 @@ def add_student():
         )
 
         try:
+            # Update concatenated address before saving
+            student.update_concatenated_address()
+            
             db.session.add(student)
             db.session.flush()  # This will assign the auto-generated ID
 
@@ -2136,6 +2139,9 @@ def edit_student(student_id):
         student.updated_at = datetime.utcnow()
 
         try:
+            # Update concatenated address after form data changes
+            student.update_concatenated_address()
+            
             # Update fee record if fee data is provided
             fee_record = CollegeFees.query.filter_by(student_id=student.id).first()
             if fee_record:

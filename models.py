@@ -104,12 +104,39 @@ class Student(db.Model):
     rebate_meera_scholarship_status = db.Column(db.String(20), default='Not Applied')
     student_status = db.Column(db.String(20), default='Active')  # Active, Dropout, Graduated
     admission_date = db.Column(db.Date, default=datetime.utcnow().date())
+    concatenated_address = db.Column(db.Text)  # For bulk export/import operations
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
     fees = db.relationship('CollegeFees', backref='student', lazy=True)
     exams = db.relationship('Exam', backref='student', lazy=True)
     invoices = db.relationship('Invoice', backref='student', lazy=True)
+
+    def update_concatenated_address(self):
+        """Update concatenated address from individual address fields"""
+        address_parts = [
+            self.street or '',
+            self.area_village or '',
+            self.city_tehsil or '',
+            self.state or ''
+        ]
+        self.concatenated_address = ' | '.join(part.strip() for part in address_parts if part.strip())
+
+    def split_concatenated_address(self, concatenated_address):
+        """Split concatenated address into individual address fields"""
+        if not concatenated_address:
+            return
+        
+        # Split by ' | ' delimiter
+        parts = concatenated_address.split(' | ')
+        
+        # Assign to respective fields (pad with empty strings if needed)
+        parts += [''] * (4 - len(parts))  # Ensure we have at least 4 parts
+        
+        self.street = parts[0].strip() if parts[0] else ''
+        self.area_village = parts[1].strip() if parts[1] else ''
+        self.city_tehsil = parts[2].strip() if parts[2] else ''
+        self.state = parts[3].strip() if parts[3] else ''
 
 class CollegeFees(db.Model):
     __tablename__ = 'college_fees'
