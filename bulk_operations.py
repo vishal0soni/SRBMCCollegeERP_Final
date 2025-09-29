@@ -69,13 +69,17 @@ def get_students_export_data():
     headers = [
         'Student ID', 'External ID', 'First Name', 'Last Name', 'Father Name', 'Mother Name',
         'Gender', 'Category', 'Email', 'Current Course', 'Subject 1', 'Subject 2', 'Subject 3',
-        'Percentage', 'Street', 'Area/Village', 'City/Tehsil', 'State', 'Phone', 
+        'Percentage', 'Street', 'Area/Village', 'City/Tehsil', 'State', 'Concatenated Address', 'Phone', 
         'Aadhaar Number', 'APAAR ID', 'School Name', 'Scholarship Status', 
         'Meera Rebate Status', 'Student Status', 'Admission Date'
     ]
 
     data = []
     for student in students:
+        # Ensure concatenated_address is up to date before export
+        if not student.concatenated_address:
+            student.update_concatenated_address()
+        
         data.append([
             student.student_unique_id,
             student.external_id or '',
@@ -95,6 +99,7 @@ def get_students_export_data():
             student.area_village or '',
             student.city_tehsil or '',
             student.state or '',
+            student.concatenated_address or '',
             student.phone or '',
             student.aadhaar_card_number or '',
             student.apaar_id or '',
@@ -407,11 +412,21 @@ def import_students_data(records):
                     errors.append(f"Row {i}: Student with ID {record.get('Student ID')} already exists")
                     continue
 
-                # Get address fields directly (not from concatenated address)
+                # Get address fields - prioritize individual fields, fallback to concatenated
                 street = record.get('Street', '')
                 area_village = record.get('Area/Village', '')
                 city_tehsil = record.get('City/Tehsil', '')
                 state = record.get('State', '')
+                concatenated_address = record.get('Concatenated Address', '')
+
+                # If individual address fields are empty but concatenated address exists, split it
+                if not any([street, area_village, city_tehsil, state]) and concatenated_address:
+                    # Split concatenated address
+                    address_parts = [part.strip() for part in concatenated_address.split(' | ')]
+                    street = address_parts[0] if len(address_parts) > 0 else ''
+                    area_village = address_parts[1] if len(address_parts) > 1 else ''
+                    city_tehsil = address_parts[2] if len(address_parts) > 2 else ''
+                    state = address_parts[3] if len(address_parts) > 3 else ''
 
                 # Create new student
                 student = Student(
