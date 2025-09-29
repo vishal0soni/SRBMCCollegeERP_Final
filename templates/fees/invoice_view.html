@@ -383,83 +383,146 @@ function markPrinted(invoiceId) {
 const style = document.createElement('style');
 style.textContent = `
     @media print {
-        .btn, .card-header.bg-primary, nav, .d-flex.justify-content-between, .d-flex.gap-2 {
+        @page {
+            size: A4;
+            margin: 0.5in;
+        }
+        
+        /* Hide non-essential elements */
+        .btn, nav, .d-flex.justify-content-between, .d-flex.gap-2 {
             display: none !important;
         }
+        
+        /* Card styling */
         .card {
-            border: none !important;
+            border: 1px solid #000 !important;
             box-shadow: none !important;
+            page-break-inside: avoid;
         }
+        
         .card-header {
-            background: white !important;
-            color: black !important;
-            border: 1px solid black !important;
+            background: #f8f9fa !important;
+            color: #000 !important;
+            border-bottom: 2px solid #000 !important;
+            text-align: center !important;
+            padding: 10px !important;
             -webkit-print-color-adjust: exact !important;
             color-adjust: exact !important;
         }
+        
+        /* Color preservation */
         .bg-primary {
             background-color: #007bff !important;
             color: white !important;
         }
-        .text-primary {
-            color: #007bff !important;
-        }
-        .text-success {
-            color: #28a745 !important;
-        }
-        .text-danger {
-            color: #dc3545 !important;
-        }
-        .text-warning {
-            color: #ffc107 !important;
-        }
-        .text-info {
-            color: #17a2b8 !important;
-        }
+        .text-primary { color: #007bff !important; }
+        .text-success { color: #28a745 !important; }
+        .text-danger { color: #dc3545 !important; }
+        .text-warning { color: #856404 !important; }
+        .text-info { color: #17a2b8 !important; }
+        
         .badge {
             color: white !important;
-            padding: 2px 6px !important;
-            border-radius: 3px !important;
+            padding: 3px 8px !important;
+            border-radius: 4px !important;
+            font-weight: bold !important;
         }
-        .bg-success {
-            background-color: #28a745 !important;
-        }
-        .bg-info {
-            background-color: #17a2b8 !important;
-        }
-        .bg-secondary {
-            background-color: #6c757d !important;
-        }
+        .bg-success { background-color: #28a745 !important; }
+        .bg-info { background-color: #17a2b8 !important; }
+        .bg-secondary { background-color: #6c757d !important; }
+        
+        /* Typography */
         body { 
-            font-size: 11px; 
-            line-height: 1.3;
+            font-size: 10px !important; 
+            line-height: 1.2 !important;
+            font-family: Arial, sans-serif !important;
         }
+        
         h1, h2, h3, h4 { 
-            font-size: 16px; 
-            margin-bottom: 8px;
+            font-size: 14px !important; 
+            margin-bottom: 6px !important;
+            font-weight: bold !important;
         }
         h5 { 
-            font-size: 14px; 
+            font-size: 12px !important;
+            margin-bottom: 4px !important;
         }
         h6 { 
-            font-size: 12px; 
-            margin-bottom: 6px;
+            font-size: 11px !important; 
+            margin-bottom: 4px !important;
+            font-weight: bold !important;
         }
+        
+        /* Table styling */
         .table {
-            font-size: 10px;
+            font-size: 9px !important;
+            margin-bottom: 6px !important;
         }
         .table th, .table td {
-            padding: 4px 6px !important;
+            padding: 3px 5px !important;
+            line-height: 1.1 !important;
+            border: 1px solid #dee2e6 !important;
         }
+        .table-borderless th, .table-borderless td {
+            border: none !important;
+        }
+        .table-light {
+            background-color: #f8f9fa !important;
+        }
+        
+        /* Layout adjustments */
+        .container-fluid { 
+            padding: 0 !important; 
+            margin: 0 !important;
+        }
+        .row { 
+            margin: 0 !important; 
+        }
+        .col-12, .col-md-6, .col-md-3 { 
+            padding: 0 3px !important; 
+        }
+        
         .card-body {
-            padding: 15px !important;
+            padding: 8px !important;
         }
-        .mb-4 {
-            margin-bottom: 15px !important;
+        
+        /* Spacing adjustments */
+        .mb-4 { margin-bottom: 8px !important; }
+        .mb-3 { margin-bottom: 6px !important; }
+        .mb-2 { margin-bottom: 4px !important; }
+        .mb-1 { margin-bottom: 2px !important; }
+        .py-3 { padding: 3px 0 !important; }
+        .pt-3 { padding-top: 3px !important; }
+        .mt-2 { margin-top: 3px !important; }
+        .mt-4 { margin-top: 5px !important; }
+        
+        /* Hide summary cards for space optimization */
+        .card.bg-light.border-info,
+        .card.bg-light.border-success,
+        .card.bg-light.border-danger,
+        .card.bg-light.border-warning {
+            display: none !important;
         }
-        .mb-3 {
-            margin-bottom: 10px !important;
+        
+        /* Footer styling */
+        .border-top {
+            border-top: 2px solid #000 !important;
+            margin-top: 8px !important;
+            padding-top: 6px !important;
         }
+        
+        /* Ensure content fits on one page */
+        .table-responsive {
+            overflow: visible !important;
+        }
+        
+        /* Text adjustments for better readability */
+        strong { font-weight: bold !important; }
+        .text-center { text-align: center !important; }
+        .text-end { text-align: right !important; }
+        
+        /* Prevent page breaks */
+        tr, td, th { page-break-inside: avoid !important; }
     }
 `;
 document.head.appendChild(style);
