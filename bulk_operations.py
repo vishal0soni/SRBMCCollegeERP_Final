@@ -400,16 +400,44 @@ def import_students_data(records):
     try:
         imported_count = 0
         errors = []
+        warnings = []
 
         for i, record in enumerate(records, 1):
             try:
-                # Check if student already exists
+                # Check if student already exists by Student ID
                 existing_student = Student.query.filter_by(
                     student_unique_id=record.get('Student ID', '')
                 ).first()
 
                 if existing_student:
                     errors.append(f"Row {i}: Student with ID {record.get('Student ID')} already exists")
+                    continue
+
+                # Check for duplicate entries based on first_name, last_name, and father_name
+                first_name = record.get('First Name', '').strip()
+                last_name = record.get('Last Name', '').strip()
+                father_name = record.get('Father Name', '').strip()
+
+                if first_name and last_name and father_name:
+                    duplicate_student = Student.query.filter(
+                        db.func.lower(Student.first_name) == first_name.lower(),
+                        db.func.lower(Student.last_name) == last_name.lower(),
+                        db.func.lower(Student.father_name) == father_name.lower()
+                    ).first()
+
+                    if duplicate_student:
+                        warnings.append(f"Row {i}: Potential duplicate detected - {first_name} {last_name} (S/o {father_name}) matches existing student ID: {duplicate_student.student_unique_id}")
+                elif first_name and last_name:
+                    # Check for name match even without father's name
+                    duplicate_student = Student.query.filter(
+                        db.func.lower(Student.first_name) == first_name.lower(),
+                        db.func.lower(Student.last_name) == last_name.lower()
+                    ).first()
+
+                    if duplicate_student:
+                        warnings.append(f"Row {i}: Potential duplicate name detected - {first_name} {last_name} matches existing student ID: {duplicate_student.student_unique_id}")
+                elif not first_name or not last_name:
+                    errors.append(f"Row {i}: First Name and Last Name are required fields")
                     continue
 
                 # Get address fields - prioritize individual fields, fallback to concatenated
@@ -471,8 +499,10 @@ def import_students_data(records):
         db.session.commit()
 
         message = f"Successfully imported {imported_count} students."
+        if warnings:
+            message += f"\n\n⚠️ {len(warnings)} warnings - Potential duplicates detected:\n" + "\n".join(warnings)
         if errors:
-            message += f" {len(errors)} errors occurred:\n" + "\n".join(errors)
+            message += f"\n\n❌ {len(errors)} errors occurred:\n" + "\n".join(errors)
 
         return True, message
 
@@ -695,8 +725,18 @@ def get_template_data(data_type):
             'Aadhaar Number', 'APAAR ID', 'School Name', 'Scholarship Status', 
             'Meera Rebate Status', 'Student Status', 'Admission Date'
         ]
-        # Return empty template with just headers
-        return [], headers
+        # Add sample data to show proper formatting and highlight duplicate checking
+        sample_data = [
+            [
+                'SAMPLE-2024-001', 'EXT001', 'John', 'Doe', 'Robert Doe', 'Jane Doe',
+                'Male', 'General', 'john.doe@email.com', 'Bachelor of Arts (BA) - 1st Year',
+                'Hindi', 'English', 'Political Science', '85.5', '123 Main Street',
+                'Ward 5', 'Raniwara', 'Rajasthan', '123 Main Street, Ward 5, Raniwara, Rajasthan',
+                '9876543210', '123456789012', 'APAAR123', 'ABC High School',
+                'Not Applied', 'Not Applied', 'Active', '2024-01-15'
+            ]
+        ]
+        return sample_data, headers
     elif data_type == 'courses':
         return get_courses_export_data()
     elif data_type == 'course_details':

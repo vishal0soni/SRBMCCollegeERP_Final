@@ -39,6 +39,14 @@
                             <i class="fas fa-download"></i> Download Template
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
+                        <li class="px-3 py-2">
+                            <div class="alert alert-info alert-sm mb-2" style="font-size: 0.8rem;">
+                                <i class="fas fa-info-circle"></i> <strong>Duplicate Check:</strong><br>
+                                System checks for duplicates based on:<br>
+                                • First Name + Last Name + Father Name<br>
+                                • Student ID uniqueness
+                            </div>
+                        </li>
                         <li>
                             <form method="POST" action="{{ url_for('bulk_import', data_type='students') }}" enctype="multipart/form-data" class="px-3 py-2">
                                 <div class="mb-2">
