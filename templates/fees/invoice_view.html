@@ -167,7 +167,7 @@
                 </div>
 
                 <!-- Fee Structure Details -->
-                <div class="row mb-4">
+                <div class="row mb-4 fee-structure-section">
                     <div class="col-12">
                         <h6 class="text-primary mb-3">Fee Structure</h6>
                         <div class="table-responsive">
@@ -496,11 +496,12 @@ style.textContent = `
         .mt-2 { margin-top: 3px !important; }
         .mt-4 { margin-top: 5px !important; }
         
-        /* Hide summary cards for space optimization */
+        /* Hide Fee Summary cards (1st extra section) and Fee Structure Details (3rd section) from print preview */
         .card.bg-light.border-info,
         .card.bg-light.border-success,
         .card.bg-light.border-danger,
-        .card.bg-light.border-warning {
+        .card.bg-light.border-warning,
+        .fee-structure-section {
             display: none !important;
         }
         
