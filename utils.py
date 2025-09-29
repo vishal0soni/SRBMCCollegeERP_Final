@@ -88,9 +88,9 @@ def can_edit_module(user, module):
     # Module-specific permissions
     module_permissions = {
         'admin': ['Administrator'],
-        'students': ['Administrator', 'Admission Officer'],
-        'courses': ['Administrator', 'Admission Officer'],
-        'fees': ['Administrator', 'Accountant'],
+        'students': ['Administrator', 'Manager', 'Admission Officer'],
+        'courses': ['Administrator', 'Manager', 'Admission Officer'],
+        'fees': ['Administrator', 'Manager', 'Accountant'],
         'exams': ['Administrator', 'Exam Controller']
     }
 

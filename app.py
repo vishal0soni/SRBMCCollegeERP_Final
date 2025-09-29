@@ -82,12 +82,13 @@ def create_default_data():
     # Create default roles
     roles_data = [
         {'role_name': 'Administrator', 'role_description': 'Full system access', 'access_type': 'Edit', 'access_level': 1},
-        {'role_name': 'Admission Officer', 'role_description': 'Student admission management', 'access_type': 'Edit', 'access_level': 2},
-        {'role_name': 'Accountant', 'role_description': 'Financial management', 'access_type': 'Edit', 'access_level': 3},
-        {'role_name': 'Exam Controller', 'role_description': 'Examination management', 'access_type': 'Edit', 'access_level': 4},
-        {'role_name': 'Admission Assistant', 'role_description': 'View admission records', 'access_type': 'Read', 'access_level': 5},
-        {'role_name': 'Accountant Assistant', 'role_description': 'View financial records', 'access_type': 'Read', 'access_level': 6},
-        {'role_name': 'Exam Assistant', 'role_description': 'View exam records', 'access_type': 'Read', 'access_level': 7},
+        {'role_name': 'Manager', 'role_description': 'Student admission and financial management', 'access_type': 'Edit', 'access_level': 2},
+        {'role_name': 'Admission Officer', 'role_description': 'Student admission management', 'access_type': 'Edit', 'access_level': 3},
+        {'role_name': 'Accountant', 'role_description': 'Financial management', 'access_type': 'Edit', 'access_level': 4},
+        {'role_name': 'Exam Controller', 'role_description': 'Examination management', 'access_type': 'Edit', 'access_level': 5},
+        {'role_name': 'Admission Assistant', 'role_description': 'View admission records', 'access_type': 'Read', 'access_level': 6},
+        {'role_name': 'Accountant Assistant', 'role_description': 'View financial records', 'access_type': 'Read', 'access_level': 7},
+        {'role_name': 'Exam Assistant', 'role_description': 'View exam records', 'access_type': 'Read', 'access_level': 8},
     ]
     
     for role_data in roles_data:
