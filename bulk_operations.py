@@ -76,9 +76,9 @@ def get_students_export_data():
 
     data = []
     for student in students:
-        # Ensure concatenated_address is up to date before export
-        if not student.concatenated_address:
-            student.update_concatenated_address()
+        # Always update concatenated_address before export to ensure it's current
+        student.update_concatenated_address()
+        db.session.commit()  # Save the updated concatenated address
         
         data.append([
             student.student_unique_id,
@@ -455,7 +455,8 @@ def import_students_data(records):
                     scholarship_status=record.get('Scholarship Status', 'Not Applied'),
                     rebate_meera_scholarship_status=record.get('Meera Rebate Status', 'Not Applied'),
                     student_status=record.get('Student Status', 'Active'),
-                    admission_date=_parse_admission_date(record.get('Admission Date'))
+                    admission_date=_parse_admission_date(record.get('Admission Date')),
+                    concatenated_address=concatenated_address  # Set the concatenated address from import
                 )
 
                 # Update concatenated address after setting individual fields
@@ -683,6 +684,35 @@ def import_invoices_data(records):
     except Exception as e:
         db.session.rollback()
         return False, f"Import failed: {str(e)}"
+
+def get_template_data(data_type):
+    """Get template headers for download with empty data"""
+    if data_type == 'students':
+        headers = [
+            'Student ID', 'External ID', 'First Name', 'Last Name', 'Father Name', 'Mother Name',
+            'Gender', 'Category', 'Email', 'Current Course', 'Subject 1', 'Subject 2', 'Subject 3',
+            'Percentage', 'Street', 'Area/Village', 'City/Tehsil', 'State', 'Concatenated Address', 'Phone', 
+            'Aadhaar Number', 'APAAR ID', 'School Name', 'Scholarship Status', 
+            'Meera Rebate Status', 'Student Status', 'Admission Date'
+        ]
+        # Return empty template with just headers
+        return [], headers
+    elif data_type == 'courses':
+        return get_courses_export_data()
+    elif data_type == 'course_details':
+        return get_course_details_export_data()
+    elif data_type == 'fees':
+        return get_fees_export_data()
+    elif data_type == 'exams':
+        return get_exams_export_data()
+    elif data_type == 'invoices':
+        return get_invoices_export_data()
+    elif data_type == 'users':
+        return get_users_export_data()
+    elif data_type == 'subjects':
+        return get_subjects_export_data()
+    else:
+        raise ValueError(f"Unsupported data type: {data_type}")
 
 def get_export_data(data_type):
     """Get data for export based on data type"""

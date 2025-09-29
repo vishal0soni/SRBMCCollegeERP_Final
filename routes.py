@@ -329,7 +329,7 @@ def add_student():
     course_choices = [('', 'Select Course')]
     course_choices.extend([(cd.course_full_name, cd.course_full_name) for cd in CourseDetails.query.all()])
     form.current_course.choices = course_choices
-    
+
     # Set gender choices to prevent validation issues
     form.gender.choices = [('', 'Select Gender'), ('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')]
 
@@ -338,7 +338,7 @@ def add_student():
     form.subject_1_name.choices = [('', 'Select Subject')] + [(s.subject_name, s.subject_name) for s in subjects]
     form.subject_2_name.choices = [('', 'Select Subject')] + [(s.subject_name, s.subject_name) for s in subjects]
     form.subject_3_name.choices = [('', 'Select Subject')] + [(s.subject_name, s.subject_name) for s in subjects]
-    
+
     # Set default values for scholarship and rebate statuses
     form.scholarship_status.default = 'Not Applied'
     form.rebate_meera_scholarship_status.default = 'Not Applied'
@@ -402,7 +402,7 @@ def add_student():
         try:
             # Update concatenated address before saving
             student.update_concatenated_address()
-            
+
             db.session.add(student)
             db.session.flush()  # This will assign the auto-generated ID
 
@@ -2108,7 +2108,7 @@ def edit_student(student_id):
     course_choices = [('', 'Select Course')]
     course_choices.extend([(cd.course_full_name, cd.course_full_name) for cd in CourseDetails.query.all()])
     form.current_course.choices = course_choices
-    
+
     # Set gender choices to prevent validation issues
     form.gender.choices = [('', 'Select Gender'), ('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')]
 
@@ -2141,7 +2141,7 @@ def edit_student(student_id):
         try:
             # Update concatenated address after form data changes
             student.update_concatenated_address()
-            
+
             # Update fee record if fee data is provided
             fee_record = CollegeFees.query.filter_by(student_id=student.id).first()
             if fee_record:
@@ -3695,89 +3695,17 @@ def bulk_import(data_type):
 @app.route('/download-template/<data_type>')
 @login_required
 def download_template(data_type):
-    """Download template files for bulk import"""
+    """Download template file for bulk import"""
     try:
-        if data_type == 'students':
-            headers = [
-                'Student ID', 'External ID', 'First Name', 'Last Name', 'Father Name', 'Mother Name',
-                'Gender', 'Category', 'Email', 'Current Course', 'Subject 1', 'Subject 2', 'Subject 3',
-                'Percentage', 'Street', 'Area/Village', 'City/Tehsil', 'State', 'Phone', 
-                'Aadhaar Number', 'APAAR ID', 'School Name', 'Scholarship Status', 
-                'Meera Rebate Status', 'Dropout Status', 'Admission Date'
-            ]
-            sample_data = [
-                ['', 'EXT001', 'John', 'Doe', 'Father Name', 'Mother Name',
-                 'Male', 'General', 'john@example.com', 'BA First Year', 'English', 'Hindi', 'History',
-                 '85.5', 'Main Street', 'Village Name', 'City Name', 'State Name', '9876543210',
-                 '123456789012', 'APAAR ID', 'School Name', 'Scholarship Status', 
-                'Meera Rebate Status', 'Active', '2024-01-15']
-            ]
-        elif data_type == 'courses':
-            headers = ['Course ID', 'Short Name', 'Full Name', 'Category', 'Duration (Years)']
-            sample_data = [
-                ['', 'BA', 'Bachelor of Arts', 'Undergraduate', '3']
-            ]
-        elif data_type == 'course_details':
-            headers = [
-                'ID', 'Course Full Name', 'Course Short Name', 'Year/Semester', 
-                'Course Tuition Fee', 'Course Type', 'Misc Fee 1', 'Misc Fee 2', 
-                'Misc Fee 3', 'Misc Fee 4', 'Misc Fee 5', 'Misc Fee 6', 'Total Course Fees'
-            ]
-            sample_data = [
-                ['', 'Bachelor of Arts First Year', 'BA', 'First Year', '15000', 'Regular',
-                 '1000', '500', '0', '0', '0', '0', '16500']
-            ]
-        elif data_type == 'users':
-            headers = [
-                'User ID', 'Username', 'First Name', 'Last Name', 'Email', 'Phone', 
-                'Gender', 'Role', 'Status', 'Created Date'
-            ]
-            sample_data = [
-                ['', 'teacher1', 'Teacher', 'Name', 'teacher@example.com', '9876543210',
-                 'Male', 'Teacher', 'Active', '2024-01-01']
-            ]
-        elif data_type == 'fees':
-            headers = [
-                'Student ID', 'Student Name', 'Course', 'Total Fee', 'Paid Amount', 'Due Amount',
-                'Installment 1', 'Installment 2', 'Installment 3', 'Installment 4', 
-                'Installment 5', 'Installment 6', 'Payment Status'
-            ]
-            sample_data = [
-                ['BA-24-001', 'Student Name', 'Bachelor of Arts First Year', '25000', '10000', '15000',
-                 '5000', '5000', '0', '0', '0', '0', 'Partial']
-            ]
-        elif data_type == 'exams':
-            headers = [
-                'Student ID', 'Student Name', 'Course', 'Exam Name', 'Semester', 'Exam Date',
-                'Subject 1', 'Subject 1 Max', 'Subject 1 Obtained',
-                'Subject 2', 'Subject 2 Max', 'Subject 2 Obtained',
-                'Subject 3', 'Subject 3 Max', 'Subject 3 Obtained',
-                'Subject 4', 'Subject 4 Max', 'Subject 4 Obtained',
-                'Subject 5', 'Subject 5 Max', 'Subject 5 Obtained',
-                'Subject 6', 'Subject 6 Max', 'Subject 6 Obtained',
-                'Total Max Marks', 'Total Obtained', 'Percentage', 'Grade', 'Status'
-            ]
-            sample_data = [
-                ['BA-24-001', 'Student Name', 'Bachelor of Arts First Year', 'First Semester Exam', 'Semester 1', '2024-01-15',
-                 'English', '100', '85', 'Hindi', '100', '78', 'History', '100', '82',
-                 '', '0', '0', '', '0', '0', '', '0', '0',
-                 '300', '245', '81.67', 'A', 'Pass']
-            ]
-        elif data_type == 'invoices':
-            headers = [
-                'Invoice Number', 'Student ID', 'Student Name', 'Course', 'Invoice Date',
-                'Amount', 'Payment Mode', 'Status', 'Academic Year', 'Installment Number'
-            ]
-            sample_data = [
-                ['INV-2024-001', 'BA-24-001', 'Student Name', 'Bachelor of Arts First Year', '2024-01-15',
-                 '5000', 'Cash', 'Paid', '2024-25', '1']
-            ]
-        else:
-            flash('Invalid template type.', 'error')
-            return redirect(url_for('dashboard'))
+        # Get empty template data (just headers)
+        data, headers = get_template_data(data_type)
 
-        return export_to_csv(sample_data, headers, f'{data_type}_template.csv')
+        # Create empty template
+        template_data = []
+
+        filename = f"{data_type}_template.csv"
+        return export_to_csv(template_data, headers, filename)
 
     except Exception as e:
         flash(f'Template download failed: {str(e)}', 'error')
-        return redirect(url_for('dashboard'))
+        return redirect(request.referrer or url_for('dashboard'))
