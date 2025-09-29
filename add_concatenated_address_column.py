@@ -1,21 +1,30 @@
 
 from app import app, db
 from models import Student
+from sqlalchemy import text
 
 def add_concatenated_address_column():
     """Add concatenated_address column to students table and populate it"""
     with app.app_context():
         try:
-            # Add the column if it doesn't exist
-            try:
-                db.engine.execute('ALTER TABLE students ADD COLUMN concatenated_address TEXT')
+            # Check if column already exists
+            result = db.session.execute(text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'students' 
+                AND column_name = 'concatenated_address'
+            """))
+            
+            if result.fetchone():
+                print("✓ concatenated_address column already exists")
+            else:
+                # Add the column
+                db.session.execute(text("""
+                    ALTER TABLE students 
+                    ADD COLUMN concatenated_address TEXT
+                """))
+                db.session.commit()
                 print("✓ Added concatenated_address column to students table")
-            except Exception as e:
-                if "duplicate column name" in str(e).lower() or "already exists" in str(e).lower():
-                    print("✓ concatenated_address column already exists")
-                else:
-                    print(f"Error adding column: {e}")
-                    return
 
             # Update existing records
             students = Student.query.all()
@@ -28,6 +37,19 @@ def add_concatenated_address_column():
             db.session.commit()
             print(f"✓ Updated concatenated_address for {updated_count} students")
             
+            # Verify the column exists
+            result = db.session.execute(text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'students' 
+                AND column_name = 'concatenated_address'
+            """))
+            
+            if result.fetchone():
+                print("✓ Column verified in database")
+            else:
+                print("✗ Column not found after creation")
+                
         except Exception as e:
             db.session.rollback()
             print(f"✗ Error: {e}")
