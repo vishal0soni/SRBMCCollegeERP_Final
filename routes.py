@@ -344,12 +344,17 @@ def add_student():
     form.rebate_meera_scholarship_status.default = 'Not Applied'
     form.process(None) # Process the form to set defaults
 
-    if form.validate_on_submit():
+    if request.method == 'POST':
         # Generate student unique ID
-        course_details = CourseDetails.query.filter_by(course_full_name=form.current_course.data).first()
+        course_name = form.current_course.data or request.form.get('current_course', '')
+        if not course_name:
+            flash('Please select a course.', 'error')
+            return render_template('students/student_form.html', form=form, title='Add Student', today_date=date.today().strftime('%Y-%m-%d'))
+
+        course_details = CourseDetails.query.filter_by(course_full_name=course_name).first()
         if not course_details:
             flash('Course details not found. Please select a valid course.', 'error')
-            return render_template('students/student_form.html', form=form, title='Add Student')
+            return render_template('students/student_form.html', form=form, title='Add Student', today_date=date.today().strftime('%Y-%m-%d'))
 
         course_short = course_details.course_short_name
         student_unique_id = generate_student_id(course_short, date.today().year)
@@ -365,32 +370,33 @@ def add_student():
             student_unique_id = f"{course_short}-{year_short}-{counter:03d}"
             existing_student = Student.query.filter_by(student_unique_id=student_unique_id).first()
 
+        # Get data from form, using request.form as fallback
         student = Student(
             student_unique_id=student_unique_id,
-            external_id=form.external_id.data,
-            first_name=form.first_name.data,
-            last_name=form.last_name.data,
-            father_name=form.father_name.data,
-            mother_name=form.mother_name.data,
-            gender=form.gender.data,
-            category=form.category.data,
-            email=form.email.data,
-            current_course=form.current_course.data,
-            subject_1_name=form.subject_1_name.data,
-            subject_2_name=form.subject_2_name.data,
-            subject_3_name=form.subject_3_name.data,
-            percentage=form.percentage.data,
-            street=form.street.data,
-            area_village=form.area_village.data,
-            city_tehsil=form.city_tehsil.data,
-            state=form.state.data,
-            phone=form.phone.data,
-            aadhaar_card_number=form.aadhaar_card_number.data,
-            apaar_id=form.apaar_id.data,
-            school_name=form.school_name.data,
-            scholarship_status=form.scholarship_status.data,
-            rebate_meera_scholarship_status=form.rebate_meera_scholarship_status.data,
-            admission_date=form.admission_date.data
+            external_id=form.external_id.data or request.form.get('external_id', ''),
+            first_name=form.first_name.data or request.form.get('first_name', ''),
+            last_name=form.last_name.data or request.form.get('last_name', ''),
+            father_name=form.father_name.data or request.form.get('father_name', ''),
+            mother_name=form.mother_name.data or request.form.get('mother_name', ''),
+            gender=form.gender.data or request.form.get('gender', ''),
+            category=form.category.data or request.form.get('category', ''),
+            email=form.email.data or request.form.get('email', ''),
+            current_course=course_name,
+            subject_1_name=form.subject_1_name.data or request.form.get('subject_1_name', ''),
+            subject_2_name=form.subject_2_name.data or request.form.get('subject_2_name', ''),
+            subject_3_name=form.subject_3_name.data or request.form.get('subject_3_name', ''),
+            percentage=form.percentage.data or (float(request.form.get('percentage', 0)) if request.form.get('percentage') else None),
+            street=form.street.data or request.form.get('street', ''),
+            area_village=form.area_village.data or request.form.get('area_village', ''),
+            city_tehsil=form.city_tehsil.data or request.form.get('city_tehsil', ''),
+            state=form.state.data or request.form.get('state', ''),
+            phone=form.phone.data or request.form.get('phone', ''),
+            aadhaar_card_number=form.aadhaar_card_number.data or request.form.get('aadhaar_card_number', ''),
+            apaar_id=form.apaar_id.data or request.form.get('apaar_id', ''),
+            school_name=form.school_name.data or request.form.get('school_name', ''),
+            scholarship_status=form.scholarship_status.data or request.form.get('scholarship_status', 'Not Applied'),
+            rebate_meera_scholarship_status=form.rebate_meera_scholarship_status.data or request.form.get('rebate_meera_scholarship_status', 'Not Applied'),
+            admission_date=form.admission_date.data or datetime.strptime(request.form.get('admission_date', date.today().strftime('%Y-%m-%d')), '%Y-%m-%d').date()
         )
 
         try:
