@@ -593,9 +593,6 @@ function updateCourseFees() {
                     document.getElementById('miscFee5').textContent = `₹${parseFloat(fees.misc_course_fees_5 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                     document.getElementById('miscFee6').textContent = `₹${parseFloat(fees.misc_course_fees_6 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-                    // Format Total Course Fees (Tuition + All Misc Fees)
-                    document.getElementById('totalCourseFees').textContent = `₹${totalCourseFees.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-
                     // Store course fees data for form submission
                     window.courseFees = fees;
 
@@ -610,7 +607,10 @@ function updateCourseFees() {
                     }
                     hiddenInput.value = courseTuitionFee.toFixed(2);
 
-                    calculateTotalFees();
+                    // Call calculateTotalFees to update all totals
+                    setTimeout(() => {
+                        calculateTotalFees();
+                    }, 100);
                 } else {
                     // Clear fee displays if no course selected or error
                     clearFeeDisplays();
@@ -643,6 +643,8 @@ function clearFeeDisplays() {
 }
 
 function calculateTotalFees() {
+    console.log('Calculating total fees...');
+    
     // Calculate Total Course Fees = Course Tuition Fee + All Misc Fees (1-6)
     const courseTuitionFeeText = document.getElementById('courseTuitionFee')?.textContent || '₹0.00';
     const courseTuitionFee = parseFloat(courseTuitionFeeText.replace('₹', '').replace(/,/g, '') || 0);
@@ -668,8 +670,13 @@ function calculateTotalFees() {
     // Total Course Fees = Tuition + All Misc Fees
     const totalCourseFees = courseTuitionFee + miscFee1 + miscFee2 + miscFee3 + miscFee4 + miscFee5 + miscFee6;
     
+    console.log('Total Course Fees:', totalCourseFees);
+    
     // Update Total Course Fees display
-    document.getElementById('totalCourseFees').textContent = `₹${totalCourseFees.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    const totalCourseFeesElement = document.getElementById('totalCourseFees');
+    if (totalCourseFeesElement) {
+        totalCourseFeesElement.textContent = `₹${totalCourseFees.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
 
     // Calculate Total Additional Fees = Sum of all additional fee inputs
     let additionalFees = 0;
@@ -678,20 +685,30 @@ function calculateTotalFees() {
         additionalFees += feeValue;
     });
     
+    console.log('Total Additional Fees:', additionalFees);
+    
     // Update Total Additional Fees display
-    document.getElementById('totalAdditionalFees').textContent = `₹${additionalFees.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    const totalAdditionalFeesElement = document.getElementById('totalAdditionalFees');
+    if (totalAdditionalFeesElement) {
+        totalAdditionalFeesElement.textContent = `₹${additionalFees.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
 
     // Calculate Grand Total = Total Course Fees + Total Additional Fees
     const grandTotal = totalCourseFees + additionalFees;
     
+    console.log('Grand Total:', grandTotal);
+    
     // Update Grand Total display
-    document.getElementById('grandTotalFees').textContent = `₹${grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    const grandTotalFeesElement = document.getElementById('grandTotalFees');
+    if (grandTotalFeesElement) {
+        grandTotalFeesElement.textContent = `₹${grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
 
     // Calculate amount due with Meera rebate affecting total due
     // Note: totalFeesPaid is now auto-calculated by database, so we use the displayed value
     const totalFeesPaid = parseFloat(document.getElementById('totalFeesPaid')?.value || 0);
     const meeraRebateGranted = document.getElementById('meeraRebateGranted')?.checked || false;
-    const meeraRebateAmount = parseFloat(document.getElementById('meeraRebateAmount').value || 0);
+    const meeraRebateAmount = parseFloat(document.getElementById('meeraRebateAmount')?.value || 0);
 
     // Calculate Total Amount after rebate (deduct Meera rebate only if granted)
     let totalAmountAfterRebate = grandTotal;
