@@ -153,9 +153,6 @@ class CollegeFees(db.Model):
     coursedetail_id = db.Column(db.Integer, db.ForeignKey('course_details.id'))
     course_full_name = db.Column(db.String(200))  # Snapshot of course name at time of fee record creation
     total_course_fees = db.Column(db.Numeric(10, 2), default=0)
-    
-    # Relationship to CourseDetails
-    coursedetail = db.relationship('CourseDetails', foreign_keys=[coursedetail_id], backref='fee_records', lazy=True)
     enrollment_fee = db.Column(db.Numeric(10, 2), default=0)
     eligibility_certificate_fee = db.Column(db.Numeric(10, 2), default=0)
     university_affiliation_fee = db.Column(db.Numeric(10, 2), default=0)
