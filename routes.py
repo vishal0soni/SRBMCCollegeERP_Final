@@ -921,9 +921,9 @@ def fees():
     sort_by = request.args.get('sort', 'student_unique_id')
     sort_order = request.args.get('order', 'asc')
 
-    # Query all students with their fee records (LEFT JOIN to show all students even without fee records)
-    query = db.session.query(Student, CollegeFees).outerjoin(
-        CollegeFees, Student.id == CollegeFees.student_id
+    # Query all fee records with their associated students - use explicit join to get all records
+    query = db.session.query(CollegeFees, Student).join(
+        Student, CollegeFees.student_id == Student.id
     )
 
     # Search filters
@@ -932,12 +932,18 @@ def fees():
             Student.first_name.contains(search),
             Student.last_name.contains(search),
             Student.student_unique_id.contains(search),
-            Student.current_course.contains(search)
+            Student.current_course.contains(search),
+            CollegeFees.course_full_name.contains(search)
         )
         query = query.filter(search_filter)
 
     if course_filter:
-        query = query.filter(Student.current_course.contains(course_filter))
+        query = query.filter(
+            or_(
+                Student.current_course.contains(course_filter),
+                CollegeFees.course_full_name.contains(course_filter)
+            )
+        )
 
     if dues_issued_filter:
         if dues_issued_filter == 'library_dues':
@@ -951,15 +957,17 @@ def fees():
 
 
 
-    # Sorting - prioritize Student fields
+    # Sorting
     if hasattr(Student, sort_by):
         if sort_order == 'desc':
             query = query.order_by(getattr(Student, sort_by).desc())
         else:
             query = query.order_by(getattr(Student, sort_by))
-    else:
-        # Default to student_unique_id if sort field not found
-        query = query.order_by(Student.student_unique_id)
+    elif hasattr(CollegeFees, sort_by):
+        if sort_order == 'desc':
+            query = query.order_by(getattr(CollegeFees, sort_by).desc())
+        else:
+            query = query.order_by(getattr(CollegeFees, sort_by))
 
     fees = query.paginate(page=page, per_page=20, error_out=False)
 
