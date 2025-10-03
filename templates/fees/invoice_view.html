@@ -38,7 +38,11 @@
     <div class="col-12">
         <div class="card shadow" id="invoice-content">
             <div class="card-header text-center bg-primary text-white">
+                {% if student.current_course and ('Bachelor of Pharmacy' in student.current_course or 'B.Pharm' in student.current_course or 'B.PHARM' in student.current_course.upper()) %}
+                <h4 class="mb-0">SUNDHA MATA INSTITUTE FOR HIGHER STUDIES</h4>
+                {% else %}
                 <h4 class="mb-0">SHRI RAGHUNATH BISHNOI MEMORIAL COLLEGE</h4>
+                {% endif %}
                 <p class="mb-0">Raniwara, Jalore, Rajasthan</p>
                 <h5 class="mt-2 mb-0">FEE RECEIPT</h5>
             </div>

@@ -122,23 +122,23 @@ def generate_pdf_invoice(invoice):
         from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
         import io
 
-        # Create PDF buffer
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.5*inch)
 
-        # Get styles
         styles = getSampleStyleSheet()
         title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=18, spaceAfter=30, alignment=TA_CENTER)
-        heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontSize=14, spaceAfter=12, alignment=TA_LEFT)
-        normal_style = styles['Normal']
 
-        # Build PDF content
         content = []
 
-        # College header
-        content.append(Paragraph("SHRI RAGHUNATH BISHNOI MEMORIAL COLLEGE", title_style))
+        # Determine college name based on course
+        college_name = "SHRI RAGHUNATH BISHNOI MEMORIAL COLLEGE"
+        if invoice.student and invoice.student.current_course and ("Bachelor of Pharmacy" in invoice.student.current_course or "B.Pharm" in invoice.student.current_course or "B.PHARM" in invoice.student.current_course.upper()):
+            college_name = "SUNDHA MATA INSTITUTE FOR HIGHER STUDIES"
+
+        # Header
+        content.append(Paragraph(college_name, title_style))
         content.append(Paragraph("Raniwara, Jalore, Rajasthan", styles['Normal']))
-        content.append(Paragraph("FEE RECEIPT", heading_style))
+        content.append(Paragraph("FEE RECEIPT", getSampleStyleSheet()['Heading2']))
         content.append(Spacer(1, 20))
 
         # Invoice details
