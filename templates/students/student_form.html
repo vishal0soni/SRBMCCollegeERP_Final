@@ -593,6 +593,17 @@ function updateCourseFees() {
                     document.getElementById('miscFee5').textContent = `₹${parseFloat(fees.misc_course_fees_5 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                     document.getElementById('miscFee6').textContent = `₹${parseFloat(fees.misc_course_fees_6 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
+                    // Calculate and display Total Course Fees immediately
+                    const totalCourseFees = courseTuitionFee + 
+                        parseFloat(fees.misc_course_fees_1 || 0) + 
+                        parseFloat(fees.misc_course_fees_2 || 0) + 
+                        parseFloat(fees.misc_course_fees_3 || 0) + 
+                        parseFloat(fees.misc_course_fees_4 || 0) + 
+                        parseFloat(fees.misc_course_fees_5 || 0) + 
+                        parseFloat(fees.misc_course_fees_6 || 0);
+                    
+                    document.getElementById('totalCourseFees').textContent = `₹${totalCourseFees.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
                     // Store course fees data for form submission
                     window.courseFees = fees;
 
