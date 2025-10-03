@@ -212,7 +212,7 @@
                     <div id="feeDetailsSection" class="card border-light">
                         <div class="card-body">
                             <h6 class="text-primary mb-3">Fee Summary</h6>
-                            
+
                             <div class="row">
                                 <div class="col-md-6">
                                     <h6 class="text-secondary mb-3">Course Fees Breakdown</h6>
@@ -450,6 +450,29 @@
                                 </div>
                             </div>
 
+                            <!-- Summary Display Boxes -->
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="card text-center bg-info text-white p-3 rounded">
+                                        <h6 class="mb-1">Total Course Fees</h6>
+                                        <h4 class="mb-0 fw-bold" id="displayTotalCourseFees">₹0.00</h4>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card text-center bg-warning text-white p-3 rounded">
+                                        <h6 class="mb-1">Total Additional Fees</h6>
+                                        <h4 class="mb-0 fw-bold" id="displayTotalAdditionalFees">₹0.00</h4>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card text-center bg-success text-white p-3 rounded">
+                                        <h6 class="mb-1">Grand Total</h6>
+                                        <h4 class="mb-0 fw-bold" id="displayGrandTotal">₹0.00</h4>
+                                    </div>
+                                </div>
+                            </div>
+
+
                             <!-- Other Status (Hidden by default - can be shown if needed) -->
                             <div class="collapse" id="otherStatusCollapse">
                                 <div class="row">
@@ -680,12 +703,17 @@ function calculateTotalFees() {
     document.getElementById('totalAdditionalFees').textContent = `₹${additionalFees.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     document.getElementById('grandTotalFees').textContent = `₹${grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
+    // Update summary display boxes
+    document.getElementById('displayTotalCourseFees').textContent = `₹${totalCourseFees.toFixed(2)}`;
+    document.getElementById('displayTotalAdditionalFees').textContent = `₹${additionalFees.toFixed(2)}`;
+    document.getElementById('displayGrandTotal').textContent = `₹${grandTotal.toFixed(2)}`;
+
     // Update the total amount after rebate field and display
     const totalAmountAfterRebateField = document.getElementById('totalAmountAfterRebate');
     if (totalAmountAfterRebateField) {
         totalAmountAfterRebateField.value = totalAmountAfterRebate.toFixed(2);
     }
-    
+
     // Update the total amount due field
     const totalAmountDueField = document.getElementById('totalAmountDue');
     if (totalAmountDueField) {
