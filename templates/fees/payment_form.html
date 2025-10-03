@@ -398,10 +398,10 @@ function loadStudentDetails(student = null) {
                     const feeData = data.fee_data;
                     window.studentFeeData = feeData;
                     
-                    // Update display
-                    document.getElementById('totalFees').textContent = parseFloat(feeData.total_fee || 0).toLocaleString('en-IN', {minimumFractionDigits: 2});
-                    document.getElementById('paidAmount').textContent = parseFloat(feeData.paid_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2});
-                    document.getElementById('dueAmount').textContent = parseFloat(feeData.due_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2});
+                    // Update display with proper formatting
+                    document.getElementById('totalFees').textContent = parseFloat(feeData.total_fee || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    document.getElementById('paidAmount').textContent = parseFloat(feeData.paid_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    document.getElementById('dueAmount').textContent = parseFloat(feeData.due_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                     
                     // Show additional details and payment summary
                     document.getElementById('additionalDetails').style.display = 'block';
@@ -450,9 +450,9 @@ function loadStudentDetails(student = null) {
                         document.getElementById('studentId').textContent = data.student_unique_id || '-';
                         document.getElementById('studentName').textContent = data.student_name || '-';
                         document.getElementById('studentCourse').textContent = data.student_course || '-';
-                        document.getElementById('totalFees').textContent = parseFloat(feeData.total_fee || 0).toLocaleString('en-IN', {minimumFractionDigits: 2});
-                        document.getElementById('paidAmount').textContent = parseFloat(feeData.paid_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2});
-                        document.getElementById('dueAmount').textContent = parseFloat(feeData.due_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2});
+                        document.getElementById('totalFees').textContent = parseFloat(feeData.total_fee || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        document.getElementById('paidAmount').textContent = parseFloat(feeData.paid_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        document.getElementById('dueAmount').textContent = parseFloat(feeData.due_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
                         // Update payment history if available
                         if (data.payment_history) {

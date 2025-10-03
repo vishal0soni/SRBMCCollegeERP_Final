@@ -1888,8 +1888,9 @@ def api_student_fee_details(student_id):
             next_installment = 7  # All installments paid
 
         # Use total_amount_after_rebate if available, otherwise use total_fee
-        total_fee = float(fee_record.total_amount_after_rebate or fee_record.total_fee or 0)
-        due_amount = max(0, total_fee - paid_amount)  # Ensure non-negative
+        # Prioritize total_amount_after_rebate for accurate due amount calculation
+        total_fee_to_use = float(fee_record.total_amount_after_rebate) if fee_record.total_amount_after_rebate and fee_record.total_amount_after_rebate > 0 else float(fee_record.total_fee or 0)
+        due_amount = max(0, total_fee_to_use - paid_amount)  # Ensure non-negative
 
         # Get payment history
         invoices = Invoice.query.filter_by(student_id=student_id).order_by(Invoice.date_time.desc()).limit(5).all()
@@ -1908,7 +1909,8 @@ def api_student_fee_details(student_id):
             'student_name': f"{student.first_name} {student.last_name}",
             'student_course': student.current_course or 'No Course Assigned',
             'fee_data': {
-                'total_fee': float(total_fee),
+                'total_fee': float(total_fee_to_use),
+                'total_fee_original': float(fee_record.total_fee or 0),
                 'paid_amount': float(paid_amount),
                 'due_amount': float(due_amount),
                 'next_installment': next_installment,
