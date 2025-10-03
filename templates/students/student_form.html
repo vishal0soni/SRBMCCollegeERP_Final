@@ -643,24 +643,49 @@ function clearFeeDisplays() {
 }
 
 function calculateTotalFees() {
-    // Calculate total fee using the same formula as database:
-    // total_course_fees + enrollment_fee + eligibility_certificate_fee +
-    // university_affiliation_fee + university_sports_fee + university_development_fee +
-    // tc_cc_fee + miscellaneous_fee_1 + miscellaneous_fee_2 + miscellaneous_fee_3
+    // Calculate Total Course Fees = Course Tuition Fee + All Misc Fees (1-6)
+    const courseTuitionFeeText = document.getElementById('courseTuitionFee')?.textContent || '₹0.00';
+    const courseTuitionFee = parseFloat(courseTuitionFeeText.replace('₹', '').replace(/,/g, '') || 0);
+    
+    const miscFee1Text = document.getElementById('miscFee1')?.textContent || '₹0.00';
+    const miscFee1 = parseFloat(miscFee1Text.replace('₹', '').replace(/,/g, '') || 0);
+    
+    const miscFee2Text = document.getElementById('miscFee2')?.textContent || '₹0.00';
+    const miscFee2 = parseFloat(miscFee2Text.replace('₹', '').replace(/,/g, '') || 0);
+    
+    const miscFee3Text = document.getElementById('miscFee3')?.textContent || '₹0.00';
+    const miscFee3 = parseFloat(miscFee3Text.replace('₹', '').replace(/,/g, '') || 0);
+    
+    const miscFee4Text = document.getElementById('miscFee4')?.textContent || '₹0.00';
+    const miscFee4 = parseFloat(miscFee4Text.replace('₹', '').replace(/,/g, '') || 0);
+    
+    const miscFee5Text = document.getElementById('miscFee5')?.textContent || '₹0.00';
+    const miscFee5 = parseFloat(miscFee5Text.replace('₹', '').replace(/,/g, '') || 0);
+    
+    const miscFee6Text = document.getElementById('miscFee6')?.textContent || '₹0.00';
+    const miscFee6 = parseFloat(miscFee6Text.replace('₹', '').replace(/,/g, '') || 0);
+    
+    // Total Course Fees = Tuition + All Misc Fees
+    const totalCourseFees = courseTuitionFee + miscFee1 + miscFee2 + miscFee3 + miscFee4 + miscFee5 + miscFee6;
+    
+    // Update Total Course Fees display
+    document.getElementById('totalCourseFees').textContent = `₹${totalCourseFees.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-    // Get the complete total course fees (including tuition + misc fees)
-    const totalCourseFeesElement = document.getElementById('totalCourseFees');
-    const totalCourseFeesText = totalCourseFeesElement?.textContent || '₹0.00';
-    const totalCourseFees = parseFloat(totalCourseFeesText.replace('₹', '').replace(/,/g, '') || 0);
-
-    // Add all additional fee components
+    // Calculate Total Additional Fees = Sum of all additional fee inputs
     let additionalFees = 0;
     document.querySelectorAll('.additional-fee-input').forEach(input => {
         const feeValue = parseFloat(input.value || 0);
         additionalFees += feeValue;
     });
+    
+    // Update Total Additional Fees display
+    document.getElementById('totalAdditionalFees').textContent = `₹${additionalFees.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
+    // Calculate Grand Total = Total Course Fees + Total Additional Fees
     const grandTotal = totalCourseFees + additionalFees;
+    
+    // Update Grand Total display
+    document.getElementById('grandTotalFees').textContent = `₹${grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
     // Calculate amount due with Meera rebate affecting total due
     // Note: totalFeesPaid is now auto-calculated by database, so we use the displayed value
@@ -675,10 +700,6 @@ function calculateTotalFees() {
     }
 
     const totalAmountDue = Math.max(0, totalAmountAfterRebate - totalFeesPaid);
-
-    // Update displays with proper formatting
-    document.getElementById('totalAdditionalFees').textContent = `₹${additionalFees.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    document.getElementById('grandTotalFees').textContent = `₹${grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
     // Update the total amount after rebate field and display
     const totalAmountAfterRebateField = document.getElementById('totalAmountAfterRebate');
