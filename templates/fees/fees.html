@@ -141,9 +141,11 @@
                                         {% endif %}
                                     </a>
                                 </th>
+                                <th>Course Tuition Fee</th>
+                                <th>Course Total Fees</th>
                                 <th>
                                     <a href="{{ url_for('fees', sort='total_amount_after_rebate', order='desc' if request.args.get('sort') == 'total_amount_after_rebate' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), dues_issued=request.args.get('dues_issued', '')) }}" class="text-decoration-none text-dark">
-                                        Total Fees
+                                        Student Total Fees
                                         {% if request.args.get('sort') == 'total_amount_after_rebate' %}
                                             <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
                                         {% else %}
@@ -199,6 +201,20 @@
                                     {{ fee_record.course_full_name or student.current_course }}
                                     {% if fee_record.course_full_name and fee_record.course_full_name != student.current_course %}
                                         <br><small class="text-muted">Current: {{ student.current_course }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if fee_record.coursedetail %}
+                                        <span class="text-info">₹{{ "%.2f"|format(fee_record.coursedetail.course_tuition_fee or 0) }}</span>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if fee_record.coursedetail %}
+                                        <span class="text-primary">₹{{ "%.2f"|format(fee_record.coursedetail.total_course_fees or 0) }}</span>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -295,7 +311,7 @@
                             {% endfor %}
                             {% else %}
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">
+                                <td colspan="10" class="text-center text-muted py-4">
                                     <i class="fas fa-inbox fa-2x mb-2"></i>
                                     <p>No student fee records found. Fee records will appear here once students are added with fee details.</p>
                                 </td>
