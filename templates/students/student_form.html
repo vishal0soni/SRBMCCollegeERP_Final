@@ -211,6 +211,8 @@
                     <!-- Fee Details -->
                     <div id="feeDetailsSection" class="card border-light">
                         <div class="card-body">
+                            <h6 class="text-primary mb-3">Fee Summary</h6>
+                            
                             <div class="row">
                                 <div class="col-md-6">
                                     <h6 class="text-secondary mb-3">Course Fees Breakdown</h6>
@@ -255,9 +257,9 @@
                                     <hr class="my-3">
 
                                     <!-- Total Course Fees -->
-                                    <div class="mb-2">
-                                        <strong>Total Course Fees:</strong>
-                                        <span class="float-end" id="totalCourseFees">₹0.00</span>
+                                    <div class="mb-2 bg-light p-2 rounded">
+                                        <strong class="text-primary">Total Course Fees:</strong>
+                                        <span class="float-end fw-bold text-primary" id="totalCourseFees">₹0.00</span>
                                         <div class="mt-1">
                                             <small class="text-muted d-block">(Tuition Fee + All Misc Fees)</small>
                                         </div>
@@ -338,13 +340,49 @@
                                         </div>
                                     </div>
                                     <hr>
-                                    <div class="mb-2">
-                                        <strong>Total Additional Fees:</strong>
+                                    <div class="mb-2 bg-light p-2 rounded">
+                                        <strong class="text-info">Total Additional Fees:</strong>
                                         <span class="float-end text-info fw-bold" id="totalAdditionalFees">₹0.00</span>
                                     </div>
-                                    <div class="mb-2">
+                                    <div class="mb-2 bg-success text-white p-2 rounded">
                                         <strong>Grand Total:</strong>
-                                        <span class="float-end text-success fw-bold" id="grandTotalFees">₹0.00</span>
+                                        <span class="float-end fw-bold" id="grandTotalFees">₹0.00</span>
+                                        <div class="mt-1">
+                                            <small class="d-block">(Total Course Fees + Total Additional Fees)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Comprehensive Fee Summary Section -->
+                            <hr class="my-4">
+                            <h6 class="text-primary mb-3">Payment & Balance Summary</h6>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-primary">
+                                        <div class="card-body text-center">
+                                            <small class="text-muted d-block mb-1">Total Amount Paid Till Date</small>
+                                            <h5 class="text-primary mb-0" id="displayTotalFeesPaid">₹0.00</h5>
+                                            <small class="text-muted">(Sum of all installments)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-warning">
+                                        <div class="card-body text-center">
+                                            <small class="text-muted d-block mb-1">Total Amount After Rebate</small>
+                                            <h5 class="text-warning mb-0" id="displayTotalAmountAfterRebate">₹0.00</h5>
+                                            <small class="text-muted">(Grand Total - Meera Rebate if granted)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-danger">
+                                        <div class="card-body text-center">
+                                            <small class="text-muted d-block mb-1">Total Amount Due</small>
+                                            <h5 class="text-danger mb-0" id="displayTotalAmountDue">₹0.00</h5>
+                                            <small class="text-muted">(Amount After Rebate - Amount Paid)</small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -677,21 +715,32 @@ function calculateTotalFees() {
     document.getElementById('totalAdditionalFees').textContent = `₹${additionalFees.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     document.getElementById('grandTotalFees').textContent = `₹${grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-    // Update the total amount after rebate field
+    // Update the total amount after rebate field and display
     const totalAmountAfterRebateField = document.getElementById('totalAmountAfterRebate');
     if (totalAmountAfterRebateField) {
         totalAmountAfterRebateField.value = totalAmountAfterRebate.toFixed(2);
-        // Also update display if there's a display element
-        const totalAmountAfterRebateDisplay = document.getElementById('totalAmountAfterRebateDisplay');
-        if (totalAmountAfterRebateDisplay) {
-            totalAmountAfterRebateDisplay.textContent = `₹${totalAmountAfterRebate.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        }
     }
-
+    
     // Update the total amount due field
     const totalAmountDueField = document.getElementById('totalAmountDue');
     if (totalAmountDueField) {
         totalAmountDueField.value = totalAmountDue.toFixed(2);
+    }
+
+    // Update summary display cards
+    const displayTotalFeesPaid = document.getElementById('displayTotalFeesPaid');
+    if (displayTotalFeesPaid) {
+        displayTotalFeesPaid.textContent = `₹${totalFeesPaid.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
+    const displayTotalAmountAfterRebate = document.getElementById('displayTotalAmountAfterRebate');
+    if (displayTotalAmountAfterRebate) {
+        displayTotalAmountAfterRebate.textContent = `₹${totalAmountAfterRebate.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
+    const displayTotalAmountDue = document.getElementById('displayTotalAmountDue');
+    if (displayTotalAmountDue) {
+        displayTotalAmountDue.textContent = `₹${totalAmountDue.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     }
 
     // Store calculated values for form submission validation
