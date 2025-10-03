@@ -494,13 +494,23 @@ def add_student():
                     total_amount_after_rebate=total_amount_after_rebate,
                     pending_dues_for_libraries=pending_dues_for_libraries,
                     pending_dues_for_hostel=pending_dues_for_hostel,
-                    exam_admit_card_issued=exam_admit_card_issued
+                    exam_admit_card_issued=exam_admit_card_issued,
+                    # Initialize installments to 0
+                    installment_1=0,
+                    installment_2=0,
+                    installment_3=0,
+                    installment_4=0,
+                    installment_5=0,
+                    installment_6=0
                 )
                 db.session.add(fee_record)
                 db.session.flush()  # Flush to get the auto-calculated total_fee from database
 
                 # Only update total_fees_paid from installments sum (total_fee is handled by database)
                 fee_record.update_total_fees_paid()
+                
+                # Log the fee record creation
+                app.logger.info(f"Created fee record for student {student.student_unique_id} with course {course_detail.course_full_name}")
 
             db.session.commit()
 
@@ -911,7 +921,10 @@ def fees():
     sort_by = request.args.get('sort', 'student_unique_id')
     sort_order = request.args.get('order', 'asc')
 
-    query = db.session.query(CollegeFees, Student).join(Student)
+    # Query all fee records with their associated students
+    query = db.session.query(CollegeFees, Student).join(
+        Student, CollegeFees.student_id == Student.id
+    )
 
     # Search filters
     if search:
@@ -919,12 +932,18 @@ def fees():
             Student.first_name.contains(search),
             Student.last_name.contains(search),
             Student.student_unique_id.contains(search),
-            Student.current_course.contains(search)
+            Student.current_course.contains(search),
+            CollegeFees.course_full_name.contains(search)
         )
         query = query.filter(search_filter)
 
     if course_filter:
-        query = query.filter(Student.current_course.contains(course_filter))
+        query = query.filter(
+            or_(
+                Student.current_course.contains(course_filter),
+                CollegeFees.course_full_name.contains(course_filter)
+            )
+        )
 
     if dues_issued_filter:
         if dues_issued_filter == 'library_dues':
