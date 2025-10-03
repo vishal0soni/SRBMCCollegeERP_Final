@@ -1887,8 +1887,9 @@ def api_student_fee_details(student_id):
         else:
             next_installment = 7  # All installments paid
 
-        total_fee = float(fee_record.total_amount_after_rebate or 0)
-        due_amount = total_fee - paid_amount
+        # Use total_amount_after_rebate if available, otherwise use total_fee
+        total_fee = float(fee_record.total_amount_after_rebate or fee_record.total_fee or 0)
+        due_amount = max(0, total_fee - paid_amount)  # Ensure non-negative
 
         # Get payment history
         invoices = Invoice.query.filter_by(student_id=student_id).order_by(Invoice.date_time.desc()).limit(5).all()

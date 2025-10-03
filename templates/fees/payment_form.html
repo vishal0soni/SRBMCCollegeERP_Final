@@ -80,11 +80,11 @@
                                         <div class="col-md-6">
                                             {% if selected_fee_record %}
                                                 {% set total_paid = ((selected_fee_record.installment_1|float or 0) + (selected_fee_record.installment_2|float or 0) + (selected_fee_record.installment_3|float or 0) + (selected_fee_record.installment_4|float or 0) + (selected_fee_record.installment_5|float or 0) + (selected_fee_record.installment_6|float or 0)) %}
-                                                {% set total_fee_amount = (selected_fee_record.total_amount_after_rebate|float or 0) %}
+                                                {% set total_fee_amount = (selected_fee_record.total_amount_after_rebate|float or selected_fee_record.total_fee|float or 0) %}
                                                 {% set due_amount = total_fee_amount - total_paid %}
-                                                <p><strong>Total Fees:</strong> ₹<span id="totalFees">{{ "%.2f"|format(total_fee_amount) }}</span></p>
-                                                <p><strong>Paid Amount:</strong> ₹<span id="paidAmount">{{ "%.2f"|format(total_paid) }}</span></p>
-                                                <p><strong>Due Amount:</strong> ₹<span id="dueAmount">{{ "%.2f"|format(due_amount) }}</span></p>
+                                                <p><strong>Total Fees:</strong> ₹<span id="totalFees">{{ "{:,.2f}".format(total_fee_amount) }}</span></p>
+                                                <p><strong>Paid Amount:</strong> ₹<span id="paidAmount">{{ "{:,.2f}".format(total_paid) }}</span></p>
+                                                <p><strong>Due Amount:</strong> ₹<span id="dueAmount">{{ "{:,.2f}".format(due_amount if due_amount > 0 else 0) }}</span></p>
                                             {% else %}
                                                 <p><strong>Total Fees:</strong> ₹<span id="totalFees">0.00</span></p>
                                                 <p><strong>Paid Amount:</strong> ₹<span id="paidAmount">0.00</span></p>
@@ -385,25 +385,34 @@ document.getElementById('studentSearch').addEventListener('focus', function() {
 
 function loadStudentDetails(student = null) {
     {% if selected_student %}
-        // Student is pre-selected, load their fee data
+        // Student is pre-selected, load their fee data from API to ensure accuracy
         const studentId = {{ selected_student.id }};
-        window.studentFeeData = {
-            {% if selected_fee_record %}
-                total_fee: {{ selected_fee_record.total_amount_after_rebate|float or 0 }},
-                paid_amount: {{ ((selected_fee_record.installment_1|float or 0) + (selected_fee_record.installment_2|float or 0) + (selected_fee_record.installment_3|float or 0) + (selected_fee_record.installment_4|float or 0) + (selected_fee_record.installment_5|float or 0) + (selected_fee_record.installment_6|float or 0)) }},
-                due_amount: {{ (selected_fee_record.total_amount_after_rebate|float or 0) - ((selected_fee_record.installment_1|float or 0) + (selected_fee_record.installment_2|float or 0) + (selected_fee_record.installment_3|float or 0) + (selected_fee_record.installment_4|float or 0) + (selected_fee_record.installment_5|float or 0) + (selected_fee_record.installment_6|float or 0)) }},
-                next_installment: getNextInstallmentForStudent()
-            {% else %}
-                total_fee: 0,
-                paid_amount: 0,
-                due_amount: 0,
-                next_installment: 1
-            {% endif %}
-        };
-
-        // Show additional details and payment summary
-        document.getElementById('additionalDetails').style.display = 'block';
-        updatePaymentSummary();
+        
+        console.log('Loading pre-selected student fee details for ID:', studentId);
+        
+        fetch(`/api/student-fee-details/${studentId}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Pre-selected student API Response:', data);
+                if (data.success) {
+                    const feeData = data.fee_data;
+                    window.studentFeeData = feeData;
+                    
+                    // Update display
+                    document.getElementById('totalFees').textContent = parseFloat(feeData.total_fee || 0).toLocaleString('en-IN', {minimumFractionDigits: 2});
+                    document.getElementById('paidAmount').textContent = parseFloat(feeData.paid_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2});
+                    document.getElementById('dueAmount').textContent = parseFloat(feeData.due_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2});
+                    
+                    // Show additional details and payment summary
+                    document.getElementById('additionalDetails').style.display = 'block';
+                    updatePaymentSummary();
+                } else {
+                    console.error('Failed to load pre-selected student fee details:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading pre-selected student fee details:', error);
+            });
     {% else %}
         // Functionality for manual student selection
         const studentId = document.getElementById('{{ form.student_id.id }}').value;
