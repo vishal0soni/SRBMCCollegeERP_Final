@@ -187,22 +187,28 @@
                         </thead>
                         <tbody>
                             {% if fees.items %}
-                            {% for fee_record, student in fees.items %}
-                            {% set total_paid = ((fee_record.installment_1 or 0)|float + (fee_record.installment_2 or 0)|float + (fee_record.installment_3 or 0)|float + (fee_record.installment_4 or 0)|float + (fee_record.installment_5 or 0)|float + (fee_record.installment_6 or 0)|float) %}
-                            {% set due_amount = (fee_record.total_amount_after_rebate or 0)|float - total_paid %}
+                            {% for student, fee_record in fees.items %}
+                            {% if fee_record %}
+                                {% set total_paid = ((fee_record.installment_1 or 0)|float + (fee_record.installment_2 or 0)|float + (fee_record.installment_3 or 0)|float + (fee_record.installment_4 or 0)|float + (fee_record.installment_5 or 0)|float + (fee_record.installment_6 or 0)|float) %}
+                                {% set due_amount = (fee_record.total_amount_after_rebate or fee_record.total_fee or 0)|float - total_paid %}
+                            {% else %}
+                                {% set total_paid = 0 %}
+                                {% set due_amount = 0 %}
+                            {% endif %}
                             <tr>
                                 <td>
                                     <strong>{{ student.student_unique_id }}</strong><br>
                                     <small class="text-muted">{{ student.first_name }} {{ student.last_name }}</small>
                                 </td>
                                 <td>
-                                    {{ fee_record.course_full_name or student.current_course }}
-                                    {% if fee_record.course_full_name and fee_record.course_full_name != student.current_course %}
-                                        <br><small class="text-muted">Current: {{ student.current_course }}</small>
-                                    {% endif %}
+                                    {{ student.current_course or 'No Course Assigned' }}
                                 </td>
                                 <td>
-                                    <strong>₹{{ "%.2f"|format(fee_record.total_amount_after_rebate or 0) }}</strong>
+                                    {% if fee_record %}
+                                        <strong>₹{{ "%.2f"|format(fee_record.total_amount_after_rebate or fee_record.total_fee or 0) }}</strong>
+                                    {% else %}
+                                        <span class="text-muted">No Fee Record</span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <span class="text-success">₹{{ "%.2f"|format(total_paid) }}</span>
@@ -215,80 +221,92 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <small>
-                                        {% set installments = [
-                                            (fee_record.installment_1, fee_record.invoice1_number),
-                                            (fee_record.installment_2, fee_record.invoice2_number),
-                                            (fee_record.installment_3, fee_record.invoice3_number),
-                                            (fee_record.installment_4, fee_record.invoice4_number),
-                                            (fee_record.installment_5, fee_record.invoice5_number),
-                                            (fee_record.installment_6, fee_record.invoice6_number)
-                                        ] %}
-                                        {% for amount, invoice_num in installments %}
-                                            {% if amount and amount > 0 %}
-                                                <span class="badge bg-success mb-1">₹{{ amount }}</span><br>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </small>
+                                    {% if fee_record %}
+                                        <small>
+                                            {% set installments = [
+                                                (fee_record.installment_1, fee_record.invoice1_number),
+                                                (fee_record.installment_2, fee_record.invoice2_number),
+                                                (fee_record.installment_3, fee_record.invoice3_number),
+                                                (fee_record.installment_4, fee_record.invoice4_number),
+                                                (fee_record.installment_5, fee_record.invoice5_number),
+                                                (fee_record.installment_6, fee_record.invoice6_number)
+                                            ] %}
+                                            {% for amount, invoice_num in installments %}
+                                                {% if amount and amount > 0 %}
+                                                    <span class="badge bg-success mb-1">₹{{ amount }}</span><br>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </small>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
                                 </td>
                                 <td>
-                                    <div class="d-flex flex-column gap-1">
-                                        {% if current_user.role.access_type == 'Edit' %}
-                                            <div class="form-check form-check-inline">
-                                                <input class="form-check-input dues-checkbox" type="checkbox"
-                                                       id="library_dues_{{ fee_record.id }}"
-                                                       data-fee-id="{{ fee_record.id }}"
-                                                       data-field="pending_dues_for_libraries"
-                                                       {% if fee_record.pending_dues_for_libraries %}checked{% endif %}>
-                                                <label class="form-check-label" for="library_dues_{{ fee_record.id }}"><i class="fas fa-book"></i> Library Dues</label>
-                                            </div>
-                                            <div class="form-check form-check-inline">
-                                                <input class="form-check-input dues-checkbox" type="checkbox"
-                                                       id="hostel_dues_{{ fee_record.id }}"
-                                                       data-fee-id="{{ fee_record.id }}"
-                                                       data-field="pending_dues_for_hostel"
-                                                       {% if fee_record.pending_dues_for_hostel %}checked{% endif %}>
-                                                <label class="form-check-label" for="hostel_dues_{{ fee_record.id }}"><i class="fas fa-bed"></i> Hostel Dues</label>
-                                            </div>
-                                            <div class="form-check form-check-inline">
-                                                <input class="form-check-input dues-checkbox" type="checkbox"
-                                                       id="admit_card_{{ fee_record.id }}"
-                                                       data-fee-id="{{ fee_record.id }}"
-                                                       data-field="exam_admit_card_issued"
-                                                       {% if fee_record.exam_admit_card_issued %}checked{% endif %}>
-                                                <label class="form-check-label" for="admit_card_{{ fee_record.id }}"><i class="fas fa-id-card"></i> Admit Card Issued</label>
-                                            </div>
-                                        {% else %}
-                                            {% if fee_record.pending_dues_for_libraries %}
-                                                <span class="badge bg-warning text-dark"><i class="fas fa-book"></i> Library Dues</span>
-                                            {% endif %}
-                                            {% if fee_record.pending_dues_for_hostel %}
-                                                <span class="badge bg-info text-dark"><i class="fas fa-bed"></i> Hostel Dues</span>
-                                            {% endif %}
-                                            {% if fee_record.exam_admit_card_issued %}
-                                                <span class="badge bg-success"><i class="fas fa-id-card"></i> Admit Card Issued</span>
+                                    {% if fee_record %}
+                                        <div class="d-flex flex-column gap-1">
+                                            {% if current_user.role.access_type == 'Edit' %}
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input dues-checkbox" type="checkbox"
+                                                           id="library_dues_{{ fee_record.id }}"
+                                                           data-fee-id="{{ fee_record.id }}"
+                                                           data-field="pending_dues_for_libraries"
+                                                           {% if fee_record.pending_dues_for_libraries %}checked{% endif %}>
+                                                    <label class="form-check-label" for="library_dues_{{ fee_record.id }}"><i class="fas fa-book"></i> Library Dues</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input dues-checkbox" type="checkbox"
+                                                           id="hostel_dues_{{ fee_record.id }}"
+                                                           data-fee-id="{{ fee_record.id }}"
+                                                           data-field="pending_dues_for_hostel"
+                                                           {% if fee_record.pending_dues_for_hostel %}checked{% endif %}>
+                                                    <label class="form-check-label" for="hostel_dues_{{ fee_record.id }}"><i class="fas fa-bed"></i> Hostel Dues</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input dues-checkbox" type="checkbox"
+                                                           id="admit_card_{{ fee_record.id }}"
+                                                           data-fee-id="{{ fee_record.id }}"
+                                                           data-field="exam_admit_card_issued"
+                                                           {% if fee_record.exam_admit_card_issued %}checked{% endif %}>
+                                                    <label class="form-check-label" for="admit_card_{{ fee_record.id }}"><i class="fas fa-id-card"></i> Admit Card Issued</label>
+                                                </div>
                                             {% else %}
-                                                <span class="badge bg-secondary"><i class="fas fa-id-card"></i> Admit Card Pending</span>
+                                                {% if fee_record.pending_dues_for_libraries %}
+                                                    <span class="badge bg-warning text-dark"><i class="fas fa-book"></i> Library Dues</span>
+                                                {% endif %}
+                                                {% if fee_record.pending_dues_for_hostel %}
+                                                    <span class="badge bg-info text-dark"><i class="fas fa-bed"></i> Hostel Dues</span>
+                                                {% endif %}
+                                                {% if fee_record.exam_admit_card_issued %}
+                                                    <span class="badge bg-success"><i class="fas fa-id-card"></i> Admit Card Issued</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary"><i class="fas fa-id-card"></i> Admit Card Pending</span>
+                                                {% endif %}
+                                                {% if not (fee_record.pending_dues_for_libraries or fee_record.pending_dues_for_hostel) %}
+                                                    <span class="badge bg-light text-dark">No Pending Dues</span>
+                                                {% endif %}
                                             {% endif %}
-                                            {% if not (fee_record.pending_dues_for_libraries or fee_record.pending_dues_for_hostel) %}
-                                                <span class="badge bg-light text-dark">No Pending Dues</span>
-                                            {% endif %}
-                                        {% endif %}
-                                    </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{{ url_for('view_fee_detail', fee_id=fee_record.id) }}" class="btn btn-outline-info">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
+                                        {% if fee_record %}
+                                            <a href="{{ url_for('view_fee_detail', fee_id=fee_record.id) }}" class="btn btn-outline-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        {% endif %}
                                         {% if current_user.role.access_type == 'Edit' %}
                                         <a href="{{ url_for('payment') }}?student_id={{ student.id }}" class="btn btn-outline-primary">
                                             <i class="fas fa-plus"></i> Pay
                                         </a>
                                         {% endif %}
-                                        <a href="{{ url_for('student_fee_statement_print', student_id=fee_record.student_id) }}" target="_blank" class="btn btn-sm btn-info" title="Print Fee Statement">
-                                            <i class="fas fa-print"></i>
-                                        </a>
+                                        {% if fee_record %}
+                                            <a href="{{ url_for('student_fee_statement_print', student_id=student.id) }}" target="_blank" class="btn btn-sm btn-info" title="Print Fee Statement">
+                                                <i class="fas fa-print"></i>
+                                            </a>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
