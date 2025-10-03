@@ -347,101 +347,87 @@ $(document).ready(function() {
     // Initialize tooltips
     $('[data-bs-toggle="tooltip"]').tooltip();
 
-    // Fee status update - Handle checkbox changes
-    $(document).on('change', '.dues-checkbox', function() {
-        const feeId = $(this).data('fee-id');
-        const field = $(this).data('field');
-        const value = this.checked;
+    // Prevent default form submission on checkbox change
+    $('.dues-checkbox').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         const checkbox = $(this);
-
-        console.log('Updating fee field:', {feeId, field, value});
-
+        const feeId = checkbox.data('fee-id');
+        const field = checkbox.data('field');
+        const newValue = !checkbox.is(':checked'); // Toggle the value
+        
+        console.log('Checkbox clicked:', {feeId, field, currentValue: checkbox.is(':checked'), newValue});
+        
+        // Optimistically update the checkbox
+        checkbox.prop('checked', newValue);
+        
         // Show loading state
         checkbox.prop('disabled', true);
         const label = $(`label[for="${checkbox.attr('id')}"]`);
-        label.append(' <span class="spinner-border spinner-border-sm ms-1"></span>');
+        const originalText = label.html();
+        label.html(originalText + ' <span class="spinner-border spinner-border-sm ms-1 saving-spinner"></span>');
 
-        // Update via AJAX with CSRF token if available
-        const csrfToken = $('meta[name=csrf-token]').attr('content');
-        const ajaxData = {
+        // Update via AJAX
+        $.ajax({
             url: `/api/update-fee-field/${feeId}`,
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
                 field: field,
-                value: value
+                value: newValue
             }),
-            timeout: 15000, // 15 second timeout
+            timeout: 15000,
             success: function(response) {
                 console.log('API Response:', response);
                 if (response.success) {
-                    showAlert(`${field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} updated successfully`, 'success');
-                    
-                    // Ensure checkbox reflects the actual database value
+                    // Confirm checkbox reflects the actual database value
                     checkbox.prop('checked', response.new_value);
-                    
-                    // Remove from localStorage on successful update
-                    const storageKey = `fee_${feeId}_${field}`;
-                    localStorage.removeItem(storageKey);
+                    showAlert(`${field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} ${response.new_value ? 'enabled' : 'disabled'}`, 'success');
                 } else {
-                    showAlert('Error updating field: ' + (response.error || 'Unknown error'), 'error');
-                    // Revert checkbox state on error
-                    checkbox.prop('checked', !value);
+                    showAlert('Error: ' + (response.error || 'Unknown error'), 'error');
+                    // Revert on error
+                    checkbox.prop('checked', !newValue);
                 }
             },
             error: function(xhr, status, error) {
                 console.error('AJAX Error:', {xhr, status, error, responseText: xhr.responseText});
-                let errorMessage = 'Error updating field: ';
+                let errorMessage = 'Failed to update: ';
                 
                 try {
                     const response = JSON.parse(xhr.responseText);
-                    if (response && response.error) {
-                        errorMessage += response.error;
-                    } else {
-                        errorMessage += `HTTP ${xhr.status}: ${xhr.statusText}`;
-                    }
+                    errorMessage += response.error || xhr.statusText;
                 } catch (e) {
-                    if (xhr.responseText) {
-                        errorMessage += xhr.responseText;
-                    } else {
-                        errorMessage += `${status}: ${error}`;
-                    }
+                    errorMessage += xhr.statusText || error;
                 }
                 
                 showAlert(errorMessage, 'error');
-                // Revert checkbox state on error
-                checkbox.prop('checked', !value);
+                // Revert on error
+                checkbox.prop('checked', !newValue);
             },
             complete: function() {
                 // Re-enable checkbox and remove loading spinner
                 checkbox.prop('disabled', false);
-                label.find('.spinner-border').remove();
+                label.html(originalText);
             }
-        };
-
-        // Add CSRF token if available
-        if (csrfToken) {
-            ajaxData.headers = {
-                'X-CSRFToken': csrfToken
-            };
-        }
-
-        $.ajax(ajaxData);
+        });
+        
+        return false;
     });
 
-    // Verify checkbox states on page load by fetching from server
+    // Verify checkbox states on page load
     $('.dues-checkbox').each(function() {
         const feeId = $(this).data('fee-id');
         const field = $(this).data('field');
         const checkbox = $(this);
         
-        // Verify current state with server
         $.ajax({
             url: `/api/verify-fee-field/${feeId}/${field}`,
             method: 'GET',
             success: function(response) {
                 if (response.success) {
                     checkbox.prop('checked', response.current_value);
+                    console.log(`Verified ${field} for fee ${feeId}: ${response.current_value}`);
                 }
             },
             error: function(xhr, status, error) {

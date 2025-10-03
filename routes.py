@@ -3445,8 +3445,8 @@ def api_update_fee_field(fee_id):
             app.logger.error(f"Invalid field name: {field}")
             return jsonify({'success': False, 'error': f'Invalid field name: {field}'}), 400
 
-        # Get the fee record with explicit query
-        fee_record = CollegeFees.query.filter_by(id=fee_id).first()
+        # Get the fee record
+        fee_record = CollegeFees.query.get(fee_id)
         if not fee_record:
             app.logger.error(f"Fee record not found: {fee_id}")
             return jsonify({'success': False, 'error': 'Fee record not found'}), 404
@@ -3455,28 +3455,23 @@ def api_update_fee_field(fee_id):
         bool_value = bool(value)
 
         # Get old value for logging
-        old_value = getattr(fee_record, field)
+        old_value = bool(getattr(fee_record, field, False))
 
         # Update the field
         setattr(fee_record, field, bool_value)
 
-        # Commit the transaction
-        try:
-            db.session.commit()
-            app.logger.info(f"Successfully committed {field} change for fee_id {fee_id}")
-        except Exception as commit_error:
-            db.session.rollback()
-            app.logger.error(f"Failed to commit {field} change for fee_id {fee_id}: {str(commit_error)}")
-            raise commit_error
+        # Force flush and commit
+        db.session.flush()
+        db.session.commit()
+        
+        app.logger.info(f"Successfully committed {field} change for fee_id {fee_id} from {old_value} to {bool_value}")
 
         # Verify the update by refetching the record
-        updated_record = CollegeFees.query.filter_by(id=fee_id).first()
-        actual_value = getattr(updated_record, field)
+        db.session.expire_all()
+        updated_record = CollegeFees.query.get(fee_id)
+        actual_value = bool(getattr(updated_record, field, False))
 
-        app.logger.info(f"Updated {field} from {old_value} to {actual_value} for fee_id {fee_id}")
-
-        if actual_value != bool_value:
-            app.logger.warning(f"Value mismatch after update: expected {bool_value}, got {actual_value}")
+        app.logger.info(f"Verified {field} value after commit: {actual_value}")
 
         return jsonify({
             'success': True,
@@ -3489,7 +3484,7 @@ def api_update_fee_field(fee_id):
 
     except Exception as e:
         db.session.rollback()
-        app.logger.error(f"Error updating fee field {fee_id}: {str(e)}")
+        app.logger.error(f"Error updating fee field {fee_id}: {str(e)}", exc_info=True)
         return jsonify({
             'success': False,
             'error': f'Database error: {str(e)}'
