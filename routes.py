@@ -921,10 +921,10 @@ def fees():
     sort_by = request.args.get('sort', 'student_unique_id')
     sort_order = request.args.get('order', 'asc')
 
-    # Query all fee records with their associated students using inner join to ensure only students with fee records are shown
+    # Query all fee records with their associated students - use explicit join to get all records
     query = db.session.query(CollegeFees, Student).join(
         Student, CollegeFees.student_id == Student.id
-    ).filter(CollegeFees.id.isnot(None))
+    )
 
     # Search filters
     if search:
@@ -970,6 +970,11 @@ def fees():
             query = query.order_by(getattr(CollegeFees, sort_by))
 
     fees = query.paginate(page=page, per_page=20, error_out=False)
+
+    # Log the number of fee records found
+    total_fee_records = db.session.query(CollegeFees).count()
+    app.logger.info(f"Total fee records in database: {total_fee_records}")
+    app.logger.info(f"Fee records displayed on page: {len(fees.items)}")
 
     # Get unique courses for filter - include both from students and fee records
     student_courses = db.session.query(Student.current_course).distinct().filter(Student.current_course != None).all()
@@ -3355,6 +3360,42 @@ def api_debug_student_data():
 
         return jsonify(debug_info)
     except Exception as e:
+        return jsonify({'error': str(e)})
+
+@app.route('/api/debug-fee-data')
+@login_required
+def api_debug_fee_data():
+    """Debug route to check fee records"""
+    try:
+        # Get all fee records
+        all_fees = CollegeFees.query.all()
+        
+        # Get fee records with student info
+        fees_with_students = db.session.query(CollegeFees, Student).join(
+            Student, CollegeFees.student_id == Student.id
+        ).all()
+
+        debug_info = {
+            'total_fee_records': len(all_fees),
+            'fee_records_with_students': len(fees_with_students),
+            'sample_fee_records': []
+        }
+
+        # Add sample fee records
+        for fee, student in fees_with_students[:10]:
+            debug_info['sample_fee_records'].append({
+                'fee_id': fee.id,
+                'student_id': student.id,
+                'student_name': f"{student.first_name} {student.last_name}",
+                'student_unique_id': student.student_unique_id,
+                'course': fee.course_full_name or student.current_course,
+                'total_fee': float(fee.total_fee or 0),
+                'total_fees_paid': float(fee.total_fees_paid or 0)
+            })
+
+        return jsonify(debug_info)
+    except Exception as e:
+        app.logger.error(f"Error in debug fee data: {str(e)}")
         return jsonify({'error': str(e)})
 
 @app.route('/api/student-breakdown-data')
