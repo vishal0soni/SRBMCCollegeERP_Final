@@ -186,6 +186,7 @@
                             </tr>
                         </thead>
                         <tbody>
+                            {% if fees.items %}
                             {% for fee_record, student in fees.items %}
                             {% set total_paid = ((fee_record.installment_1 or 0)|float + (fee_record.installment_2 or 0)|float + (fee_record.installment_3 or 0)|float + (fee_record.installment_4 or 0)|float + (fee_record.installment_5 or 0)|float + (fee_record.installment_6 or 0)|float) %}
                             {% set due_amount = (fee_record.total_amount_after_rebate or 0)|float - total_paid %}
@@ -292,6 +293,14 @@
                                 </td>
                             </tr>
                             {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                                    <p>No student fee records found. Fee records will appear here once students are added with fee details.</p>
+                                </td>
+                            </tr>
+                            {% endif %}
                         </tbody>
                     </table>
                 </div>

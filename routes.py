@@ -921,10 +921,10 @@ def fees():
     sort_by = request.args.get('sort', 'student_unique_id')
     sort_order = request.args.get('order', 'asc')
 
-    # Query all fee records with their associated students
+    # Query all fee records with their associated students using inner join to ensure only students with fee records are shown
     query = db.session.query(CollegeFees, Student).join(
         Student, CollegeFees.student_id == Student.id
-    )
+    ).filter(CollegeFees.id.isnot(None))
 
     # Search filters
     if search:
@@ -971,9 +971,14 @@ def fees():
 
     fees = query.paginate(page=page, per_page=20, error_out=False)
 
-    # Get unique courses for filter
-    courses = db.session.query(Student.current_course).distinct().filter(Student.current_course != None).all()
-    courses = [course[0] for course in courses]
+    # Get unique courses for filter - include both from students and fee records
+    student_courses = db.session.query(Student.current_course).distinct().filter(Student.current_course != None).all()
+    fee_courses = db.session.query(CollegeFees.course_full_name).distinct().filter(CollegeFees.course_full_name != None).all()
+    
+    # Combine and deduplicate courses
+    all_courses = set([course[0] for course in student_courses if course[0]])
+    all_courses.update([course[0] for course in fee_courses if course[0]])
+    courses = sorted(list(all_courses))
 
     return render_template('fees/fees.html', fees=fees, courses=courses)
 
