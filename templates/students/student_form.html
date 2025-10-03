@@ -212,7 +212,7 @@
                     <div id="feeDetailsSection" class="card border-light">
                         <div class="card-body">
                             <h6 class="text-primary mb-3">Fee Summary</h6>
-                            
+
                             <div class="row">
                                 <div class="col-md-6">
                                     <h6 class="text-secondary mb-3">Course Fees Breakdown</h6>
@@ -685,7 +685,7 @@ function calculateTotalFees() {
     if (totalAmountAfterRebateField) {
         totalAmountAfterRebateField.value = totalAmountAfterRebate.toFixed(2);
     }
-    
+
     // Update the total amount due field
     const totalAmountDueField = document.getElementById('totalAmountDue');
     if (totalAmountDueField) {
@@ -820,6 +820,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('miscFee5').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_5).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         document.getElementById('miscFee6').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_6).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         document.getElementById('totalCourseFees').textContent = `₹${parseFloat(existingCourseData.total_course_fees).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        window.courseFees = fees;
+        calculateTotalFees();
         {% else %}
         // If no course detail, try to fetch from API for the current course
         if (currentCourse) {
