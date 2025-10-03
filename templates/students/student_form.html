@@ -213,39 +213,54 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <h6 class="text-secondary mb-3">Course Fees</h6>
-                                    <div class="mb-2">
-                                        <strong>Course Tuition Fee:</strong>
-                                        <span class="float-end" id="courseTuitionFee">₹0.00</span>
+                                    <h6 class="text-secondary mb-3">Course Fees Breakdown</h6>
+
+                                    <!-- Course Tuition Fee - Highlighted -->
+                                    <div class="mb-3 p-3 bg-primary bg-opacity-10 border border-primary rounded">
+                                        <strong class="text-primary fs-6">Course Tuition Fee:</strong>
+                                        <span class="float-end fw-bold text-primary fs-5" id="courseTuitionFee">₹0.00</span>
                                     </div>
-                                    <div class="mb-2">
-                                        <strong>Misc Fee 1:</strong>
-                                        <span class="float-end" id="miscFee1">₹0.00</span>
+
+                                    <!-- Misc Fees Section -->
+                                    <div class="mb-3">
+                                        <small class="text-muted fw-semibold">Miscellaneous Fees:</small>
+                                        <div class="mt-2">
+                                            <div class="mb-1">
+                                                <small>Misc Fee 1:</small>
+                                                <span class="float-end small" id="miscFee1">₹0.00</span>
+                                            </div>
+                                            <div class="mb-1">
+                                                <small>Misc Fee 2:</small>
+                                                <span class="float-end small" id="miscFee2">₹0.00</span>
+                                            </div>
+                                            <div class="mb-1">
+                                                <small>Misc Fee 3:</small>
+                                                <span class="float-end small" id="miscFee3">₹0.00</span>
+                                            </div>
+                                            <div class="mb-1">
+                                                <small>Misc Fee 4:</small>
+                                                <span class="float-end small" id="miscFee4">₹0.00</span>
+                                            </div>
+                                            <div class="mb-1">
+                                                <small>Misc Fee 5:</small>
+                                                <span class="float-end small" id="miscFee5">₹0.00</span>
+                                            </div>
+                                            <div class="mb-1">
+                                                <small>Misc Fee 6:</small>
+                                                <span class="float-end small" id="miscFee6">₹0.00</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="mb-2">
-                                        <strong>Misc Fee 2:</strong>
-                                        <span class="float-end" id="miscFee2">₹0.00</span>
-                                    </div>
-                                    <div class="mb-2">
-                                        <strong>Misc Fee 3:</strong>
-                                        <span class="float-end" id="miscFee3">₹0.00</span>
-                                    </div>
-                                    <div class="mb-2">
-                                        <strong>Misc Fee 4:</strong>
-                                        <span class="float-end" id="miscFee4">₹0.00</span>
-                                    </div>
-                                    <div class="mb-2">
-                                        <strong>Misc Fee 5:</strong>
-                                        <span class="float-end" id="miscFee5">₹0.00</span>
-                                    </div>
-                                    <div class="mb-2">
-                                        <strong>Misc Fee 6:</strong>
-                                        <span class="float-end" id="miscFee6">₹0.00</span>
-                                    </div>
-                                    <hr>
-                                    <div class="mb-2">
-                                        <strong>Total Course Fees:</strong>
-                                        <span class="float-end text-primary fw-bold" id="totalCourseFees">₹0.00</span>
+
+                                    <hr class="my-3">
+
+                                    <!-- Total Course Fees - Highlighted -->
+                                    <div class="p-3 bg-success bg-opacity-10 border border-success rounded">
+                                        <strong class="text-success fs-6">Total Course Fees:</strong>
+                                        <span class="float-end fw-bold text-success fs-5" id="totalCourseFees">₹0.00</span>
+                                        <div class="mt-1">
+                                            <small class="text-muted d-block">(Tuition Fee + All Misc Fees)</small>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -560,21 +575,37 @@ function updateCourseFees() {
                 if (data.success && data.fees) {
                     const fees = data.fees;
 
-                    // Update course fee displays
-                    document.getElementById('courseTuitionFee').textContent = `₹${parseFloat(fees.course_tuition_fee || 0).toFixed(2)}`;
-                    document.getElementById('miscFee1').textContent = `₹${parseFloat(fees.misc_course_fees_1 || 0).toFixed(2)}`;
-                    document.getElementById('miscFee2').textContent = `₹${parseFloat(fees.misc_course_fees_2 || 0).toFixed(2)}`;
-                    document.getElementById('miscFee3').textContent = `₹${parseFloat(fees.misc_course_fees_3 || 0).toFixed(2)}`;
-                    document.getElementById('miscFee4').textContent = `₹${parseFloat(fees.misc_course_fees_4 || 0).toFixed(2)}`;
-                    document.getElementById('miscFee5').textContent = `₹${parseFloat(fees.misc_course_fees_5 || 0).toFixed(2)}`;
-                    document.getElementById('miscFee6').textContent = `₹${parseFloat(fees.misc_course_fees_6 || 0).toFixed(2)}`;
-                    document.getElementById('totalCourseFees').textContent = `₹${parseFloat(fees.total_course_fees || 0).toFixed(2)}`;
+                    // Update course fee displays with Indian locale formatting
+                    const courseTuitionFee = parseFloat(fees.course_tuition_fee || 0);
+                    const totalCourseFees = parseFloat(fees.total_course_fees || 0);
+
+                    // Format Course Tuition Fee
+                    document.getElementById('courseTuitionFee').textContent = `₹${courseTuitionFee.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+                    // Format Misc Fees
+                    document.getElementById('miscFee1').textContent = `₹${parseFloat(fees.misc_course_fees_1 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('miscFee2').textContent = `₹${parseFloat(fees.misc_course_fees_2 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('miscFee3').textContent = `₹${parseFloat(fees.misc_course_fees_3 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('miscFee4').textContent = `₹${parseFloat(fees.misc_course_fees_4 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('miscFee5').textContent = `₹${parseFloat(fees.misc_course_fees_5 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('miscFee6').textContent = `₹${parseFloat(fees.misc_course_fees_6 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+                    // Format Total Course Fees (Tuition + All Misc Fees)
+                    document.getElementById('totalCourseFees').textContent = `₹${totalCourseFees.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
                     // Store course fees data for form submission
                     window.courseFees = fees;
 
-                    // Update the hidden input for course tuition fee
-                    document.getElementById('courseTuitionFeeInput').value = parseFloat(fees.course_tuition_fee || 0).toFixed(2);
+                    // Create hidden input if it doesn't exist
+                    let hiddenInput = document.getElementById('courseTuitionFeeInput');
+                    if (!hiddenInput) {
+                        hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.id = 'courseTuitionFeeInput';
+                        hiddenInput.name = 'course_tuition_fee_hidden';
+                        document.querySelector('form').appendChild(hiddenInput);
+                    }
+                    hiddenInput.value = courseTuitionFee.toFixed(2);
 
                     calculateTotalFees();
                 } else {
