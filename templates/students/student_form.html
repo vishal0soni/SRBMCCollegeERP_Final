@@ -653,34 +653,34 @@ function clearFeeDisplays() {
 
 function calculateTotalFees() {
     console.log('Calculating total fees...');
-
+    
     // Calculate Total Course Fees = Course Tuition Fee + All Misc Fees (1-6)
     const courseTuitionFeeText = document.getElementById('courseTuitionFee')?.textContent || '₹0.00';
     const courseTuitionFee = parseFloat(courseTuitionFeeText.replace('₹', '').replace(/,/g, '') || 0);
-
+    
     const miscFee1Text = document.getElementById('miscFee1')?.textContent || '₹0.00';
     const miscFee1 = parseFloat(miscFee1Text.replace('₹', '').replace(/,/g, '') || 0);
-
+    
     const miscFee2Text = document.getElementById('miscFee2')?.textContent || '₹0.00';
     const miscFee2 = parseFloat(miscFee2Text.replace('₹', '').replace(/,/g, '') || 0);
-
+    
     const miscFee3Text = document.getElementById('miscFee3')?.textContent || '₹0.00';
     const miscFee3 = parseFloat(miscFee3Text.replace('₹', '').replace(/,/g, '') || 0);
-
+    
     const miscFee4Text = document.getElementById('miscFee4')?.textContent || '₹0.00';
     const miscFee4 = parseFloat(miscFee4Text.replace('₹', '').replace(/,/g, '') || 0);
-
+    
     const miscFee5Text = document.getElementById('miscFee5')?.textContent || '₹0.00';
     const miscFee5 = parseFloat(miscFee5Text.replace('₹', '').replace(/,/g, '') || 0);
-
+    
     const miscFee6Text = document.getElementById('miscFee6')?.textContent || '₹0.00';
     const miscFee6 = parseFloat(miscFee6Text.replace('₹', '').replace(/,/g, '') || 0);
-
+    
     // Total Course Fees = Tuition + All Misc Fees
     const totalCourseFees = courseTuitionFee + miscFee1 + miscFee2 + miscFee3 + miscFee4 + miscFee5 + miscFee6;
-
+    
     console.log('Total Course Fees:', totalCourseFees);
-
+    
     // Update Total Course Fees display
     const totalCourseFeesElement = document.getElementById('totalCourseFees');
     if (totalCourseFeesElement) {
@@ -693,9 +693,9 @@ function calculateTotalFees() {
         const feeValue = parseFloat(input.value || 0);
         additionalFees += feeValue;
     });
-
+    
     console.log('Total Additional Fees:', additionalFees);
-
+    
     // Update Total Additional Fees display
     const totalAdditionalFeesElement = document.getElementById('totalAdditionalFees');
     if (totalAdditionalFeesElement) {
@@ -704,9 +704,9 @@ function calculateTotalFees() {
 
     // Calculate Grand Total = Total Course Fees + Total Additional Fees
     const grandTotal = totalCourseFees + additionalFees;
-
+    
     console.log('Grand Total:', grandTotal);
-
+    
     // Update Grand Total display
     const grandTotalFeesElement = document.getElementById('grandTotalFees');
     if (grandTotalFeesElement) {
@@ -833,8 +833,6 @@ document.addEventListener('DOMContentLoaded', function() {
         pending_dues_for_hostel: {{ fee_record.pending_dues_for_hostel|tojson }},
         exam_admit_card_issued: {{ fee_record.exam_admit_card_issued|tojson }}
     };
-    {% else %}
-    const existingFeeData = null;
     {% endif %}
 
     {% if course_detail %}
@@ -848,36 +846,36 @@ document.addEventListener('DOMContentLoaded', function() {
         misc_course_fees_6: {{ course_detail.misc_course_fees_6 or 0 }},
         total_course_fees: {{ course_detail.total_course_fees or 0 }}
     };
-    {% else %}
-    const existingCourseData = null;
     {% endif %}
 
     // Function to populate fee data from server-side variables
     function populateExistingFeeData() {
-        if (!existingFeeData) {
-            console.log('No existing fee data to populate');
-            return;
-        }
-
+        {% if fee_record %}
         console.log('Populating existing fee data:', existingFeeData);
 
-        // Update course fee displays - prioritize existingCourseData if available
-        if (existingCourseData) {
-            document.getElementById('courseTuitionFee').textContent = `₹${parseFloat(existingCourseData.course_tuition_fee).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            document.getElementById('courseTuitionFeeInput').value = parseFloat(existingCourseData.course_tuition_fee).toFixed(2);
+        // Update course fee displays and the hidden input - use course_tuition_fee from course_details, not fee record
+        {% if course_detail %}
+        document.getElementById('courseTuitionFee').textContent = `₹${parseFloat(existingCourseData.course_tuition_fee).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('courseTuitionFeeInput').value = parseFloat(existingCourseData.course_tuition_fee).toFixed(2);
+        {% else %}
+        document.getElementById('courseTuitionFee').textContent = `₹0.00`;
+        document.getElementById('courseTuitionFeeInput').value = '0.00';
+        {% endif %}
 
-            // Update misc fees from course details
-            document.getElementById('miscFee1').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_1).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            document.getElementById('miscFee2').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_2).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            document.getElementById('miscFee3').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_3).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            document.getElementById('miscFee4').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_4).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            document.getElementById('miscFee5').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_5).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            document.getElementById('miscFee6').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_6).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            document.getElementById('totalCourseFees').textContent = `₹${parseFloat(existingCourseData.total_course_fees).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-
-            window.courseFees = existingCourseData;
-        } else if (currentCourse) {
-            // If no course detail, fetch from API for the current course
+        // Update misc fees from course details if available
+        {% if course_detail %}
+        document.getElementById('miscFee1').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_1).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('miscFee2').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_2).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('miscFee3').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_3).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('miscFee4').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_4).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('miscFee5').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_5).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('miscFee6').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_6).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('totalCourseFees').textContent = `₹${parseFloat(existingCourseData.total_course_fees).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        window.courseFees = fees;
+        calculateTotalFees();
+        {% else %}
+        // If no course detail, try to fetch from API for the current course
+        if (currentCourse) {
             fetch(`/api/course-fees/${encodeURIComponent(currentCourse)}`)
                 .then(response => response.json())
                 .then(data => {
@@ -900,6 +898,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('Error fetching course fees for edit mode:', error);
                 });
         }
+        {% endif %}
 
         // Populate existing fee structure fields
         document.getElementById('enrollmentFee').value = parseFloat(existingFeeData.enrollment_fee).toFixed(2);
@@ -932,8 +931,8 @@ document.addEventListener('DOMContentLoaded', function() {
         calculateTotalFees();
 
         console.log('Fee data populated successfully from server data');
+        {% endif %}
     }
-    {% endif %}
 
     // Set the current subject values immediately on page load (before API calls)
     if (currentSubject1) {
@@ -989,16 +988,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (courseSelect.value) {
         updateCourseFees();
     }
-    {% endif %}
+
     {% else %}
-    // If not editing, initialize subjects based on selected course
-    if (courseSelect.value) {
-        updateSubjects();
-    }
+        // If not editing, initialize subjects based on selected course
+        if (courseSelect.value) {
+            updateSubjects();
+        }
     {% endif %}
-});
-</script>
-<script>
+
+
     // Override form submission to include fee data
     const form = document.querySelector('form');
     form.addEventListener('submit', function(e) {
