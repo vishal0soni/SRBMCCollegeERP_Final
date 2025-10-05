@@ -427,49 +427,49 @@ def add_student():
             miscellaneous_fee_3 = float(request.form.get('fee_miscellaneous_fee_3', 0) or 0)
 
                 # Note: total_fee is automatically calculated by database formula
-                # No manual calculation needed as database handles:
-                # total_course_fees + enrollment_fee + eligibility_certificate_fee +
-                # university_affiliation_fee + university_sports_fee + university_development_fee + 
-                # tc_cc_fee + miscellaneous_fee_1 + miscellaneous_fee_2 + miscellaneous_fee_3
+            # No manual calculation needed as database handles:
+            # total_course_fees + enrollment_fee + eligibility_certificate_fee +
+            # university_affiliation_fee + university_sports_fee + university_development_fee + 
+            # tc_cc_fee + miscellaneous_fee_1 + miscellaneous_fee_2 + miscellaneous_fee_3
 
-                # Get new fee management fields from form - don't use form value for total_fees_paid as it's calculated
-                meera_rebate_applied = request.form.get('fee_meera_rebate_applied') == 'true'
-                meera_rebate_approved = request.form.get('fee_meera_rebate_approved') == 'true'
-                meera_rebate_granted = request.form.get('fee_meera_rebate_granted') == 'true'
-                meera_rebate_amount = float(request.form.get('fee_meera_rebate_amount', 0) or 0)
-                scholarship_applied = request.form.get('fee_scholarship_applied') == 'true'
-                scholarship_approved = request.form.get('fee_scholarship_approved') == 'true'
-                scholarship_granted = request.form.get('fee_scholarship_granted') == 'true'
-                government_scholarship_amount = float(request.form.get('fee_government_scholarship_amount', 0) or 0)
-                total_amount_due = float(request.form.get('fee_total_amount_due', 0) or 0)
-                total_amount_after_rebate = float(request.form.get('fee_total_amount_after_rebate', 0) or 0)
-                pending_dues_for_libraries = request.form.get('fee_pending_dues_for_libraries') == 'true'
-                pending_dues_for_hostel = request.form.get('fee_pending_dues_for_hostel') == 'true'
-                exam_admit_card_issued = request.form.get('fee_exam_admit_card_issued') == 'true'
+            # Get new fee management fields from form - don't use form value for total_fees_paid as it's calculated
+            meera_rebate_applied = request.form.get('fee_meera_rebate_applied') == 'true'
+            meera_rebate_approved = request.form.get('fee_meera_rebate_approved') == 'true'
+            meera_rebate_granted = request.form.get('fee_meera_rebate_granted') == 'true'
+            meera_rebate_amount = float(request.form.get('fee_meera_rebate_amount', 0) or 0)
+            scholarship_applied = request.form.get('fee_scholarship_applied') == 'true'
+            scholarship_approved = request.form.get('fee_scholarship_approved') == 'true'
+            scholarship_granted = request.form.get('fee_scholarship_granted') == 'true'
+            government_scholarship_amount = float(request.form.get('fee_government_scholarship_amount', 0) or 0)
+            total_amount_due = float(request.form.get('fee_total_amount_due', 0) or 0)
+            total_amount_after_rebate = float(request.form.get('fee_total_amount_after_rebate', 0) or 0)
+            pending_dues_for_libraries = request.form.get('fee_pending_dues_for_libraries') == 'true'
+            pending_dues_for_hostel = request.form.get('fee_pending_dues_for_hostel') == 'true'
+            exam_admit_card_issued = request.form.get('fee_exam_admit_card_issued') == 'true'
 
-                # Synchronize student dropdown values with checkbox states - but not for Admission Officers
-                if current_user.role.role_name != 'Admission Officer':
-                    if meera_rebate_granted:
-                        student.rebate_meera_scholarship_status = 'Granted'
-                    elif meera_rebate_approved:
-                        student.rebate_meera_scholarship_status = 'Approved'
-                    elif meera_rebate_applied:
-                        student.rebate_meera_scholarship_status = 'Applied'
-                    elif student.rebate_meera_scholarship_status == 'Rejected':
-                        # If rejected, ensure amount is 0
-                        meera_rebate_amount = 0
+            # Synchronize student dropdown values with checkbox states - but not for Admission Officers
+            if current_user.role.role_name != 'Admission Officer':
+                if meera_rebate_granted:
+                    student.rebate_meera_scholarship_status = 'Granted'
+                elif meera_rebate_approved:
+                    student.rebate_meera_scholarship_status = 'Approved'
+                elif meera_rebate_applied:
+                    student.rebate_meera_scholarship_status = 'Applied'
+                elif student.rebate_meera_scholarship_status == 'Rejected':
+                    # If rejected, ensure amount is 0
+                    meera_rebate_amount = 0
 
-                    if scholarship_granted:
-                        student.scholarship_status = 'Granted'
-                    elif scholarship_approved:
-                        student.scholarship_status = 'Approved'
-                    elif scholarship_applied:
-                        student.scholarship_status = 'Applied'
-                    elif student.scholarship_status == 'Rejected':
-                        # If rejected, ensure amount is 0
-                        government_scholarship_amount = 0
+                if scholarship_granted:
+                    student.scholarship_status = 'Granted'
+                elif scholarship_approved:
+                    student.scholarship_status = 'Approved'
+                elif scholarship_applied:
+                    student.scholarship_status = 'Applied'
+                elif student.scholarship_status == 'Rejected':
+                    # If rejected, ensure amount is 0
+                    government_scholarship_amount = 0
 
-                fee_record = CollegeFees(
+            fee_record = CollegeFees(
                     student_id=student.id,
                     course_id=course_id,
                     coursedetail_id=coursedetail_id,
