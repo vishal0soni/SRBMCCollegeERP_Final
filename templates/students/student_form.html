@@ -833,6 +833,8 @@ document.addEventListener('DOMContentLoaded', function() {
         pending_dues_for_hostel: {{ fee_record.pending_dues_for_hostel|tojson }},
         exam_admit_card_issued: {{ fee_record.exam_admit_card_issued|tojson }}
     };
+    {% else %}
+    const existingFeeData = null;
     {% endif %}
 
     {% if course_detail %}
@@ -846,36 +848,36 @@ document.addEventListener('DOMContentLoaded', function() {
         misc_course_fees_6: {{ course_detail.misc_course_fees_6 or 0 }},
         total_course_fees: {{ course_detail.total_course_fees or 0 }}
     };
+    {% else %}
+    const existingCourseData = null;
     {% endif %}
 
     // Function to populate fee data from server-side variables
     function populateExistingFeeData() {
-        {% if fee_record %}
+        if (!existingFeeData) {
+            console.log('No existing fee data to populate');
+            return;
+        }
+
         console.log('Populating existing fee data:', existingFeeData);
 
-        // Update course fee displays and the hidden input - use course_tuition_fee from course_details, not fee record
-        {% if course_detail %}
-        document.getElementById('courseTuitionFee').textContent = `₹${parseFloat(existingCourseData.course_tuition_fee).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        document.getElementById('courseTuitionFeeInput').value = parseFloat(existingCourseData.course_tuition_fee).toFixed(2);
-        {% else %}
-        document.getElementById('courseTuitionFee').textContent = `₹0.00`;
-        document.getElementById('courseTuitionFeeInput').value = '0.00';
-        {% endif %}
-
-        // Update misc fees from course details if available
-        {% if course_detail %}
-        document.getElementById('miscFee1').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_1).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        document.getElementById('miscFee2').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_2).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        document.getElementById('miscFee3').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_3).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        document.getElementById('miscFee4').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_4).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        document.getElementById('miscFee5').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_5).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        document.getElementById('miscFee6').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_6).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        document.getElementById('totalCourseFees').textContent = `₹${parseFloat(existingCourseData.total_course_fees).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        window.courseFees = fees;
-        calculateTotalFees();
-        {% else %}
-        // If no course detail, try to fetch from API for the current course
-        if (currentCourse) {
+        // Update course fee displays - prioritize existingCourseData if available
+        if (existingCourseData) {
+            document.getElementById('courseTuitionFee').textContent = `₹${parseFloat(existingCourseData.course_tuition_fee).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('courseTuitionFeeInput').value = parseFloat(existingCourseData.course_tuition_fee).toFixed(2);
+            
+            // Update misc fees from course details
+            document.getElementById('miscFee1').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_1).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('miscFee2').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_2).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('miscFee3').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_3).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('miscFee4').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_4).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('miscFee5').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_5).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('miscFee6').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_6).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('totalCourseFees').textContent = `₹${parseFloat(existingCourseData.total_course_fees).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            
+            window.courseFees = existingCourseData;
+        } else if (currentCourse) {
+            // If no course detail, fetch from API for the current course
             fetch(`/api/course-fees/${encodeURIComponent(currentCourse)}`)
                 .then(response => response.json())
                 .then(data => {
@@ -898,7 +900,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('Error fetching course fees for edit mode:', error);
                 });
         }
-        {% endif %}
 
         // Populate existing fee structure fields
         document.getElementById('enrollmentFee').value = parseFloat(existingFeeData.enrollment_fee).toFixed(2);
