@@ -580,23 +580,34 @@ function updateCourseFees() {
 
                     // Update course fee displays with Indian locale formatting
                     const courseTuitionFee = parseFloat(fees.course_tuition_fee || 0);
-                    const totalCourseFees = parseFloat(fees.total_course_fees || 0);
+                    const miscFee1 = parseFloat(fees.misc_course_fees_1 || 0);
+                    const miscFee2 = parseFloat(fees.misc_course_fees_2 || 0);
+                    const miscFee3 = parseFloat(fees.misc_course_fees_3 || 0);
+                    const miscFee4 = parseFloat(fees.misc_course_fees_4 || 0);
+                    const miscFee5 = parseFloat(fees.misc_course_fees_5 || 0);
+                    const miscFee6 = parseFloat(fees.misc_course_fees_6 || 0);
 
-                    // Format Course Tuition Fee
+                    // Calculate Total Course Fees = Course Tuition Fee + All Misc Fees
+                    const totalCourseFees = courseTuitionFee + miscFee1 + miscFee2 + miscFee3 + miscFee4 + miscFee5 + miscFee6;
+
+                    // Format and display Course Tuition Fee
                     document.getElementById('courseTuitionFee').textContent = `₹${courseTuitionFee.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-                    // Format Misc Fees
-                    document.getElementById('miscFee1').textContent = `₹${parseFloat(fees.misc_course_fees_1 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                    document.getElementById('miscFee2').textContent = `₹${parseFloat(fees.misc_course_fees_2 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                    document.getElementById('miscFee3').textContent = `₹${parseFloat(fees.misc_course_fees_3 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                    document.getElementById('miscFee4').textContent = `₹${parseFloat(fees.misc_course_fees_4 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                    document.getElementById('miscFee5').textContent = `₹${parseFloat(fees.misc_course_fees_5 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                    document.getElementById('miscFee6').textContent = `₹${parseFloat(fees.misc_course_fees_6 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    // Format and display Misc Fees
+                    document.getElementById('miscFee1').textContent = `₹${miscFee1.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('miscFee2').textContent = `₹${miscFee2.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('miscFee3').textContent = `₹${miscFee3.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('miscFee4').textContent = `₹${miscFee4.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('miscFee5').textContent = `₹${miscFee5.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('miscFee6').textContent = `₹${miscFee6.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+                    // Format and display Total Course Fees
+                    document.getElementById('totalCourseFees').textContent = `₹${totalCourseFees.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
                     // Store course fees data for form submission
                     window.courseFees = fees;
 
-                    // Create hidden input if it doesn't exist
+                    // Create/update hidden input for course tuition fee
                     let hiddenInput = document.getElementById('courseTuitionFeeInput');
                     if (!hiddenInput) {
                         hiddenInput = document.createElement('input');
@@ -607,7 +618,7 @@ function updateCourseFees() {
                     }
                     hiddenInput.value = courseTuitionFee.toFixed(2);
 
-                    // Immediately calculate and update Total Course Fees and Grand Total
+                    // Immediately calculate and update Grand Total
                     calculateTotalFees();
                 } else {
                     // Clear fee displays if no course selected or error
