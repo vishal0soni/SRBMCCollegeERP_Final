@@ -646,41 +646,43 @@ function clearFeeDisplays() {
     window.courseFees = null;
 
     // Clear the hidden input for course tuition fee
-    document.getElementById('courseTuitionFeeInput').value = '0.00';
+    if (document.getElementById('courseTuitionFeeInput')) {
+        document.getElementById('courseTuitionFeeInput').value = '0.00';
+    }
 
     calculateTotalFees();
 }
 
 function calculateTotalFees() {
     console.log('Calculating total fees...');
-    
+
     // Calculate Total Course Fees = Course Tuition Fee + All Misc Fees (1-6)
     const courseTuitionFeeText = document.getElementById('courseTuitionFee')?.textContent || '₹0.00';
     const courseTuitionFee = parseFloat(courseTuitionFeeText.replace('₹', '').replace(/,/g, '') || 0);
-    
+
     const miscFee1Text = document.getElementById('miscFee1')?.textContent || '₹0.00';
     const miscFee1 = parseFloat(miscFee1Text.replace('₹', '').replace(/,/g, '') || 0);
-    
+
     const miscFee2Text = document.getElementById('miscFee2')?.textContent || '₹0.00';
     const miscFee2 = parseFloat(miscFee2Text.replace('₹', '').replace(/,/g, '') || 0);
-    
+
     const miscFee3Text = document.getElementById('miscFee3')?.textContent || '₹0.00';
     const miscFee3 = parseFloat(miscFee3Text.replace('₹', '').replace(/,/g, '') || 0);
-    
+
     const miscFee4Text = document.getElementById('miscFee4')?.textContent || '₹0.00';
     const miscFee4 = parseFloat(miscFee4Text.replace('₹', '').replace(/,/g, '') || 0);
-    
+
     const miscFee5Text = document.getElementById('miscFee5')?.textContent || '₹0.00';
     const miscFee5 = parseFloat(miscFee5Text.replace('₹', '').replace(/,/g, '') || 0);
-    
+
     const miscFee6Text = document.getElementById('miscFee6')?.textContent || '₹0.00';
     const miscFee6 = parseFloat(miscFee6Text.replace('₹', '').replace(/,/g, '') || 0);
-    
+
     // Total Course Fees = Tuition + All Misc Fees
     const totalCourseFees = courseTuitionFee + miscFee1 + miscFee2 + miscFee3 + miscFee4 + miscFee5 + miscFee6;
-    
+
     console.log('Total Course Fees:', totalCourseFees);
-    
+
     // Update Total Course Fees display
     const totalCourseFeesElement = document.getElementById('totalCourseFees');
     if (totalCourseFeesElement) {
@@ -693,9 +695,9 @@ function calculateTotalFees() {
         const feeValue = parseFloat(input.value || 0);
         additionalFees += feeValue;
     });
-    
+
     console.log('Total Additional Fees:', additionalFees);
-    
+
     // Update Total Additional Fees display
     const totalAdditionalFeesElement = document.getElementById('totalAdditionalFees');
     if (totalAdditionalFeesElement) {
@@ -704,9 +706,9 @@ function calculateTotalFees() {
 
     // Calculate Grand Total = Total Course Fees + Total Additional Fees
     const grandTotal = totalCourseFees + additionalFees;
-    
+
     console.log('Grand Total:', grandTotal);
-    
+
     // Update Grand Total display
     const grandTotalFeesElement = document.getElementById('grandTotalFees');
     if (grandTotalFeesElement) {
@@ -871,7 +873,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('miscFee5').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_5).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         document.getElementById('miscFee6').textContent = `₹${parseFloat(existingCourseData.misc_course_fees_6).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         document.getElementById('totalCourseFees').textContent = `₹${parseFloat(existingCourseData.total_course_fees).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        window.courseFees = fees;
+        window.courseFees = existingCourseData; // Store actual course data object
         calculateTotalFees();
         {% else %}
         // If no course detail, try to fetch from API for the current course
@@ -1011,7 +1013,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Add hidden inputs for fee data using most current values
         const feeData = {
-            course_tuition_fee: document.getElementById('courseTuitionFeeInput').value || '0.00',
+            course_tuition_fee: document.getElementById('courseTuitionFeeInput')?.value || '0.00',
             enrollment_fee: document.getElementById('enrollmentFee').value || '0.00',
             eligibility_certificate_fee: document.getElementById('eligibilityCertificateFee').value || '0.00',
             university_affiliation_fee: document.getElementById('universityAffiliationFee').value || '0.00',
@@ -1021,7 +1023,7 @@ document.addEventListener('DOMContentLoaded', function() {
             miscellaneous_fee_1: document.getElementById('miscellaneousFee1').value || '0.00',
             miscellaneous_fee_2: document.getElementById('miscellaneousFee2').value || '0.00',
             miscellaneous_fee_3: document.getElementById('miscellaneousFee3').value || '0.00',
-            total_course_fees: document.getElementById('courseTuitionFeeInput').value || '0.00',
+            total_course_fees: document.getElementById('courseTuitionFeeInput').value || '0.00', // Use the hidden input value
             total_fee: window.calculatedFees ? window.calculatedFees.grandTotal.toFixed(2) : '0.00',
 
             // New fee management fields
@@ -1113,6 +1115,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         scholarshipApplied.checked = true;
                         scholarshipApproved.checked = true;
                         scholarshipGranted.checked = true;
+                    } else { // For empty or other statuses, uncheck all
+                        scholarshipApplied.checked = false;
+                        scholarshipApproved.checked = false;
+                        scholarshipGranted.checked = false;
                     }
                 }
                 calculateTotalFees();
@@ -1191,6 +1197,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         meeraRebateApplied.checked = true;
                         meeraRebateApproved.checked = true;
                         meeraRebateGranted.checked = true;
+                    } else { // For empty or other statuses, uncheck all
+                        meeraRebateApplied.checked = false;
+                        meeraRebateApproved.checked = false;
+                        meeraRebateGranted.checked = false;
                     }
                 }
                 calculateTotalFees();
@@ -1273,13 +1283,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize form state on page load
     document.addEventListener('DOMContentLoaded', function() {
-        updateSubjectsBasedOnCourse();
-        loadCourseFeesData();
+        updateSubjectsBasedOnCourse(); // Renamed from updateSubjects to avoid conflict with global function
+        loadCourseFeesData();          // Renamed from updateCourseFees to avoid conflict
         calculateTotalFees();
 
         // Load existing fee data for editing
         {% if fee_record %}
-            loadExistingFeeData();
+            loadExistingFeeData(); // Renamed from populateExistingFeeData to avoid conflict
         {% endif %}
 
         // Disable scholarship fields for Admission Officers
@@ -1288,43 +1298,74 @@ document.addEventListener('DOMContentLoaded', function() {
         {% endif %}
     });
 
+    // Helper function to initialize subjects based on the selected course
+    function updateSubjectsBasedOnCourse() {
+        const courseSelect = document.getElementById('{{ form.current_course.id }}');
+        if (courseSelect && courseSelect.value) {
+            updateSubjects(); // Call the global updateSubjects function
+        }
+    }
+
+    // Helper function to load course fees data
+    function loadCourseFeesData() {
+        const courseSelect = document.getElementById('{{ form.current_course.id }}');
+        if (courseSelect && courseSelect.value) {
+            updateCourseFees(); // Call the global updateCourseFees function
+        }
+    }
+
+    // Helper function to load existing fee data
+    function loadExistingFeeData() {
+        // This function is now directly called within the DOMContentLoaded listener
+        // and assumes existingFeeData and existingCourseData are defined in the scope.
+        // If the logic needs to be more complex, it should be self-contained here or called appropriately.
+        populateExistingFeeData(); // Calls the previously defined function
+    }
+
+
     {% if current_user.role.role_name == 'Admission Officer' %}
     function disableScholarshipFieldsForAdmissionOfficer() {
         // Disable scholarship dropdown interactions
         const scholarshipDropdown = document.getElementById('{{ form.scholarship_status.id }}');
         const meeraDropdown = document.getElementById('{{ form.rebate_meera_scholarship_status.id }}');
 
+        // Disable dropdowns and make them read-only in appearance
         if (scholarshipDropdown) {
-            scholarshipDropdown.style.backgroundColor = '#f8f9fa';
+            scholarshipDropdown.style.backgroundColor = '#e9ecef'; // Light gray background
             scholarshipDropdown.style.cursor = 'not-allowed';
+            // To make it truly read-only, we might need to iterate over options and disable them,
+            // or use JS to prevent selection changes. For now, visual cues are used.
         }
 
         if (meeraDropdown) {
-            meeraDropdown.style.backgroundColor = '#f8f9fa';
+            meeraDropdown.style.backgroundColor = '#e9ecef';
             meeraDropdown.style.cursor = 'not-allowed';
         }
 
         // Disable all scholarship checkboxes
         const scholarshipCheckboxes = document.querySelectorAll('#scholarshipApplied, #scholarshipApproved, #scholarshipGranted, #meeraRebateApplied, #meeraRebateApproved, #meeraRebateGranted');
         scholarshipCheckboxes.forEach(checkbox => {
+            checkbox.disabled = true;
             checkbox.style.cursor = 'not-allowed';
-            checkbox.style.opacity = '0.6';
+            checkbox.style.opacity = '0.7'; // Slightly faded appearance
         });
 
         // Disable scholarship amount fields
         const amountFields = document.querySelectorAll('#governmentScholarshipAmount, #meeraRebateAmount');
         amountFields.forEach(field => {
-            field.style.backgroundColor = '#f8f9fa';
+            field.disabled = true;
+            field.style.backgroundColor = '#e9ecef';
             field.style.cursor = 'not-allowed';
         });
 
-        // Add visual indicator
-        const scholarshipSection = document.querySelector('.fee-management-section'); // Assuming this class exists or adjust selector
-        if (scholarshipSection) {
+        // Add visual indicator for Admission Officers
+        const feeDetailsCardBody = document.querySelector('#feeDetailsSection .card-body');
+        if (feeDetailsCardBody) {
             const notice = document.createElement('div');
-            notice.className = 'alert alert-info mt-3';
-            notice.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Note:</strong> As an Admission Officer, you can only view scholarship information. Contact the Accountant to modify scholarship statuses and amounts.';
-            scholarshipSection.appendChild(notice);
+            notice.className = 'alert alert-info mt-3 small'; // Use 'small' for smaller text
+            notice.innerHTML = '<i class="fas fa-info-circle me-2"></i> <strong>Note:</strong> As an Admission Officer, you can only view scholarship information. Contact the Accountant to modify scholarship statuses and amounts.';
+            // Insert the notice at the end of the fee details section
+            feeDetailsCardBody.appendChild(notice);
         }
     }
     {% endif %}
