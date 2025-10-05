@@ -410,18 +410,21 @@ def add_student():
             course = Course.query.filter_by(course_short_name=course_short).first()
             course_detail = CourseDetails.query.filter_by(course_full_name=form.current_course.data).first()
 
-            if course and course_detail:
-                # Get fee data from form (submitted via JavaScript) - use total_course_fees from course_details
-                total_course_fees = float(request.form.get('fee_total_course_fees', course_detail.total_course_fees) or 0)
-                enrollment_fee = float(request.form.get('fee_enrollment_fee', 0) or 0)
-                eligibility_certificate_fee = float(request.form.get('fee_eligibility_certificate_fee', 0) or 0)
-                university_affiliation_fee = float(request.form.get('fee_university_affiliation_fee', 0) or 0)
-                university_sports_fee = float(request.form.get('fee_university_sports_fee', 0) or 0)
-                university_development_fee = float(request.form.get('fee_university_development_fee', 0) or 0)
-                tc_cc_fee = float(request.form.get('fee_tc_cc_fee', 0) or 0)
-                miscellaneous_fee_1 = float(request.form.get('fee_miscellaneous_fee_1', 0) or 0)
-                miscellaneous_fee_2 = float(request.form.get('fee_miscellaneous_fee_2', 0) or 0)
-                miscellaneous_fee_3 = float(request.form.get('fee_miscellaneous_fee_3', 0) or 0)
+            # Always create a fee record, even if course details are missing
+            course_id = course.course_id if course else None
+            coursedetail_id = course_detail.id if course_detail else None
+            
+            # Get fee data from form (submitted via JavaScript) - use total_course_fees from course_details
+            total_course_fees = float(request.form.get('fee_total_course_fees', course_detail.total_course_fees if course_detail else 0) or 0)
+            enrollment_fee = float(request.form.get('fee_enrollment_fee', 0) or 0)
+            eligibility_certificate_fee = float(request.form.get('fee_eligibility_certificate_fee', 0) or 0)
+            university_affiliation_fee = float(request.form.get('fee_university_affiliation_fee', 0) or 0)
+            university_sports_fee = float(request.form.get('fee_university_sports_fee', 0) or 0)
+            university_development_fee = float(request.form.get('fee_university_development_fee', 0) or 0)
+            tc_cc_fee = float(request.form.get('fee_tc_cc_fee', 0) or 0)
+            miscellaneous_fee_1 = float(request.form.get('fee_miscellaneous_fee_1', 0) or 0)
+            miscellaneous_fee_2 = float(request.form.get('fee_miscellaneous_fee_2', 0) or 0)
+            miscellaneous_fee_3 = float(request.form.get('fee_miscellaneous_fee_3', 0) or 0)
 
                 # Note: total_fee is automatically calculated by database formula
                 # No manual calculation needed as database handles:
@@ -468,9 +471,9 @@ def add_student():
 
                 fee_record = CollegeFees(
                     student_id=student.id,
-                    course_id=course.course_id,
-                    coursedetail_id=course_detail.id,
-                    course_full_name=course_detail.course_full_name,
+                    course_id=course_id,
+                    coursedetail_id=coursedetail_id,
+                    course_full_name=course_name,  # Use the course name from the form
                     total_course_fees=total_course_fees,
                     enrollment_fee=enrollment_fee,
                     eligibility_certificate_fee=eligibility_certificate_fee,
@@ -510,7 +513,21 @@ def add_student():
                 fee_record.update_total_fees_paid()
                 
                 # Log the fee record creation
-                app.logger.info(f"Created fee record for student {student.student_unique_id} with course {course_detail.course_full_name}")
+                app.logger.info(f"Created fee record for student {student.student_unique_id} with course {course_name}")
+            else:
+                # If course details are not found, still create a basic fee record
+                app.logger.warning(f"Course details not found for {course_name}, creating basic fee record")
+                fee_record = CollegeFees(
+                    student_id=student.id,
+                    course_full_name=course_name,
+                    installment_1=0,
+                    installment_2=0,
+                    installment_3=0,
+                    installment_4=0,
+                    installment_5=0,
+                    installment_6=0
+                )
+                db.session.add(fee_record)
 
             db.session.commit()
 
