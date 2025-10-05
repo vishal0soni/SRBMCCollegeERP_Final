@@ -470,50 +470,50 @@ def add_student():
                     government_scholarship_amount = 0
 
             fee_record = CollegeFees(
-                student_id=student.id,
-                course_id=course_id,
-                coursedetail_id=coursedetail_id,
-                course_full_name=course_name,  # Use the course name from the form
-                total_course_fees=total_course_fees,
-                enrollment_fee=enrollment_fee,
-                eligibility_certificate_fee=eligibility_certificate_fee,
-                university_affiliation_fee=university_affiliation_fee,
-                university_sports_fee=university_sports_fee,
-                university_development_fee=university_development_fee,
-                tc_cc_fee=tc_cc_fee,
-                miscellaneous_fee_1=miscellaneous_fee_1,
-                miscellaneous_fee_2=miscellaneous_fee_2,
-                miscellaneous_fee_3=miscellaneous_fee_3,
-                # New fee management fields
-                meera_rebate_applied=meera_rebate_applied,
-                meera_rebate_approved=meera_rebate_approved,
-                meera_rebate_granted=meera_rebate_granted,
-                meera_rebate_amount=meera_rebate_amount,
-                scholarship_applied=scholarship_applied,
-                scholarship_approved=scholarship_approved,
-                scholarship_granted=scholarship_granted,
-                government_scholarship_amount=government_scholarship_amount,
-                total_amount_due=total_amount_due,
-                total_amount_after_rebate=total_amount_after_rebate,
-                pending_dues_for_libraries=pending_dues_for_libraries,
-                pending_dues_for_hostel=pending_dues_for_hostel,
-                exam_admit_card_issued=exam_admit_card_issued,
-                # Initialize installments to 0
-                installment_1=0,
-                installment_2=0,
-                installment_3=0,
-                installment_4=0,
-                installment_5=0,
-                installment_6=0
-            )
-            db.session.add(fee_record)
-            db.session.flush()  # Flush to get the auto-calculated total_fee from database
+                    student_id=student.id,
+                    course_id=course_id,
+                    coursedetail_id=coursedetail_id,
+                    course_full_name=course_name,  # Use the course name from the form
+                    total_course_fees=total_course_fees,
+                    enrollment_fee=enrollment_fee,
+                    eligibility_certificate_fee=eligibility_certificate_fee,
+                    university_affiliation_fee=university_affiliation_fee,
+                    university_sports_fee=university_sports_fee,
+                    university_development_fee=university_development_fee,
+                    tc_cc_fee=tc_cc_fee,
+                    miscellaneous_fee_1=miscellaneous_fee_1,
+                    miscellaneous_fee_2=miscellaneous_fee_2,
+                    miscellaneous_fee_3=miscellaneous_fee_3,
+                    # New fee management fields
+                    meera_rebate_applied=meera_rebate_applied,
+                    meera_rebate_approved=meera_rebate_approved,
+                    meera_rebate_granted=meera_rebate_granted,
+                    meera_rebate_amount=meera_rebate_amount,
+                    scholarship_applied=scholarship_applied,
+                    scholarship_approved=scholarship_approved,
+                    scholarship_granted=scholarship_granted,
+                    government_scholarship_amount=government_scholarship_amount,
+                    total_amount_due=total_amount_due,
+                    total_amount_after_rebate=total_amount_after_rebate,
+                    pending_dues_for_libraries=pending_dues_for_libraries,
+                    pending_dues_for_hostel=pending_dues_for_hostel,
+                    exam_admit_card_issued=exam_admit_card_issued,
+                    # Initialize installments to 0
+                    installment_1=0,
+                    installment_2=0,
+                    installment_3=0,
+                    installment_4=0,
+                    installment_5=0,
+                    installment_6=0
+                )
+                db.session.add(fee_record)
+                db.session.flush()  # Flush to get the auto-calculated total_fee from database
 
-            # Only update total_fees_paid from installments sum (total_fee is handled by database)
-            fee_record.update_total_fees_paid()
-            
-            # Log the fee record creation
-            app.logger.info(f"Created fee record for student {student.student_unique_id} with course {course_name}")
+                # Only update total_fees_paid from installments sum (total_fee is handled by database)
+                fee_record.update_total_fees_paid()
+                
+                # Log the fee record creation
+                app.logger.info(f"Created fee record for student {student.student_unique_id} with course {course_name}")
             else:
                 # If course details are not found, still create a basic fee record
                 app.logger.warning(f"Course details not found for {course_name}, creating basic fee record")
