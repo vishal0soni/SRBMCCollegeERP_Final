@@ -989,12 +989,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (courseSelect.value) {
         updateCourseFees();
     }
-
     {% else %}
-        // If not editing, initialize subjects based on selected course
-        if (courseSelect.value) {
-            updateSubjects();
-        }
+    // If not editing, initialize subjects based on selected course
+    if (courseSelect.value) {
+        updateSubjects();
+    }
     {% endif %}
 
 
