@@ -989,6 +989,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (courseSelect.value) {
         updateCourseFees();
     }
+    {% endif %}
     {% else %}
     // If not editing, initialize subjects based on selected course
     if (courseSelect.value) {
