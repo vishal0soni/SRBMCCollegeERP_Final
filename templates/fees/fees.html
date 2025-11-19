@@ -240,7 +240,7 @@
                                                        id="library_dues_{{ fee_record.id }}"
                                                        data-fee-id="{{ fee_record.id }}"
                                                        data-field="pending_dues_for_libraries"
-                                                       {% if fee_record.pending_dues_for_libraries %}checked{% endif %}>
+                                                       {% if fee_record.pending_dues_for_libraries %}checked="checked"{% endif %}>
                                                 <label class="form-check-label" for="library_dues_{{ fee_record.id }}"><i class="fas fa-book"></i> Library Dues</label>
                                             </div>
                                             <div class="form-check form-check-inline">
@@ -248,7 +248,7 @@
                                                        id="hostel_dues_{{ fee_record.id }}"
                                                        data-fee-id="{{ fee_record.id }}"
                                                        data-field="pending_dues_for_hostel"
-                                                       {% if fee_record.pending_dues_for_hostel %}checked{% endif %}>
+                                                       {% if fee_record.pending_dues_for_hostel %}checked="checked"{% endif %}>
                                                 <label class="form-check-label" for="hostel_dues_{{ fee_record.id }}"><i class="fas fa-bed"></i> Hostel Dues</label>
                                             </div>
                                             <div class="form-check form-check-inline">
@@ -256,7 +256,7 @@
                                                        id="admit_card_{{ fee_record.id }}"
                                                        data-fee-id="{{ fee_record.id }}"
                                                        data-field="exam_admit_card_issued"
-                                                       {% if fee_record.exam_admit_card_issued %}checked{% endif %}>
+                                                       {% if fee_record.exam_admit_card_issued %}checked="checked"{% endif %}>
                                                 <label class="form-check-label" for="admit_card_{{ fee_record.id }}"><i class="fas fa-id-card"></i> Admit Card Issued</label>
                                             </div>
                                         {% else %}
@@ -363,9 +363,9 @@ $(document).ready(function() {
         const feeId = checkbox.data('fee-id');
         const field = checkbox.data('field');
         const newValue = checkbox.is(':checked');
-        
+
         console.log('Checkbox changed:', {feeId, field, newValue});
-        
+
         // Show loading state
         checkbox.prop('disabled', true);
         const label = $(`label[for="${checkbox.attr('id')}"]`);
@@ -388,14 +388,14 @@ $(document).ready(function() {
                     // Force checkbox to match the verified database value
                     const verifiedValue = Boolean(response.new_value);
                     checkbox.prop('checked', verifiedValue);
-                    
+
                     // Update the checkbox's checked attribute for persistence
                     if (verifiedValue) {
                         checkbox.attr('checked', 'checked');
                     } else {
                         checkbox.removeAttr('checked');
                     }
-                    
+
                     const fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                     showAlert(`${fieldName} ${verifiedValue ? 'enabled' : 'disabled'}`, 'success');
                 } else {
@@ -407,14 +407,14 @@ $(document).ready(function() {
             error: function(xhr, status, error) {
                 console.error('Update error:', {xhr, status, error});
                 let errorMessage = 'Failed to update: ';
-                
+
                 try {
                     const response = JSON.parse(xhr.responseText);
                     errorMessage += response.error || xhr.statusText || 'Unknown error';
                 } catch (e) {
                     errorMessage += xhr.statusText || error || 'Unknown error';
                 }
-                
+
                 showAlert(errorMessage, 'error');
                 // Revert checkbox on error
                 checkbox.prop('checked', !newValue);
@@ -433,11 +433,11 @@ $(document).ready(function() {
         const checkbox = $(this);
         const feeId = checkbox.data('fee-id');
         const field = checkbox.data('field');
-        
+
         // Use the current checked state from the template as the initial value
         const initialValue = checkbox.is(':checked');
         console.log(`Initial state for ${field} (fee ${feeId}): ${initialValue}`);
-        
+
         // Verify against database
         $.ajax({
             url: `/api/verify-fee-field/${feeId}/${field}`,
@@ -446,16 +446,16 @@ $(document).ready(function() {
                 if (response.success) {
                     const dbValue = Boolean(response.current_value);
                     checkbox.prop('checked', dbValue);
-                    
+
                     // Update the checked attribute for persistence
                     if (dbValue) {
                         checkbox.attr('checked', 'checked');
                     } else {
                         checkbox.removeAttr('checked');
                     }
-                    
+
                     console.log(`Verified ${field} for fee ${feeId}: ${dbValue}`);
-                    
+
                     if (initialValue !== dbValue) {
                         console.warn(`Mismatch detected for ${field} (fee ${feeId}). Template: ${initialValue}, DB: ${dbValue}`);
                     }
@@ -473,7 +473,7 @@ function showAlert(message, type) {
                      type === 'warning' ? 'alert-warning' : 'alert-danger';
     const icon = type === 'success' ? 'fas fa-check-circle' : 
                 type === 'warning' ? 'fas fa-exclamation-triangle' : 'fas fa-exclamation-circle';
-    
+
     const alert = $(`
         <div class="alert ${alertClass} alert-dismissible fade show position-fixed" role="alert" style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
             <i class="${icon} me-2"></i>${message}
@@ -492,7 +492,7 @@ function showAlert(message, type) {
 $(document).on('click', '.dues-checkbox', function() {
     const checkbox = $(this);
     const row = checkbox.closest('tr');
-    
+
     // Debug logging
     console.log('Checkbox clicked:', {
         feeId: checkbox.data('fee-id'),
@@ -500,7 +500,7 @@ $(document).on('click', '.dues-checkbox', function() {
         checked: checkbox.is(':checked'),
         element: checkbox[0]
     });
-    
+
     // Add a subtle highlight to show the row is being updated
     row.addClass('table-warning');
     setTimeout(() => {

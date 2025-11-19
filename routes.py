@@ -3587,8 +3587,14 @@ def api_update_fee_field(fee_id):
         # Update the field
         setattr(fee_record, field, bool_value)
 
+        # Flush to ensure the change is written
+        db.session.flush()
+        
         # Commit the change
         db.session.commit()
+        
+        # Force a refresh from database to verify
+        db.session.refresh(fee_record)
         
         app.logger.info(f"Successfully committed {field} change for fee_id {fee_id}")
 
