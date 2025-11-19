@@ -2253,7 +2253,6 @@ def edit_student(student_id):
 
             # Update fee record if fee data is provided
             if fee_record:
-            if fee_record:
                 # Synchronize total_course_fees from course_details if course has changed
                 if student.current_course:
                     course_detail = CourseDetails.query.filter_by(course_full_name=student.current_course).first()
