@@ -204,10 +204,6 @@
                                 </td>
                                 <td>
                                     <strong>₹{{ "%.2f"|format(display_total) }}</strong>
-                                    {% if fee_record.meera_rebate_granted and fee_record.meera_rebate_amount and fee_record.meera_rebate_amount > 0 %}
-                                        <br><small class="text-muted">Original: ₹{{ "%.2f"|format(fee_record.total_fee or 0) }}</small>
-                                        <br><small class="text-success">Rebate: -₹{{ "%.2f"|format(fee_record.meera_rebate_amount) }}</small>
-                                    {% endif %}
                                 </td>
                                 <td>
                                     <span class="text-success">₹{{ "%.2f"|format(total_paid) }}</span>
