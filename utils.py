@@ -131,8 +131,9 @@ def generate_pdf_invoice(invoice):
         content = []
 
         # Determine college name based on course
+        student = invoice.student
         college_name = "SHRI RAGHUNATH BISHNOI MEMORIAL COLLEGE"
-        if invoice.student and invoice.student.current_course and ("Bachelor of Pharmacy" in invoice.student.current_course or "B.Pharm" in invoice.student.current_course or "B.PHARM" in invoice.student.current_course.upper()):
+        if student and student.current_course and ('Bachelor of Pharmacy' in student.current_course or 'B.Pharm' in student.current_course or 'Diploma of Pharmacy' in student.current_course or 'D Pharma' in student.current_course or 'D.Pharm' in student.current_course or 'DIPLOMA OF PHARMACY' in student.current_course.upper()):
             college_name = "SUNDHA MATA INSTITUTE FOR HIGHER STUDIES"
 
         # Header
@@ -614,8 +615,8 @@ def generate_pdf_fee_statement_print(student, fee_record):
         # Determine college name based on course
         college_name = "SHRI RAGHUNATH BISHNOI MEMORIAL COLLEGE"
         college_location = "Raniwara, Jalore, Rajasthan"
-        
-        if student.current_course and ('Bachelor of Pharmacy' in student.current_course or 'B.Pharm' in student.current_course):
+
+        if student.current_course and ('Bachelor of Pharmacy' in student.current_course or 'B.Pharm' in student.current_course or 'Diploma of Pharmacy' in student.current_course or 'D Pharma' in student.current_course or 'D.Pharm' in student.current_course or 'DIPLOMA OF PHARMACY' in student.current_course.upper()):
             college_name = "SUNDHA MATA INSTITUTE FOR HIGHER STUDIES"
 
         # College header
