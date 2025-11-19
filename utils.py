@@ -650,37 +650,6 @@ def generate_pdf_fee_statement_print(student, fee_record):
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6), Rajasthan"
-
-        if student.current_course and ('Diploma of Pharmacy' in student.current_course or 'D Pharma' in student.current_course or 'D.Pharm' in student.current_course or 'DIPLOMA OF PHARMACY' in student.current_course.upper()):
-            college_name = "SUNDHA MATA INSTITUTE FOR HIGHER STUDIES"
-
-        # College header
-        content.append(Paragraph(college_name, title_style))
-        content.append(Paragraph(college_location, styles['Normal']))
-        content.append(Paragraph("FEE STATEMENT", heading_style))
-        content.append(Spacer(1, 20))
-
-        if not fee_record:
-            content.append(Paragraph("No fee record found for this student.", normal_style))
-            doc.build(content)
-            buffer.seek(0)
-            return buffer.getvalue()
-
-        # Student details
-        student_data = [
-            ['Student ID:', student.student_unique_id],
-            ['Student Name:', f"{student.first_name} {student.last_name}"],
-            ['Father Name:', student.father_name or 'N/A'],
-            ['Course:', student.current_course or 'N/A'],
-            ['Phone:', student.phone or 'N/A'],
-        ]
-
-        student_table = Table(student_data, colWidths=[2*inch, 4*inch])
-        student_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ]))
 
