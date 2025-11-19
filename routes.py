@@ -3567,41 +3567,50 @@ def api_update_fee_field(fee_id):
             app.logger.error(f"Invalid field name: {field}")
             return jsonify({'success': False, 'error': f'Invalid field name: {field}'}), 400
 
-        # Get the fee record
-        fee_record = CollegeFees.query.get(fee_id)
+        # Get the fee record using filter_by to ensure we get fresh data
+        fee_record = db.session.query(CollegeFees).filter_by(id=fee_id).first()
         if not fee_record:
             app.logger.error(f"Fee record not found: {fee_id}")
             return jsonify({'success': False, 'error': 'Fee record not found'}), 404
 
-        # Convert value to boolean
-        bool_value = bool(value)
+        # Convert value to boolean - handle string 'true'/'false' as well
+        if isinstance(value, str):
+            bool_value = value.lower() in ('true', '1', 'yes')
+        else:
+            bool_value = bool(value)
 
         # Get old value for logging
         old_value = bool(getattr(fee_record, field, False))
 
+        app.logger.info(f"Updating {field} from {old_value} to {bool_value}")
+
         # Update the field
         setattr(fee_record, field, bool_value)
 
-        # Force flush and commit
-        db.session.flush()
+        # Commit the change
         db.session.commit()
         
-        app.logger.info(f"Successfully committed {field} change for fee_id {fee_id} from {old_value} to {bool_value}")
+        app.logger.info(f"Successfully committed {field} change for fee_id {fee_id}")
 
-        # Verify the update by refetching the record
-        db.session.expire_all()
-        updated_record = CollegeFees.query.get(fee_id)
-        actual_value = bool(getattr(updated_record, field, False))
+        # Verify the update by querying fresh from database
+        verified_record = db.session.query(CollegeFees).filter_by(id=fee_id).first()
+        actual_value = bool(getattr(verified_record, field, False))
 
         app.logger.info(f"Verified {field} value after commit: {actual_value}")
+
+        if actual_value != bool_value:
+            app.logger.error(f"Verification failed! Expected {bool_value}, got {actual_value}")
+            return jsonify({
+                'success': False,
+                'error': 'Database update verification failed'
+            }), 500
 
         return jsonify({
             'success': True,
             'message': f'Field {field} updated successfully',
             'field': field,
             'new_value': actual_value,
-            'old_value': old_value,
-            'changed': old_value != actual_value
+            'old_value': old_value
         })
 
     except Exception as e:

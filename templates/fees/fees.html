@@ -357,26 +357,20 @@ $(document).ready(function() {
     // Initialize tooltips
     $('[data-bs-toggle="tooltip"]').tooltip();
 
-    // Prevent default form submission on checkbox change
-    $('.dues-checkbox').on('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
+    // Handle checkbox changes with proper state persistence
+    $('.dues-checkbox').on('change', function(e) {
         const checkbox = $(this);
         const feeId = checkbox.data('fee-id');
         const field = checkbox.data('field');
-        const newValue = !checkbox.is(':checked'); // Toggle the value
+        const newValue = checkbox.is(':checked');
         
-        console.log('Checkbox clicked:', {feeId, field, currentValue: checkbox.is(':checked'), newValue});
-        
-        // Optimistically update the checkbox
-        checkbox.prop('checked', newValue);
+        console.log('Checkbox changed:', {feeId, field, newValue});
         
         // Show loading state
         checkbox.prop('disabled', true);
         const label = $(`label[for="${checkbox.attr('id')}"]`);
         const originalText = label.html();
-        label.html(originalText + ' <span class="spinner-border spinner-border-sm ms-1 saving-spinner"></span>');
+        label.html(originalText + ' <span class="spinner-border spinner-border-sm ms-1"></span>');
 
         // Update via AJAX
         $.ajax({
@@ -387,32 +381,33 @@ $(document).ready(function() {
                 field: field,
                 value: newValue
             }),
-            timeout: 15000,
+            timeout: 10000,
             success: function(response) {
-                console.log('API Response:', response);
+                console.log('Update response:', response);
                 if (response.success) {
-                    // Confirm checkbox reflects the actual database value
+                    // Ensure checkbox matches database value
                     checkbox.prop('checked', response.new_value);
-                    showAlert(`${field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} ${response.new_value ? 'enabled' : 'disabled'}`, 'success');
+                    const fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    showAlert(`${fieldName} ${response.new_value ? 'enabled' : 'disabled'}`, 'success');
                 } else {
                     showAlert('Error: ' + (response.error || 'Unknown error'), 'error');
-                    // Revert on error
+                    // Revert checkbox on error
                     checkbox.prop('checked', !newValue);
                 }
             },
             error: function(xhr, status, error) {
-                console.error('AJAX Error:', {xhr, status, error, responseText: xhr.responseText});
+                console.error('Update error:', {xhr, status, error});
                 let errorMessage = 'Failed to update: ';
                 
                 try {
                     const response = JSON.parse(xhr.responseText);
-                    errorMessage += response.error || xhr.statusText;
+                    errorMessage += response.error || xhr.statusText || 'Unknown error';
                 } catch (e) {
-                    errorMessage += xhr.statusText || error;
+                    errorMessage += xhr.statusText || error || 'Unknown error';
                 }
                 
                 showAlert(errorMessage, 'error');
-                // Revert on error
+                // Revert checkbox on error
                 checkbox.prop('checked', !newValue);
             },
             complete: function() {
@@ -421,23 +416,32 @@ $(document).ready(function() {
                 label.html(originalText);
             }
         });
-        
-        return false;
     });
 
-    // Verify checkbox states on page load
+    // Verify and set initial checkbox states on page load
+    console.log('Verifying checkbox states on page load...');
     $('.dues-checkbox').each(function() {
-        const feeId = $(this).data('fee-id');
-        const field = $(this).data('field');
         const checkbox = $(this);
+        const feeId = checkbox.data('fee-id');
+        const field = checkbox.data('field');
         
+        // Use the current checked state from the template as the initial value
+        const initialValue = checkbox.is(':checked');
+        console.log(`Initial state for ${field} (fee ${feeId}): ${initialValue}`);
+        
+        // Verify against database
         $.ajax({
             url: `/api/verify-fee-field/${feeId}/${field}`,
             method: 'GET',
             success: function(response) {
                 if (response.success) {
-                    checkbox.prop('checked', response.current_value);
-                    console.log(`Verified ${field} for fee ${feeId}: ${response.current_value}`);
+                    const dbValue = response.current_value;
+                    checkbox.prop('checked', dbValue);
+                    console.log(`Verified ${field} for fee ${feeId}: ${dbValue}`);
+                    
+                    if (initialValue !== dbValue) {
+                        console.warn(`Mismatch detected for ${field} (fee ${feeId}). Template: ${initialValue}, DB: ${dbValue}`);
+                    }
                 }
             },
             error: function(xhr, status, error) {
