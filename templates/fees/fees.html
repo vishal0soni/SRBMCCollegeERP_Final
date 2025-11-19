@@ -189,8 +189,7 @@
                             {% if fees.items %}
                             {% for fee_record, student in fees.items %}
                             {% set total_paid = ((fee_record.installment_1 or 0)|float + (fee_record.installment_2 or 0)|float + (fee_record.installment_3 or 0)|float + (fee_record.installment_4 or 0)|float + (fee_record.installment_5 or 0)|float + (fee_record.installment_6 or 0)|float) %}
-                            {% set total_amount_after_rebate = (fee_record.total_amount_after_rebate or fee_record.total_fee or 0)|float %}
-                            {% set due_amount = total_amount_after_rebate - total_paid %}
+                            {% set due_amount = (fee_record.total_amount_after_rebate or 0)|float - total_paid %}
                             <tr>
                                 <td>
                                     <strong>{{ student.student_unique_id }}</strong><br>
@@ -203,11 +202,7 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <strong>₹{{ "%.2f"|format(total_amount_after_rebate) }}</strong>
-                                    {% if fee_record.meera_rebate_granted and fee_record.meera_rebate_amount and fee_record.meera_rebate_amount > 0 %}
-                                        <br><small class="text-muted">Original: ₹{{ "%.2f"|format(fee_record.total_fee or 0) }}</small>
-                                        <br><small class="text-success">Rebate: -₹{{ "%.2f"|format(fee_record.meera_rebate_amount) }}</small>
-                                    {% endif %}
+                                    <strong>₹{{ "%.2f"|format(fee_record.total_amount_after_rebate or 0) }}</strong>
                                 </td>
                                 <td>
                                     <span class="text-success">₹{{ "%.2f"|format(total_paid) }}</span>
