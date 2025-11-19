@@ -385,10 +385,19 @@ $(document).ready(function() {
             success: function(response) {
                 console.log('Update response:', response);
                 if (response.success) {
-                    // Ensure checkbox matches database value
-                    checkbox.prop('checked', response.new_value);
+                    // Force checkbox to match the verified database value
+                    const verifiedValue = Boolean(response.new_value);
+                    checkbox.prop('checked', verifiedValue);
+                    
+                    // Update the checkbox's checked attribute for persistence
+                    if (verifiedValue) {
+                        checkbox.attr('checked', 'checked');
+                    } else {
+                        checkbox.removeAttr('checked');
+                    }
+                    
                     const fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                    showAlert(`${fieldName} ${response.new_value ? 'enabled' : 'disabled'}`, 'success');
+                    showAlert(`${fieldName} ${verifiedValue ? 'enabled' : 'disabled'}`, 'success');
                 } else {
                     showAlert('Error: ' + (response.error || 'Unknown error'), 'error');
                     // Revert checkbox on error
@@ -435,8 +444,16 @@ $(document).ready(function() {
             method: 'GET',
             success: function(response) {
                 if (response.success) {
-                    const dbValue = response.current_value;
+                    const dbValue = Boolean(response.current_value);
                     checkbox.prop('checked', dbValue);
+                    
+                    // Update the checked attribute for persistence
+                    if (dbValue) {
+                        checkbox.attr('checked', 'checked');
+                    } else {
+                        checkbox.removeAttr('checked');
+                    }
+                    
                     console.log(`Verified ${field} for fee ${feeId}: ${dbValue}`);
                     
                     if (initialValue !== dbValue) {
