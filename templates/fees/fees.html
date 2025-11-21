@@ -240,7 +240,7 @@
                                                        id="library_dues_{{ fee_record.id }}"
                                                        data-fee-id="{{ fee_record.id }}"
                                                        data-field="pending_dues_for_libraries"
-                                                       {{ 'checked' if fee_record.pending_dues_for_libraries else '' }}>
+                                                       {% if fee_record.pending_dues_for_libraries %}checked{% endif %}>
                                                 <label class="form-check-label" for="library_dues_{{ fee_record.id }}"><i class="fas fa-book"></i> Library Dues</label>
                                             </div>
                                             <div class="form-check form-check-inline">
@@ -248,7 +248,7 @@
                                                        id="hostel_dues_{{ fee_record.id }}"
                                                        data-fee-id="{{ fee_record.id }}"
                                                        data-field="pending_dues_for_hostel"
-                                                       {{ 'checked' if fee_record.pending_dues_for_hostel else '' }}>
+                                                       {% if fee_record.pending_dues_for_hostel %}checked{% endif %}>
                                                 <label class="form-check-label" for="hostel_dues_{{ fee_record.id }}"><i class="fas fa-bed"></i> Hostel Dues</label>
                                             </div>
                                             <div class="form-check form-check-inline">
@@ -256,7 +256,7 @@
                                                        id="admit_card_{{ fee_record.id }}"
                                                        data-fee-id="{{ fee_record.id }}"
                                                        data-field="exam_admit_card_issued"
-                                                       {{ 'checked' if fee_record.exam_admit_card_issued else '' }}>
+                                                       {% if fee_record.exam_admit_card_issued %}checked{% endif %}>
                                                 <label class="form-check-label" for="admit_card_{{ fee_record.id }}"><i class="fas fa-id-card"></i> Admit Card Issued</label>
                                             </div>
                                         {% else %}
