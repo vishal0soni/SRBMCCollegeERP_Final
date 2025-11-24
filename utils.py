@@ -412,7 +412,37 @@ def generate_pdf_student_report(student):
             ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
         ]))
         story.append(other_table)
-        story.append(Spacer(1, 30))
+        story.append(Spacer(1, 20))
+
+        # Payment History
+        from models import Invoice
+        invoices = Invoice.query.filter_by(student_id=student.id).order_by(Invoice.date_time.desc()).all()
+        
+        if invoices:
+            story.append(Paragraph("<b>Payment History</b>", styles['Heading2']))
+            
+            payment_data = [['Date', 'Invoice Number', 'Amount', 'Installment']]
+            for invoice in invoices:
+                payment_data.append([
+                    invoice.date_time.strftime('%d/%m/%Y'),
+                    invoice.invoice_number,
+                    f"₹ {invoice.invoice_amount:.2f}",
+                    f"Installment {invoice.installment_number or 'N/A'}"
+                ])
+
+            payment_table = Table(payment_data, colWidths=[1.2*inch, 2*inch, 1.5*inch, 1.3*inch])
+            payment_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ]))
+
+            story.append(payment_table)
+            story.append(Spacer(1, 20))
 
         # Footer
         footer_text = f"Generated on: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"

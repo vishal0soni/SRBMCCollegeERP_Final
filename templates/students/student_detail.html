@@ -265,6 +265,32 @@ function printStudentReport() {
                 <div class="info-item"><strong>Government Scholarship:</strong> {{ student.scholarship_status }}</div>
                 <div class="info-item"><strong>Meera Scholarship:</strong> {{ student.rebate_meera_scholarship_status }}</div>
             </div>
+
+            {% if student.invoices %}
+            <div class="section">
+                <h3>Payment History</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                    <thead>
+                        <tr style="background-color: #f0f0f0;">
+                            <th style="border: 1px solid #000; padding: 5px; text-align: center;">Date</th>
+                            <th style="border: 1px solid #000; padding: 5px; text-align: center;">Invoice Number</th>
+                            <th style="border: 1px solid #000; padding: 5px; text-align: center;">Amount</th>
+                            <th style="border: 1px solid #000; padding: 5px; text-align: center;">Installment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in student.invoices|sort(attribute='date_time', reverse=True) %}
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 5px; text-align: center;">{{ invoice.date_time.strftime('%d/%m/%Y') }}</td>
+                            <td style="border: 1px solid #000; padding: 5px; text-align: center;">{{ invoice.invoice_number }}</td>
+                            <td style="border: 1px solid #000; padding: 5px; text-align: center;">₹ {{ "%.2f"|format(invoice.invoice_amount) }}</td>
+                            <td style="border: 1px solid #000; padding: 5px; text-align: center;">Installment {{ invoice.installment_number or 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
         </body>
         </html>
     `;
