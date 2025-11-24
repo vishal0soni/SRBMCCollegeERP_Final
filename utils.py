@@ -620,10 +620,10 @@ def generate_pdf_fee_statement_print(student, fee_record):
         # Determine college name based on course - for D.Pharm/Diploma in Pharmacy students
         college_name = "SHRI RAGHUNATH BISHNOI MEMORIAL COLLEGE"
         college_location = "Raniwara, Jalore, Rajasthan"
-        
+
         if student.current_course and (('Diploma' in student.current_course and 'Pharmacy' in student.current_course) or 'D Pharma' in student.current_course or 'D.Pharm' in student.current_course or 'D.PHARM' in student.current_course.upper()):
             college_name = "SUNDHA MATA INSTITUTE FOR HIGHER STUDIES"
-        
+
         # College header
         content.append(Paragraph(college_name, title_style))
         content.append(Paragraph(college_location, styles['Normal']))
