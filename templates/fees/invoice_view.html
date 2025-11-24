@@ -38,7 +38,15 @@
     <div class="col-12">
         <div class="card shadow" id="invoice-content">
             <div class="card-header text-center bg-primary text-white">
-                {% if student.current_course and (('Diploma' in student.current_course and 'Pharmacy' in student.current_course) or 'D Pharma' in student.current_course or 'D.Pharm' in student.current_course or 'D.PHARM' in student.current_course.upper()) %}
+                {% set is_d_pharm = student.current_course and (
+                    ('Diploma' in student.current_course and 'Pharmacy' in student.current_course) or 
+                    'D Pharma' in student.current_course or 
+                    'D.Pharm' in student.current_course or 
+                    'D.PHARM' in student.current_course.upper() or
+                    'Diploma of Pharmacy' in student.current_course or
+                    'DIPLOMA OF PHARMACY' in student.current_course.upper()
+                ) %}
+                {% if is_d_pharm %}
                 <h4 class="mb-0">SUNDHA MATA INSTITUTE FOR HIGHER STUDIES</h4>
                 {% else %}
                 <h4 class="mb-0">SHRI RAGHUNATH BISHNOI MEMORIAL COLLEGE</h4>
