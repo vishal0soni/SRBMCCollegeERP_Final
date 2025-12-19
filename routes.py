@@ -1556,13 +1556,13 @@ def bulk_promote_students():
                     })
                     continue
                 
-                # Check if student is already graduated or dropped out
-                if student.student_status in ['Graduated', 'Dropout']:
+                # Check if student is dropped out (but allow graduated students)
+                if student.student_status == 'Dropout':
                     results.append({
                         'success': False,
                         'student_id': student_id,
                         'student_name': student_name,
-                        'error': f'Student status is {student.student_status}'
+                        'error': 'Student status is Dropout'
                     })
                     continue
                 
@@ -1652,6 +1652,11 @@ def bulk_promote_students():
                         # Promote to next semester/year
                         old_course = student.current_course
                         student.current_course = next_course_name
+                        
+                        # If student was graduated, set them back to Active status when promoting
+                        if student.student_status == 'Graduated':
+                            student.student_status = 'Active'
+                        
                         exam.promotion_processed = True
                         db.session.commit()
                         
@@ -1682,6 +1687,11 @@ def bulk_promote_students():
                     next_course = progression[current_index + 1]
                     old_course = student.current_course
                     student.current_course = next_course
+                    
+                    # If student was graduated, set them back to Active status when promoting
+                    if student.student_status == 'Graduated':
+                        student.student_status = 'Active'
+                    
                     exam.promotion_processed = True
                     db.session.commit()
                     
@@ -1729,9 +1739,9 @@ def promote_student(student_id):
 
     student = Student.query.get_or_404(student_id)
 
-    # Check if student is already graduated or dropped out
-    if student.student_status in ['Graduated', 'Dropout']:
-        return jsonify({'error': f'Cannot promote student with status: {student.student_status}'}), 400
+    # Check if student is dropped out (but allow graduated students to be promoted to next semester if available)
+    if student.student_status == 'Dropout':
+        return jsonify({'error': f'Cannot promote student with status: Dropout'}), 400
 
     try:
         # Get exam ID from request data if provided
@@ -1816,6 +1826,11 @@ def promote_student(student_id):
                 # Promote to the next semester/year
                 old_course = student.current_course
                 student.current_course = next_course_name
+                
+                # If student was graduated, set them back to Active status when promoting
+                if student.student_status == 'Graduated':
+                    student.student_status = 'Active'
+                
                 latest_exam.promotion_processed = True
                 db.session.commit()
                 
