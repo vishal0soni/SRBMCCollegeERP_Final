@@ -258,7 +258,7 @@
                             {% for exam, student in exams.items %}
                             <tr>
                                 <td class="text-center">
-                                    {% if exam.overall_status == 'Pass' and not exam.promotion_processed and student.student_status != 'Graduated' %}
+                                    {% if not exam.promotion_processed and exam.overall_status == 'Pass' and student.student_status != 'Graduated' %}
                                     <input type="checkbox" class="student-checkbox" 
                                            data-student-id="{{ student.id }}" 
                                            data-exam-id="{{ exam.id }}"
