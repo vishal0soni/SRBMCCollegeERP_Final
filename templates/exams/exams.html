@@ -527,18 +527,22 @@ function promoteStudent(studentId, examId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Show success message
-                alert(data.message + '\n\nThe student\'s record has been updated in the Student Management page.');
-                
-                // Update button to show promotion completed
+                // Show success message with action details
+                let message = data.message + '\n\n';
                 if (data.action === 'graduated') {
-                    button.innerHTML = '<i class="fas fa-graduation-cap"></i> Graduated';
-                    button.className = 'btn btn-outline-warning disabled';
-                } else {
-                    button.innerHTML = '<i class="fas fa-check"></i> Already Promoted';
-                    button.className = 'btn btn-outline-secondary disabled';
+                    message += 'Student Status: Graduated\n';
+                    message += 'The student has completed all course levels.';
+                } else if (data.action === 'promoted') {
+                    message += 'Previous Course: ' + data.previous_course + '\n';
+                    message += 'New Course: ' + data.current_course + '\n';
+                    message += 'Student Status: ' + data.student_status;
                 }
-                button.disabled = true;
+                message += '\n\nThe page will refresh to show updated status.';
+                
+                alert(message);
+                
+                // Reload the page to show updated promotion status
+                window.location.reload();
             } else {
                 alert('Error: ' + data.error);
                 // Restore original button state
