@@ -1515,6 +1515,160 @@ def get_course_progression(course_full_name_base):
     progression.sort(key=lambda x: x[0])
     return [item[1] for item in progression]
 
+@app.route('/students/bulk-promote', methods=['POST'])
+@login_required
+def bulk_promote_students():
+    """Bulk promote multiple students at once"""
+    # Check permissions
+    if not can_edit_module(current_user, 'students') or current_user.role.access_type != 'Edit':
+        return jsonify({'error': 'Permission denied'}), 403
+
+    try:
+        data = request.get_json()
+        students_data = data.get('students', [])
+        
+        if not students_data:
+            return jsonify({'error': 'No students selected for promotion'}), 400
+        
+        results = []
+        
+        for student_data in students_data:
+            student_id = student_data.get('student_id')
+            exam_id = student_data.get('exam_id')
+            student_name = student_data.get('student_name', 'Unknown')
+            
+            try:
+                student = Student.query.get(student_id)
+                if not student:
+                    results.append({
+                        'success': False,
+                        'student_id': student_id,
+                        'student_name': student_name,
+                        'error': 'Student not found'
+                    })
+                    continue
+                
+                # Check if student is already graduated or dropped out
+                if student.student_status in ['Graduated', 'Dropout']:
+                    results.append({
+                        'success': False,
+                        'student_id': student_id,
+                        'student_name': student_name,
+                        'error': f'Student status is {student.student_status}'
+                    })
+                    continue
+                
+                # Get the exam
+                exam = Exam.query.filter_by(
+                    id=exam_id,
+                    student_id=student_id,
+                    overall_status='Pass',
+                    promotion_processed=False
+                ).first()
+                
+                if not exam:
+                    results.append({
+                        'success': False,
+                        'student_id': student_id,
+                        'student_name': student_name,
+                        'error': 'No eligible exam found for promotion'
+                    })
+                    continue
+                
+                current_course = student.current_course
+                if not current_course:
+                    results.append({
+                        'success': False,
+                        'student_id': student_id,
+                        'student_name': student_name,
+                        'error': 'No current course assigned'
+                    })
+                    continue
+                
+                # Get course progression
+                progression = get_course_progression(current_course)
+                if not progression:
+                    results.append({
+                        'success': False,
+                        'student_id': student_id,
+                        'student_name': student_name,
+                        'error': 'No course progression found'
+                    })
+                    continue
+                
+                # Find current position
+                current_index = None
+                for i, course_name in enumerate(progression):
+                    if course_name == current_course:
+                        current_index = i
+                        break
+                
+                if current_index is None:
+                    results.append({
+                        'success': False,
+                        'student_id': student_id,
+                        'student_name': student_name,
+                        'error': 'Current course not in progression'
+                    })
+                    continue
+                
+                # Check if final level
+                if current_index >= len(progression) - 1:
+                    # Graduate student
+                    student.student_status = 'Graduated'
+                    exam.promotion_processed = True
+                    db.session.commit()
+                    
+                    results.append({
+                        'success': True,
+                        'student_id': student_id,
+                        'student_name': student_name,
+                        'action': 'graduated',
+                        'message': 'Student graduated'
+                    })
+                else:
+                    # Promote to next level
+                    next_course = progression[current_index + 1]
+                    old_course = student.current_course
+                    student.current_course = next_course
+                    exam.promotion_processed = True
+                    db.session.commit()
+                    
+                    results.append({
+                        'success': True,
+                        'student_id': student_id,
+                        'student_name': student_name,
+                        'action': 'promoted',
+                        'previous_course': old_course,
+                        'current_course': next_course,
+                        'message': f'Promoted from {old_course} to {next_course}'
+                    })
+                
+            except Exception as e:
+                db.session.rollback()
+                results.append({
+                    'success': False,
+                    'student_id': student_id,
+                    'student_name': student_name,
+                    'error': str(e)
+                })
+                app.logger.error(f"Error promoting student {student_id}: {str(e)}")
+        
+        # Return summary
+        success_count = sum(1 for r in results if r['success'])
+        return jsonify({
+            'success': True,
+            'total': len(results),
+            'successful': success_count,
+            'failed': len(results) - success_count,
+            'results': results
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Bulk promotion error: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/students/promote/<int:student_id>', methods=['POST'])
 @login_required
 def promote_student(student_id):

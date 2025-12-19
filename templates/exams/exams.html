@@ -113,20 +113,51 @@
     </div>
 </div>
 
+<!-- Bulk Actions Bar -->
+<div class="row mb-3" id="bulkActionsBar" style="display: none;">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body py-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span id="selectedCount" class="fw-bold">0</span> student(s) selected
+                    </div>
+                    <div>
+                        <button class="btn btn-success btn-sm" onclick="bulkPromoteStudents()">
+                            <i class="fas fa-level-up-alt"></i> Promote Selected Students
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="clearAllSelections()">
+                            <i class="fas fa-times"></i> Clear Selection
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Exam Results Table -->
 <div class="row">
     <div class="col-12">
         <div class="card shadow">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="m-0 font-weight-bold text-primary">
                     Exam Results ({{ exams.total }} records)
                 </h6>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="selectAllPassed()">
+                        <i class="fas fa-check-square"></i> Select All Passed (This Page)
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover">
                         <thead class="table-light">
                             <tr>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)">
+                                </th>
                                 <th>
                                     <a href="{{ url_for('exams', sort='first_name', order='desc' if request.args.get('sort') == 'first_name' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), semester=request.args.get('semester', ''), result=request.args.get('result', '')) }}" class="text-decoration-none text-dark">
                                         Student 
@@ -223,6 +254,15 @@
                         <tbody>
                             {% for exam, student in exams.items %}
                             <tr>
+                                <td class="text-center">
+                                    {% if exam.overall_status == 'Pass' and not exam.promotion_processed %}
+                                    <input type="checkbox" class="student-checkbox" 
+                                           data-student-id="{{ student.id }}" 
+                                           data-exam-id="{{ exam.id }}"
+                                           data-student-name="{{ student.first_name }} {{ student.last_name }}"
+                                           onchange="updateSelectionCount()">
+                                    {% endif %}
+                                </td>
                                 <td>
                                     <strong>{{ student.student_unique_id }}</strong><br>
                                     <small>{{ student.first_name }} {{ student.last_name }}</small>
@@ -341,6 +381,126 @@
 
 {% block scripts %}
 <script>
+let selectedStudents = [];
+
+function updateSelectionCount() {
+    const checkboxes = document.querySelectorAll('.student-checkbox:checked');
+    const count = checkboxes.length;
+    
+    document.getElementById('selectedCount').textContent = count;
+    
+    if (count > 0) {
+        document.getElementById('bulkActionsBar').style.display = 'block';
+    } else {
+        document.getElementById('bulkActionsBar').style.display = 'none';
+    }
+    
+    // Update select all checkbox state
+    const allCheckboxes = document.querySelectorAll('.student-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = (allCheckboxes.length > 0 && count === allCheckboxes.length);
+    }
+}
+
+function toggleSelectAll(checkbox) {
+    const studentCheckboxes = document.querySelectorAll('.student-checkbox');
+    studentCheckboxes.forEach(cb => {
+        cb.checked = checkbox.checked;
+    });
+    updateSelectionCount();
+}
+
+function selectAllPassed() {
+    const studentCheckboxes = document.querySelectorAll('.student-checkbox');
+    studentCheckboxes.forEach(cb => {
+        cb.checked = true;
+    });
+    updateSelectionCount();
+}
+
+function clearAllSelections() {
+    const studentCheckboxes = document.querySelectorAll('.student-checkbox');
+    studentCheckboxes.forEach(cb => {
+        cb.checked = false;
+    });
+    document.getElementById('selectAllCheckbox').checked = false;
+    updateSelectionCount();
+}
+
+function bulkPromoteStudents() {
+    const checkboxes = document.querySelectorAll('.student-checkbox:checked');
+    
+    if (checkboxes.length === 0) {
+        alert('Please select at least one student to promote.');
+        return;
+    }
+    
+    const studentsList = Array.from(checkboxes).map(cb => cb.dataset.studentName).join('\n');
+    
+    if (!confirm(`Are you sure you want to promote ${checkboxes.length} student(s)?\n\n${studentsList}\n\nThis action will promote all selected students to their next class/semester.`)) {
+        return;
+    }
+    
+    // Show loading state
+    const bulkActionsBar = document.getElementById('bulkActionsBar');
+    bulkActionsBar.innerHTML = `
+        <div class="card-body py-2 text-center">
+            <i class="fas fa-spinner fa-spin me-2"></i>
+            <span>Processing promotions... Please wait.</span>
+        </div>
+    `;
+    
+    // Prepare promotion data
+    const promotionData = Array.from(checkboxes).map(cb => ({
+        student_id: parseInt(cb.dataset.studentId),
+        exam_id: parseInt(cb.dataset.examId),
+        student_name: cb.dataset.studentName
+    }));
+    
+    // Send bulk promotion request
+    fetch('/students/bulk-promote', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            students: promotionData
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            const successCount = data.results.filter(r => r.success).length;
+            const failCount = data.results.filter(r => !r.success).length;
+            
+            let message = `Bulk promotion completed!\n\n`;
+            message += `✓ Successfully promoted: ${successCount} student(s)\n`;
+            if (failCount > 0) {
+                message += `✗ Failed: ${failCount} student(s)\n\n`;
+                message += `Failed promotions:\n`;
+                data.results.filter(r => !r.success).forEach(r => {
+                    message += `- ${r.student_name}: ${r.error}\n`;
+                });
+            }
+            
+            alert(message);
+            
+            // Reload page to show updated status
+            window.location.reload();
+        } else {
+            alert('Error during bulk promotion: ' + data.error);
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred during bulk promotion. Please try again.');
+        window.location.reload();
+    });
+}
+
 function viewExamDetails(examId) {
     // Open exam details modal
     alert('View exam details for ID: ' + examId);
@@ -395,7 +555,5 @@ function promoteStudent(studentId, examId) {
         });
     }
 }
-
-
 </script>
 {% endblock %}
