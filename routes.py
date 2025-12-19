@@ -1622,20 +1622,63 @@ def bulk_promote_students():
                 
                 # Check if final level
                 if current_index >= len(progression) - 1:
-                    # Graduate student
-                    student.student_status = 'Graduated'
-                    exam.promotion_processed = True
-                    db.session.commit()
+                    # At final level - check if more progression exists
+                    base_name = current_course.split(' - ')[0] if ' - ' in current_course else current_course
+                    current_sem_info = current_course.split(' - ')[1] if ' - ' in current_course else ''
                     
-                    results.append({
-                        'success': True,
-                        'student_id': student_id,
-                        'student_name': student_name,
-                        'action': 'graduated',
-                        'message': 'Student graduated'
-                    })
+                    import re
+                    sem_match = re.search(r'(\d+)(?:st|nd|rd|th)?\s*sem', current_sem_info.lower())
+                    year_match = re.search(r'(\d+)(?:st|nd|rd|th)?\s*year', current_sem_info.lower())
+                    
+                    next_course_name = None
+                    if sem_match:
+                        current_num = int(sem_match.group(1))
+                        next_num = current_num + 1
+                        ordinal = {1: '1st', 2: '2nd', 3: '3rd'}.get(next_num, f'{next_num}th')
+                        potential_next = f"{base_name} - {ordinal} Sem"
+                        
+                        if CourseDetails.query.filter_by(course_full_name=potential_next).first():
+                            next_course_name = potential_next
+                    elif year_match:
+                        current_num = int(year_match.group(1))
+                        next_num = current_num + 1
+                        ordinal = {1: '1st', 2: '2nd', 3: '3rd'}.get(next_num, f'{next_num}th')
+                        potential_next = f"{base_name} - {ordinal} Year"
+                        
+                        if CourseDetails.query.filter_by(course_full_name=potential_next).first():
+                            next_course_name = potential_next
+                    
+                    if next_course_name:
+                        # Promote to next semester/year
+                        old_course = student.current_course
+                        student.current_course = next_course_name
+                        exam.promotion_processed = True
+                        db.session.commit()
+                        
+                        results.append({
+                            'success': True,
+                            'student_id': student_id,
+                            'student_name': student_name,
+                            'action': 'promoted',
+                            'previous_course': old_course,
+                            'current_course': next_course_name,
+                            'message': f'Promoted from {old_course} to {next_course_name}'
+                        })
+                    else:
+                        # Graduate student
+                        student.student_status = 'Graduated'
+                        exam.promotion_processed = True
+                        db.session.commit()
+                        
+                        results.append({
+                            'success': True,
+                            'student_id': student_id,
+                            'student_name': student_name,
+                            'action': 'graduated',
+                            'message': 'Student graduated'
+                        })
                 else:
-                    # Promote to next level
+                    # Promote to next level from progression
                     next_course = progression[current_index + 1]
                     old_course = student.current_course
                     student.current_course = next_course
@@ -1737,27 +1780,72 @@ def promote_student(student_id):
 
         # Check if this is the final level
         if current_index >= len(progression) - 1:
-            # Check if already at final level - graduate student
+            # At final level - need to determine if this is truly the end or if more progression exists
+            # Check if there are higher semesters/years available
             base_name = current_course.split(' - ')[0] if ' - ' in current_course else current_course
-            course = Course.query.filter_by(course_full_name=base_name).first()
+            
+            # Extract current semester/year info
+            current_sem_info = current_course.split(' - ')[1] if ' - ' in current_course else ''
+            
+            # Try to find next progression (e.g., 4th Sem -> 5th Sem, 1st year -> 2nd year)
+            import re
+            sem_match = re.search(r'(\d+)(?:st|nd|rd|th)?\s*sem', current_sem_info.lower())
+            year_match = re.search(r'(\d+)(?:st|nd|rd|th)?\s*year', current_sem_info.lower())
+            
+            next_course_name = None
+            if sem_match:
+                current_num = int(sem_match.group(1))
+                # Try to construct next semester name
+                next_num = current_num + 1
+                ordinal = {1: '1st', 2: '2nd', 3: '3rd'}.get(next_num, f'{next_num}th')
+                potential_next = f"{base_name} - {ordinal} Sem"
+                
+                # Check if this course exists
+                if CourseDetails.query.filter_by(course_full_name=potential_next).first():
+                    next_course_name = potential_next
+            elif year_match:
+                current_num = int(year_match.group(1))
+                next_num = current_num + 1
+                ordinal = {1: '1st', 2: '2nd', 3: '3rd'}.get(next_num, f'{next_num}th')
+                potential_next = f"{base_name} - {ordinal} Year"
+                
+                if CourseDetails.query.filter_by(course_full_name=potential_next).first():
+                    next_course_name = potential_next
+            
+            if next_course_name:
+                # Promote to the next semester/year
+                old_course = student.current_course
+                student.current_course = next_course_name
+                latest_exam.promotion_processed = True
+                db.session.commit()
+                
+                app.logger.info(f"Student {student.student_unique_id} promoted from {old_course} to {next_course_name}")
+                
+                return jsonify({
+                    'success': True,
+                    'message': f'Student {student.first_name} {student.last_name} promoted from {old_course} to {next_course_name}',
+                    'action': 'promoted',
+                    'previous_course': old_course,
+                    'current_course': next_course_name,
+                    'student_status': student.student_status
+                })
+            else:
+                # No next semester/year found - graduate the student
+                student.student_status = 'Graduated'
+                latest_exam.promotion_processed = True
+                db.session.commit()
 
-            # Graduate the student and mark exam as processed
-            student.student_status = 'Graduated'
-            latest_exam.promotion_processed = True
-            db.session.commit()
+                app.logger.info(f"Student {student.student_unique_id} graduated from {current_course}")
 
-            # Log the graduation
-            app.logger.info(f"Student {student.student_unique_id} ({student.first_name} {student.last_name}) graduated from {current_course}")
+                return jsonify({
+                    'success': True, 
+                    'message': f'Student {student.first_name} {student.last_name} has been graduated!',
+                    'action': 'graduated',
+                    'current_course': current_course,
+                    'student_status': 'Graduated'
+                })
 
-            return jsonify({
-                'success': True, 
-                'message': f'Student {student.first_name} {student.last_name} has been graduated!',
-                'action': 'graduated',
-                'current_course': current_course,
-                'student_status': 'Graduated'
-            })
-
-        # Promote to next level
+        # Promote to next level from progression
         next_course = progression[current_index + 1]
 
         # Check for duplicate promotion (prevent promoting twice to same level)
