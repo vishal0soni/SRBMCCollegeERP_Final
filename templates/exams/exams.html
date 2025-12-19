@@ -96,7 +96,15 @@
                             <option value="Fail" {% if request.args.get('result') == 'Fail' %}selected{% endif %}>Fail</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <label for="promotion" class="form-label">Promotion Status</label>
+                        <select name="promotion" id="promotion" class="form-select">
+                            <option value="">All Status</option>
+                            <option value="promoted" {% if request.args.get('promotion') == 'promoted' %}selected{% endif %}>Promoted</option>
+                            <option value="pending" {% if request.args.get('promotion') == 'pending' %}selected{% endif %}>Pending</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <label class="form-label">&nbsp;</label>
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary">
@@ -255,12 +263,14 @@
                             {% for exam, student in exams.items %}
                             <tr>
                                 <td class="text-center">
-                                    {% if exam.overall_status == 'Pass' and not exam.promotion_processed %}
+                                    {% if exam.overall_status == 'Pass' and not exam.promotion_processed and student.student_status != 'Graduated' %}
                                     <input type="checkbox" class="student-checkbox" 
                                            data-student-id="{{ student.id }}" 
                                            data-exam-id="{{ exam.id }}"
                                            data-student-name="{{ student.first_name }} {{ student.last_name }}"
                                            onchange="updateSelectionCount()">
+                                    {% else %}
+                                        <i class="fas fa-minus text-muted"></i>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -299,6 +309,9 @@
                                         <span class="badge bg-success">Pass</span>
                                     {% else %}
                                         <span class="badge bg-danger">Fail</span>
+                                    {% endif %}
+                                    {% if exam.promotion_processed %}
+                                        <br><span class="badge bg-info mt-1">Promoted</span>
                                     {% endif %}
                                 </td>
                                 <td>

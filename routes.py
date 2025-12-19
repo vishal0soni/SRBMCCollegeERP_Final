@@ -1236,10 +1236,12 @@ def exams():
     course_filter = request.args.get('course', '')
     semester_filter = request.args.get('semester', '')
     result_filter = request.args.get('result', '')
+    promotion_filter = request.args.get('promotion', '')
     sort_by = request.args.get('sort', 'exam_name')
     sort_order = request.args.get('order', 'asc')
 
-    query = db.session.query(Exam, Student).join(Student).filter(Student.student_status != 'Graduated')
+    # Show all exam records, including those for graduated students
+    query = db.session.query(Exam, Student).join(Student)
 
     # Search filters
     if search:
@@ -1260,6 +1262,12 @@ def exams():
 
     if result_filter:
         query = query.filter(Exam.overall_status == result_filter)
+
+    if promotion_filter:
+        if promotion_filter == 'promoted':
+            query = query.filter(Exam.promotion_processed == True)
+        elif promotion_filter == 'pending':
+            query = query.filter(Exam.promotion_processed == False)
 
     # Sorting
     if hasattr(Exam, sort_by):
