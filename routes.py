@@ -3909,8 +3909,8 @@ def api_update_fee_field(fee_id):
             app.logger.error(f"Invalid field name: {field}")
             return jsonify({'success': False, 'error': f'Invalid field name: {field}'}), 400
 
-        # Get the fee record
-        fee_record = CollegeFees.query.get(fee_id)
+        # Get the fee record with explicit query
+        fee_record = CollegeFees.query.filter_by(id=fee_id).first()
         if not fee_record:
             app.logger.error(f"Fee record not found: {fee_id}")
             return jsonify({'success': False, 'error': 'Fee record not found'}), 404
@@ -3929,14 +3929,18 @@ def api_update_fee_field(fee_id):
         # Update the field
         setattr(fee_record, field, bool_value)
         
+        # Flush to ensure the change is written
+        db.session.flush()
+        
         # Commit the change
         db.session.commit()
         
-        app.logger.info(f"Successfully updated {field} for fee_id {fee_id}")
+        app.logger.info(f"Successfully committed {field} for fee_id {fee_id}")
 
-        # Verify the update
-        db.session.refresh(fee_record)
-        actual_value = bool(getattr(fee_record, field, False))
+        # Verify the update by querying fresh from database
+        db.session.expire(fee_record)
+        fresh_record = CollegeFees.query.filter_by(id=fee_id).first()
+        actual_value = bool(getattr(fresh_record, field, False))
 
         if actual_value != bool_value:
             app.logger.error(f"Verification failed! Expected {bool_value}, got {actual_value}")
@@ -3944,6 +3948,8 @@ def api_update_fee_field(fee_id):
                 'success': False,
                 'error': 'Database update verification failed'
             }), 500
+
+        app.logger.info(f"Verified {field} = {actual_value} in database")
 
         return jsonify({
             'success': True,

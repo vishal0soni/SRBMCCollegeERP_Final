@@ -358,7 +358,7 @@ $(document).ready(function() {
     $('[data-bs-toggle="tooltip"]').tooltip();
 
     // Handle checkbox changes with proper state persistence
-    $('.dues-checkbox').on('change', function(e) {
+    $('.dues-checkbox').off('change').on('change', function(e) {
         const checkbox = $(this);
         const feeId = checkbox.data('fee-id');
         const field = checkbox.data('field');
@@ -398,10 +398,14 @@ $(document).ready(function() {
 
                     const fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                     showAlert(`${fieldName} ${verifiedValue ? 'enabled' : 'disabled'}`, 'success');
+                    
+                    // Store in session storage for persistence across page loads
+                    sessionStorage.setItem(`fee_${feeId}_${field}`, verifiedValue);
                 } else {
                     showAlert('Error: ' + (response.error || 'Unknown error'), 'error');
                     // Revert checkbox on error
                     checkbox.prop('checked', !newValue);
+                    checkbox.removeAttr('checked');
                 }
             },
             error: function(xhr, status, error) {
@@ -418,6 +422,7 @@ $(document).ready(function() {
                 showAlert(errorMessage, 'error');
                 // Revert checkbox on error
                 checkbox.prop('checked', !newValue);
+                checkbox.removeAttr('checked');
             },
             complete: function() {
                 // Re-enable checkbox and remove loading spinner
@@ -427,18 +432,14 @@ $(document).ready(function() {
         });
     });
 
-    // Verify and set initial checkbox states on page load
+    // Verify and set initial checkbox states on page load from database
     console.log('Verifying checkbox states on page load...');
     $('.dues-checkbox').each(function() {
         const checkbox = $(this);
         const feeId = checkbox.data('fee-id');
         const field = checkbox.data('field');
 
-        // Use the current checked state from the template as the initial value
-        const initialValue = checkbox.is(':checked');
-        console.log(`Initial state for ${field} (fee ${feeId}): ${initialValue}`);
-
-        // Verify against database
+        // Verify against database to get the actual current value
         $.ajax({
             url: `/api/verify-fee-field/${feeId}/${field}`,
             method: 'GET',
@@ -455,10 +456,6 @@ $(document).ready(function() {
                     }
 
                     console.log(`Verified ${field} for fee ${feeId}: ${dbValue}`);
-
-                    if (initialValue !== dbValue) {
-                        console.warn(`Mismatch detected for ${field} (fee ${feeId}). Template: ${initialValue}, DB: ${dbValue}`);
-                    }
                 }
             },
             error: function(xhr, status, error) {
