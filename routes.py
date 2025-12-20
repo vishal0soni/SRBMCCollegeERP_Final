@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify, make_response, send_file
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
-from sqlalchemy import func, and_, or_
+from sqlalchemy import func, and_, or_, text
 from datetime import datetime, date
 import datetime as dt
 import io
@@ -2295,16 +2295,95 @@ def edit_subject(subject_id):
     form = SubjectForm(obj=subject)
     form.course_short_name.choices = [(course.course_short_name, course.course_full_name)]
 
-    if form.validate_on_submit():
-        form.populate_obj(subject)
+    # Store old name for cascade update
+    old_subject_name = subject.subject_name
 
-        try:
-            db.session.commit()
-            flash('Subject updated successfully!', 'success')
-            return redirect(url_for('course_subjects', course_id=course.course_id))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error updating subject: {str(e)}', 'error')
+    if form.validate_on_submit():
+        new_subject_name = form.subject_name.data
+        
+        # Check if subject name has changed
+        if old_subject_name != new_subject_name:
+            # Update subject name in all related tables
+            try:
+                # Update students' subject fields
+                db.session.execute(text("""
+                    UPDATE students 
+                    SET subject_1_name = :new_name 
+                    WHERE subject_1_name = :old_name 
+                    AND current_course IN (
+                        SELECT course_full_name FROM course_details 
+                        WHERE course_short_name = :course_short_name
+                    )
+                """), {
+                    'new_name': new_subject_name,
+                    'old_name': old_subject_name,
+                    'course_short_name': subject.course_short_name
+                })
+                
+                db.session.execute(text("""
+                    UPDATE students 
+                    SET subject_2_name = :new_name 
+                    WHERE subject_2_name = :old_name 
+                    AND current_course IN (
+                        SELECT course_full_name FROM course_details 
+                        WHERE course_short_name = :course_short_name
+                    )
+                """), {
+                    'new_name': new_subject_name,
+                    'old_name': old_subject_name,
+                    'course_short_name': subject.course_short_name
+                })
+                
+                db.session.execute(text("""
+                    UPDATE students 
+                    SET subject_3_name = :new_name 
+                    WHERE subject_3_name = :old_name 
+                    AND current_course IN (
+                        SELECT course_full_name FROM course_details 
+                        WHERE course_short_name = :course_short_name
+                    )
+                """), {
+                    'new_name': new_subject_name,
+                    'old_name': old_subject_name,
+                    'course_short_name': subject.course_short_name
+                })
+                
+                # Update exam records (all 6 possible subjects)
+                for i in range(1, 7):
+                    db.session.execute(text(f"""
+                        UPDATE exams 
+                        SET subject{i}_name = :new_name 
+                        WHERE subject{i}_name = :old_name 
+                        AND course_id IN (
+                            SELECT course_id FROM courses WHERE course_short_name = :course_short_name
+                        )
+                    """), {
+                        'new_name': new_subject_name,
+                        'old_name': old_subject_name,
+                        'course_short_name': subject.course_short_name
+                    })
+                
+                # Update the subject name
+                subject.subject_name = new_subject_name
+                subject.subject_type = form.subject_type.data
+                
+                db.session.commit()
+                flash(f'Subject updated successfully! All student and exam records have been updated from "{old_subject_name}" to "{new_subject_name}".', 'success')
+                return redirect(url_for('course_subjects', course_id=course.course_id))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error updating subject: {str(e)}', 'error')
+        else:
+            # Only subject type changed
+            form.populate_obj(subject)
+            try:
+                db.session.commit()
+                flash('Subject updated successfully!', 'success')
+                return redirect(url_for('course_subjects', course_id=course.course_id))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error updating subject: {str(e)}', 'error')
 
     return render_template('courses/subject_form.html', form=form, title='Edit Subject', course=course, subject=subject)
 
