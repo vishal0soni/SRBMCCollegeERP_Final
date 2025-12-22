@@ -3821,6 +3821,43 @@ def api_debug_fee_data():
         app.logger.error(f"Error in debug fee data: {str(e)}")
         return jsonify({'error': str(e)})
 
+@app.route('/api/meera-rebate-notifications')
+@login_required
+def api_meera_rebate_notifications():
+    """Get students who have applied for Meera rebate for notifications"""
+    try:
+        # Only Admin can view these notifications
+        if current_user.role.role_name != 'Administrator':
+            return jsonify({'success': False, 'error': 'Access denied'}), 403
+        
+        # Get students with Meera rebate status 'Applied'
+        students = Student.query.filter_by(
+            rebate_meera_scholarship_status='Applied'
+        ).order_by(Student.created_at.desc()).limit(20).all()
+        
+        notifications = []
+        for student in students:
+            notifications.append({
+                'id': student.id,
+                'title': 'Meera Rebate Application',
+                'message': f"{student.first_name} {student.last_name} ({student.student_unique_id}) has applied for Meera rebate",
+                'type': 'info',
+                'link': f"/students/{student.id}",
+                'time': student.created_at.isoformat() if student.created_at else datetime.utcnow().isoformat(),
+                'student_name': f"{student.first_name} {student.last_name}",
+                'student_id': student.student_unique_id,
+                'course': student.current_course or 'N/A'
+            })
+        
+        return jsonify({
+            'success': True,
+            'notifications': notifications,
+            'count': len(notifications)
+        })
+    except Exception as e:
+        app.logger.error(f"Error in meera rebate notifications: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/student-breakdown-data')
 @login_required
 def api_student_breakdown_data():

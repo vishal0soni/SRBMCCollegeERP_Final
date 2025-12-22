@@ -604,7 +604,7 @@ function getNotificationIcon(type) {
 }
 
 // Notification Bell Functions
-let notifications = [];
+let notificationsData = [];
 
 function addNotification(title, message, type = 'info', link = null) {
     const notification = {
@@ -617,11 +617,11 @@ function addNotification(title, message, type = 'info', link = null) {
         read: false
     };
     
-    notifications.unshift(notification);
+    notificationsData.unshift(notification);
     
     // Keep only last 10 notifications
-    if (notifications.length > 10) {
-        notifications = notifications.slice(0, 10);
+    if (notificationsData.length > 10) {
+        notificationsData = notificationsData.slice(0, 10);
     }
     
     updateNotificationBell();
@@ -640,7 +640,7 @@ function updateNotificationBell() {
     
     if (!notificationCount || !notificationsList) return;
     
-    const unreadCount = notifications.filter(n => !n.read).length;
+    const unreadCount = notificationsData.filter(n => !n.read).length;
     
     // Update counter badge
     if (unreadCount > 0) {
@@ -651,14 +651,14 @@ function updateNotificationBell() {
     }
     
     // Update notifications list
-    if (notifications.length === 0) {
+    if (notificationsData.length === 0) {
         notificationsList.innerHTML = `
             <div class="dropdown-item text-center text-muted py-3">
                 <i class="fas fa-inbox me-2"></i>No new notifications
             </div>
         `;
     } else {
-        notificationsList.innerHTML = notifications.map(n => {
+        notificationsList.innerHTML = notificationsData.map(n => {
             const timeAgo = getTimeAgo(n.time);
             const iconClass = getNotificationIconClass(n.type);
             const unreadClass = n.read ? '' : 'unread';
@@ -704,7 +704,7 @@ function getTimeAgo(date) {
 }
 
 function markAsRead(notificationId) {
-    const notification = notifications.find(n => n.id === notificationId);
+    const notification = notificationsData.find(n => n.id === notificationId);
     if (notification) {
         notification.read = true;
         updateNotificationBell();
@@ -712,18 +712,47 @@ function markAsRead(notificationId) {
 }
 
 function clearAllNotifications() {
-    notifications = [];
+    notificationsData = [];
     updateNotificationBell();
+}
+
+// Load Meera rebate notifications for Admin
+function loadMeeraRebateNotifications() {
+    fetch('/api/meera-rebate-notifications')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.notifications) {
+                // Clear existing notifications
+                notificationsData = [];
+                
+                // Add Meera rebate notifications
+                data.notifications.forEach(n => {
+                    notificationsData.push({
+                        id: n.id,
+                        title: n.title,
+                        message: n.message,
+                        type: n.type,
+                        link: n.link,
+                        time: new Date(n.time),
+                        read: false
+                    });
+                });
+                
+                updateNotificationBell();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading Meera rebate notifications:', error);
+        });
 }
 
 // Initialize notification system on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Add some sample notifications for demonstration
-    // Remove these in production
-    // addNotification('Welcome!', 'Welcome to SRBMC ERP System', 'success');
+    // Load Meera rebate notifications for Admin
+    loadMeeraRebateNotifications();
     
-    // Update notification bell initially
-    updateNotificationBell();
+    // Refresh notifications every 5 minutes
+    setInterval(loadMeeraRebateNotifications, 5 * 60 * 1000);
 });
 
 // Utility functions
