@@ -603,6 +603,129 @@ function getNotificationIcon(type) {
     return icons[type] || icons.info;
 }
 
+// Notification Bell Functions
+let notifications = [];
+
+function addNotification(title, message, type = 'info', link = null) {
+    const notification = {
+        id: Date.now(),
+        title: title,
+        message: message,
+        type: type, // info, success, warning, danger
+        link: link,
+        time: new Date(),
+        read: false
+    };
+    
+    notifications.unshift(notification);
+    
+    // Keep only last 10 notifications
+    if (notifications.length > 10) {
+        notifications = notifications.slice(0, 10);
+    }
+    
+    updateNotificationBell();
+    
+    // Ring the bell
+    const bellIcon = document.querySelector('#notificationsDropdown .fa-bell');
+    if (bellIcon) {
+        bellIcon.classList.add('ringing');
+        setTimeout(() => bellIcon.classList.remove('ringing'), 500);
+    }
+}
+
+function updateNotificationBell() {
+    const notificationCount = document.getElementById('notificationCount');
+    const notificationsList = document.getElementById('notificationsList');
+    
+    if (!notificationCount || !notificationsList) return;
+    
+    const unreadCount = notifications.filter(n => !n.read).length;
+    
+    // Update counter badge
+    if (unreadCount > 0) {
+        notificationCount.textContent = unreadCount > 9 ? '9+' : unreadCount;
+        notificationCount.style.display = 'inline';
+    } else {
+        notificationCount.style.display = 'none';
+    }
+    
+    // Update notifications list
+    if (notifications.length === 0) {
+        notificationsList.innerHTML = `
+            <div class="dropdown-item text-center text-muted py-3">
+                <i class="fas fa-inbox me-2"></i>No new notifications
+            </div>
+        `;
+    } else {
+        notificationsList.innerHTML = notifications.map(n => {
+            const timeAgo = getTimeAgo(n.time);
+            const iconClass = getNotificationIconClass(n.type);
+            const unreadClass = n.read ? '' : 'unread';
+            
+            return `
+                <div class="notification-item ${unreadClass} d-flex align-items-start gap-2" 
+                     onclick="markAsRead(${n.id}); ${n.link ? `window.location.href='${n.link}';` : ''}" 
+                     data-notification-id="${n.id}">
+                    <div class="notification-icon ${n.type}">
+                        <i class="${iconClass}"></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-title">${n.title}</div>
+                        <div class="notification-text">${n.message}</div>
+                        <div class="notification-time">
+                            <i class="far fa-clock me-1"></i>${timeAgo}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+}
+
+function getNotificationIconClass(type) {
+    const icons = {
+        info: 'fas fa-info-circle',
+        success: 'fas fa-check-circle',
+        warning: 'fas fa-exclamation-triangle',
+        danger: 'fas fa-exclamation-circle'
+    };
+    return icons[type] || icons.info;
+}
+
+function getTimeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+    return date.toLocaleDateString();
+}
+
+function markAsRead(notificationId) {
+    const notification = notifications.find(n => n.id === notificationId);
+    if (notification) {
+        notification.read = true;
+        updateNotificationBell();
+    }
+}
+
+function clearAllNotifications() {
+    notifications = [];
+    updateNotificationBell();
+}
+
+// Initialize notification system on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Add some sample notifications for demonstration
+    // Remove these in production
+    // addNotification('Welcome!', 'Welcome to SRBMC ERP System', 'success');
+    
+    // Update notification bell initially
+    updateNotificationBell();
+});
+
 // Utility functions
 function debounce(func, wait) {
     let timeout;

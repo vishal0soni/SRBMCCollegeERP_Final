@@ -124,6 +124,31 @@
                 </ul>
 
                 <ul class="navbar-nav">
+                    <!-- Notifications Dropdown -->
+                    <li class="nav-item dropdown no-arrow mx-1">
+                        <a class="nav-link dropdown-toggle" href="#" id="notificationsDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-bell fa-fw"></i>
+                            <!-- Counter Badge -->
+                            <span class="badge bg-danger badge-counter" id="notificationCount" style="display: none;">0</span>
+                        </a>
+                        <!-- Dropdown - Notifications -->
+                        <div class="dropdown-menu dropdown-menu-end shadow animated--grow-in notification-dropdown"
+                             aria-labelledby="notificationsDropdown" style="min-width: 320px; max-height: 400px; overflow-y: auto;">
+                            <h6 class="dropdown-header bg-primary text-white">
+                                <i class="fas fa-bell me-2"></i>Notifications
+                            </h6>
+                            <div id="notificationsList">
+                                <div class="dropdown-item text-center text-muted py-3">
+                                    <i class="fas fa-inbox me-2"></i>No new notifications
+                                </div>
+                            </div>
+                            <a class="dropdown-item text-center small text-gray-500" href="#" onclick="clearAllNotifications(); return false;">
+                                Clear All
+                            </a>
+                        </div>
+                    </li>
+
                     <!-- User Dropdown -->
                     <li class="nav-item dropdown no-arrow">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
