@@ -97,6 +97,17 @@
                             <option value="Graduated" {{ 'selected' if request.args.get('status') == 'Graduated' }}>Graduated</option>
                         </select>
                     </div>
+                    <div class="col-md-2">
+                        <label for="meera_rebate" class="form-label">Meera Rebate Status</label>
+                        <select name="meera_rebate" id="meera_rebate" class="form-select">
+                            <option value="">All</option>
+                            <option value="Not Applied" {% if request.args.get('meera_rebate') == 'Not Applied' %}selected{% endif %}>Not Applied</option>
+                            <option value="Applied" {% if request.args.get('meera_rebate') == 'Applied' %}selected{% endif %}>Applied</option>
+                            <option value="Approved" {% if request.args.get('meera_rebate') == 'Approved' %}selected{% endif %}>Approved</option>
+                            <option value="Rejected" {% if request.args.get('meera_rebate') == 'Rejected' %}selected{% endif %}>Rejected</option>
+                            <option value="Granted" {% if request.args.get('meera_rebate') == 'Granted' %}selected{% endif %}>Granted</option>
+                        </select>
+                    </div>
                     <div class="col-md-3">
                         <label class="form-label">&nbsp;</label>
                         <div class="d-flex gap-2">
@@ -129,7 +140,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>
-                                    <a href="{{ url_for('students', sort='student_unique_id', order='desc' if request.args.get('sort') == 'student_unique_id' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), status=request.args.get('status', '')) }}" class="text-decoration-none text-dark">
+                                    <a href="{{ url_for('students', sort='student_unique_id', order='desc' if request.args.get('sort') == 'student_unique_id' and request.args.get('order') == 'asc' else 'asc', search=request.args.get('search', ''), course=request.args.get('course', ''), status=request.args.get('status', ''), meera_rebate=request.args.get('meera_rebate', '')) }}" class="text-decoration-none text-dark">
                                         Student ID
                                         {% if request.args.get('sort') == 'student_unique_id' %}
                                             <i class="fas fa-sort-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
@@ -302,7 +313,7 @@
                     <ul class="pagination justify-content-center">
                         {% if students.has_prev %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('students', page=students.prev_num, search=request.args.get('search', ''), course=request.args.get('course', ''), status=request.args.get('status', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Previous</a>
+                                <a class="page-link" href="{{ url_for('students', page=students.prev_num, search=request.args.get('search', ''), course=request.args.get('course', ''), status=request.args.get('status', ''), meera_rebate=request.args.get('meera_rebate', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Previous</a>
                             </li>
                         {% endif %}
 
@@ -310,7 +321,7 @@
                             {% if page_num %}
                                 {% if page_num != students.page %}
                                     <li class="page-item">
-                                        <a class="page-link" href="{{ url_for('students', page=page_num, search=request.args.get('search', ''), course=request.args.get('course', ''), status=request.args.get('status', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">{{ page_num }}</a>
+                                        <a class="page-link" href="{{ url_for('students', page=page_num, search=request.args.get('search', ''), course=request.args.get('course', ''), status=request.args.get('status', ''), meera_rebate=request.args.get('meera_rebate', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">{{ page_num }}</a>
                                     </li>
                                 {% else %}
                                     <li class="page-item active">
@@ -326,7 +337,7 @@
 
                         {% if students.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('students', page=students.next_num, search=request.args.get('search', ''), course=request.args.get('course', ''), status=request.args.get('status', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Next</a>
+                                <a class="page-link" href="{{ url_for('students', page=students.next_num, search=request.args.get('search', ''), course=request.args.get('course', ''), status=request.args.get('status', ''), meera_rebate=request.args.get('meera_rebate', ''), sort=request.args.get('sort', ''), order=request.args.get('order', '')) }}">Next</a>
                             </li>
                         {% endif %}
                     </ul>

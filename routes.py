@@ -272,6 +272,7 @@ def students():
     search = request.args.get('search', '')
     course_filter = request.args.get('course', '')
     status_filter = request.args.get('status', '')
+    meera_rebate_filter = request.args.get('meera_rebate', '')
     sort_by = request.args.get('sort', 'first_name')
     sort_order = request.args.get('order', 'asc')
 
@@ -293,6 +294,8 @@ def students():
         query = query.filter(Student.current_course == course_filter)
     if status_filter:
         query = query.filter_by(student_status=status_filter)
+    if meera_rebate_filter:
+        query = query.filter_by(rebate_meera_scholarship_status=meera_rebate_filter)
 
     # Sorting
     if hasattr(Student, sort_by):
